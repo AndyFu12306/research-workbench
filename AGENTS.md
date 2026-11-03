@@ -1,0 +1,26 @@
+# 长期工作规则
+
+- 工作前读取 README.md、docs/ROADMAP.md；涉及设计时读取 PRODUCT.md、ARCHITECTURE.md、DECISIONS.md。及时更新对应文档。
+- Zotero 是唯一文献事实源。Workbench 只保存研究数据和来源引用，不复制完整文献库，不重新实现 Zotero / zotero-mcp 已有能力。
+- 当前仅开展 Phase 1 只读 Technical Spike。未通过验收前不得推进数据库、Web UI、RAG、Inbox、知识图谱或自动化。
+- 禁止本阶段写入 Zotero，包括 metadata、Tags、Collections、Notes、Annotations、PDF、删除和批量操作。不得授权本地写入，也不得用云端或直接数据库读取掩盖 Local API 失败。
+- 后续外部写操作必须先展示预览并获得明确批准；删除需强确认。本次授权建立仓库、上下文文档和验证分支，不代表授权 Zotero 写入。
+- 优先 Python 标准库和既有能力；新增依赖说明用途、替代方案及维护成本。初期 Python 后端、SQLite；不 fork zotero-mcp。
+- 区分来源原文、用户观点、AI 生成与 AI 推断；重要结论保留来源和证据追溯。
+- 检查工作目录、Git 状态、分支及 remote；大功能使用单一目的分支。提交前检查 diff、敏感信息和相关验证结果，采用 Conventional Commits。
+- 不提交密钥、.env、本地数据库、缓存、PDF、Zotero 数据或私人报告。示例配置只含占位值。
+- 未经明确确认，不执行破坏性 Git 操作、历史改写、force push、远程删除或仓库权限变更；不覆盖用户已有修改。
+- 如实区分通过、失败、阻塞和未测试，按 Workbench / CLI / MCP / Local API / Client 分层定位；不把空结果当作连接成功。
+- 用户是初学者：完成代码并解释重要语法、设计、环境和验证方法，不要求用户补代码。保持简单、可理解、可测试、可替换。
+
+<!-- BEGIN zotero-cli skill (managed by `zotero-mcp install-skill`) -->
+
+## Zotero library access
+
+Read and write a Zotero library from the shell with the `zotero-cli` command - search papers by keyword or meaning, read PDF full text and page ranges, get and set metadata, manage collections, tags, notes and annotations, add items by DOI/URL/ISBN, and export bibliographies. Use whenever the user asks about their Zotero library, references, citations, papers they have saved, or their reading notes.
+
+Read `.agents/skills/zotero-cli/SKILL.md` before using it. Prefer it over the Zotero MCP server when you have shell access: the MCP tool schemas cost ~13k tokens of context on every request, this costs only what you run.
+
+Quick check that it is set up: `zotero-cli config`. Pass `--json` whenever you will parse the output.
+
+<!-- END zotero-cli skill -->
