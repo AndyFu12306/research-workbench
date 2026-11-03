@@ -1,15 +1,15 @@
 # 路线与阶段门槛
 
-当前：**Phase 1.5，只读 Zotero Integration Adapter 已实现、验证并 review；停留本阶段，不自动推进数据库、UI 或 AI Analysis**。检查日期：2026-11-03（Asia/Shanghai）。
+当前：**Phase 2 — Workbench Domain Model + Minimal Database**。Project/Question 与 SQLite 已实现并通过本地测试；交付需完成 PR review 和 Windows/Ubuntu CI，最后由用户决定是否合并。后续功能仍未授权。日期：2026-11-03（Asia/Shanghai）。
 
 | Phase | 内容 | 状态 |
 | --- | --- | --- |
-| 0 | 产品 / 架构设计 | 基本完成；原则已写入仓库 |
+| 0 | 产品 / 架构设计 | 原则已记录 |
 | 1 | Zotero Technical Spike | Core read-only spike: PASS |
-| 1.5 | Zotero Integration Adapter | 已完成本地实现与 review；非空真实批注样本仍未测 |
-| 2 | Minimal Workbench database | 未开始；优先 SQLite |
-| 3 | Project model | 未开始 |
-| 4 | Question model | 未开始 |
+| 1.5 | Zotero Integration Adapter | PR #1 已由用户合并，合并后双平台 CI 通过 |
+| 2 | Project + Question + Minimal Database | 已实现并本地验证，当前 feature branch 待 PR 交付 |
+| 3 | Project model（原里程碑） | 按本轮用户范围并入 Phase 2，不重复实现 |
+| 4 | Question model（原里程碑） | 按本轮用户范围并入 Phase 2，不重复实现 |
 | 5 | Zotero Source association | 未开始 |
 | 6 | AI Analysis | 未开始 |
 | 7 | Basic UI | 未开始 |
@@ -19,46 +19,42 @@
 | 11 | Research Memory | 延后 |
 | 12 | Automation | 延后 |
 
-## 已完成
+## 已完成的前置阶段
 
-- 阅读产品、数据边界、只读要求和 Git 工作流要求，建立长期上下文文档。
-- 检查工作目录、Git、Python、PowerShell、虚拟环境、安装登记、进程、工具可用性及回环 API。
-- 首轮初始化本地 Git；Phase 1.5 创建 feat/zotero-adapter，先提交 Phase 1 文档基线并建立 main 引用，再提交适配器阶段成果。未创建远程仓库、未推送或合并。
-- 首轮确认 Zotero 未运行、Local API 拒绝连接；本轮用户启动后，TCP 与实际 API JSON GET 均通过。
-- 安装 uv 0.13.6 和独立 uv tool zotero-mcp-server 0.15.2，完成本地只读配置与 Codex CLI skill 安装。
-- 显式使用 API 后端，搜索返回 2 个真实条目，metadata、非空摘要和 PDF 附件关系读取均通过。
-- 发现 get fulltext 截断 10/20 页，随后使用 read 完整读取 20 页、109,551 字符，每页非空。
-- annotations 查询成功返回空数组；没有创建测试批注。明确记录 PDF 本地定位/提取与 API metadata 的路径差异。
+- 产品与架构原则、只读 Zotero 数据边界、安全规范与 Git 工作流已写入仓库。
+- 完成真实 Zotero 搜索、item key、metadata、非空摘要、完整 20 页 PDF 读取；批注查询成功但样本为空。非空真实批注仍 NOT TESTED WITH NON-EMPTY DATA。
+- 定位并修复 Windows uv launcher 的 PATH / AppData 映射问题；建立 ZoteroClient、集中 runner、领域错误与运行时 DTO。
+- [PR #1](https://github.com/AndyFu12306/research-workbench/pull/1) 完成公开历史安全检查、push、review 和用户 merge；main 合并提交为 6634ccd。合并后的 Windows/Ubuntu CI 通过，本地同步且检查通过。
 
-## Phase 1.5 已完成
+## Phase 2 实现与验证
 
-- 定位旧 PATH 与 AppData 映射下 uv launcher 记录路径不可达两个原因；重装同版本工具到非映射目录，Python shell=False 成功，无源码中的个人路径。
-- 建立集中 runner、只读 ZoteroClient、不可变 DTO 和领域异常；正常业务不直接调用 subprocess。
-- health_check 分别报告 Client / API / CLI；Client 从 API 推断，不对未知进程状态作错误断言。
-- 从 Python 真实验证搜索、metadata、非空摘要和完整 20 页 PDF；annotations 查询成功但样本为空。
-- 63 个单元测试通过，默认排除 3 个 integration；显式集成测试 2 通过、1 因非空批注样本缺失跳过。
-- Ruff 格式和 lint 通过；配置 uv.lock、标准 src 目录、测试隔离与最小 Windows / Ubuntu CI（远程尚未运行）。
-- 文档与代码 review 完成：确认只读命令、无个人路径、无 metadata 持久化，错误/截断不被伪装为成功。review 中修复成功 stderr 保留、HTTP 重定向禁用和正常空白页处理。
+- 从 clean、与 origin/main 同步的最新 main 创建 feat/workbench-domain-model，不在 main 开发。
+- 原有无 persistence stack，新增 SQLAlchemy 2.x 和 Alembic，当前 lock 2.1.6 / 1.20.1；不引入额外 ORM 或目录管理依赖。
+- SQLite 默认在启动 cwd/data/research_workbench.db，支持显式 path 和 WORKBENCH_DATABASE_PATH；运行文件受忽略，无个人路径硬编码。
+- 仅持久化 Project / Question，一对多、必填外键、状态 active/archived。创建/查询/分页列表/更新/归档通过两个 repository，返回不可变领域值，不暴露 session。
+- 没有硬删除；archive 幂等且不级联，不实现复杂 workflow。没有 Source 或任何 Zotero metadata 持久化。
+- 初始 migration 0001 创建 projects、questions、CHECK、外键、索引。正式程序和 CLI 都走 Alembic，不调用 create_all；迁移资源已验证包含在 wheel 中。
+- 已在两份独立临时库验证 upgrade head、重复升级保留数据、完整 CRUD、关系约束、回滚、UTC 与隔离。额外运行真实 Alembic CLI 的 upgrade/current/check 均成功，ORM 与迁移无差异。
+- 普通测试 114 passed，3 个 Zotero integration deselected；新增 51 个数据库测试不依赖网络、GitHub、Zotero 或用户数据。沿用双平台 CI，自动包含 migration 测试。
+- 未访问 Zotero、未修改 ZoteroClient、未初始化真实开发数据库。无 Web UI、AI Analysis、RAG、Inbox、Claim/Evidence 或知识图谱。
+- 仓库尚无 Issues，本阶段以单一 PR 追踪，不为每个函数增加管理对象。PR 的 CI、review 和最终交付结论以 GitHub 当前 head 为准。
 
-## GitHub Initial Integration
+## 本阶段交付门槛
 
-- 远端为用户创建的 public 仓库 AndyFu12306/research-workbench，不重新创建或修改权限。
-- 首次公开 push 前，检查全部 3 个初始提交、35 个不同历史 blob 及 27 个 tracked files；未发现敏感信息、真实 Zotero key、PDF、数据库或正文 dump。后续工作流文档提交同样检查后再推送，不改写历史。
-- origin 已配置为指定 HTTPS URL；main 与 feat/zotero-adapter 已分别推送并设置 upstream。
-- 已创建 [PR #1](https://github.com/AndyFu12306/research-workbench/pull/1)，base=main、head=feat/zotero-adapter。远程 CI 已触发，检查本地相同代码的格式、lint 与离线测试。
-- 本次重新验证：63 个单元测试通过；2 个真实集成测试通过、1 个非空批注样本跳过；Ruff 对整个仓库 format/check 通过。PR review 覆盖数据边界、进程调用、错误处理、测试隔离、安全与文档。
-- 不改业务代码，不自动合并；main 仍保留文档基线，用户决定 PR 是否合并。Phase 2 尚未开始。
+1. 完整 diff review、普通测试与 Ruff 通过。
+2. 全部新增公开历史安全检查通过，不提交数据库、缓存、临时文件、私人研究内容或密钥。
+3. 推送 feat/workbench-domain-model，向 main 建立 PR；Windows / Ubuntu CI 均通过。
+4. 完成 PR-level review；报告测试、migration、架构决定与已知限制。
+5. 不自动 merge，等待用户决定；不开始后续阶段。
 
-## 剩余限制与后续门槛
+## 已知限制
 
-1. Annotations with non-empty sample：NOT TESTED WITH NON-EMPTY DATA。用户可指定已有批注论文补验，不创建数据，不阻塞本阶段。
-2. PowerShell Invoke-WebRequest 历史提前断开/超时尚未单独查明；Python GET 与 API 后端 CLI 已通过，不据此判定架构不可行。
-3. Windows launcher 修复只针对本机已定位原因；其他安装环境需要按 ADR-012 诊断，不能假设全平台 Zotero 链路已验收。CI 已触发，但远程 CI 只验证离线代码，不连接真实 Zotero。
-4. 当前只支持个人库、CLI schema=1 / 已测版本 0.15.2；批注读取有显式 limit，PDF 文字提取不保证图表公式精度。空白或扫描 PDF 的 OCR 不在本阶段范围。
-5. 停留在 feat/zotero-adapter，用户 review 后再决定是否合并或推进 Phase 2。没有数据库、Project model、Web UI 或 AI Analysis。
+- 只有 Project / Question；每次 repository 方法是一个事务，没有多 repository 事务编排、乐观锁、多用户或远程同步。
+- 列表有显式分页，默认过滤归档；归档项目不会改变子问题状态，未提供恢复、移动或删除接口。
+- 仅支持 SQLite 文件路径，默认相对启动工作目录；没有 .env 自动加载或跨平台用户目录依赖。
+- SQLite 初始迁移完成后应备份真实研究数据再做后续 schema 变更。初始 downgrade 会删除领域表，未对真实数据库执行。
+- 非空 Zotero annotations 样本验证属于独立的旧阶段限制，不阻塞本阶段，也不以写入 Zotero 来补样本。
 
 ## 长期交付
 
-v0.1.0 = Project + Question + Zotero Source + AI Analysis；v0.2.0 = Inbox；v0.3.0 = Claim + Evidence。仅在形成可用阶段后发布 Release，不为每个 commit 发版。
-
-ROADMAP 记录产品路线，GitHub Issues 记录具体可执行任务。远程仓库确认后可创建一个 Zotero Technical Spike Issue，不批量建立形式化任务。已有自动测试后建立简单 CI，仅覆盖离线检查，不依赖真实 Zotero。
+v0.1.0 = Project + Question + Zotero Source + AI Analysis；v0.2.0 = Inbox；v0.3.0 = Claim + Evidence。阶段成立不等于自动发布 Release。ROADMAP 记录产品路线，具体独立工作可在有实际需要时用 Issue 跟踪。
