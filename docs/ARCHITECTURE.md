@@ -8,7 +8,7 @@ Zotero                 文献事实层
 Research Workbench     AI 研究认知层
 ```
 
-目标形态为 Browser → Frontend → Python Backend；后端分别访问 Workbench SQLite 和 Zotero 集成适配器。数据库不是请求必须穿过的网络层。当前实现只读 Zotero Adapter、Phase 2 的 Project/Question 持久化，以及 Phase 3 的来源关联应用服务；没有 Web 应用、UI 或 AI Analysis。
+目标形态为 Browser → Frontend → Python Backend；后端分别访问 Workbench SQLite 和 Zotero 集成适配器。数据库不是请求必须穿过的网络层。当前实现只读 Zotero Adapter、Phase 2 的 Project/Question 持久化，以及 Phase 3 的来源关联应用服务；Phase 4A 增加同步结构化 AI 分析，没有 Web 应用或 UI。
 
 ```text
 Browser → Frontend → Python Backend
@@ -33,7 +33,7 @@ Agent Client → zotero-mcp（MCP）→ 上游提供的 Zotero 能力
 
 ## 数据所有权
 
-Zotero = bibliographic source of truth；Workbench SQLite = research-domain source of truth。Phase 2 创建 `projects` 与 `questions`；Phase 3 的 migration `0002` 增加 `sources` 与 `question_sources`，另有 Alembic 版本表。`ai_analyses` 尚未实现；任何文献 metadata 都不进入 schema。
+Zotero = bibliographic source of truth；Workbench SQLite = research-domain source of truth。Phase 2 创建 `projects` 与 `questions`；Phase 3 的 migration `0002` 增加 `sources` 与 `question_sources`，另有 Alembic 版本表。Phase 4A 的 `analysis_runs` / `analysis_source_inputs` 保存研究分析与来源 fingerprint；任何文献 metadata 都不进入来源 schema。
 
 来源引用可包含 source_id、zotero_item_key、project_id、question_id。后续 schema 需要明确 library 身份：item key 不应被假设为跨个人库与 group library 全局唯一。第一阶段不由此扩展多用户功能。
 
@@ -117,3 +117,35 @@ Phase 2 的 114 个普通测试现扩展至 Phase 3 的 161 个，4 个 Zotero i
 - Alembic 新版 0002 的 down_revision 为 0001；不改旧 migration。测试验证空库到 head、0001 数据保留升级、重复升级、实际约束与 ORM/schema 无差异。CLI upgrade/current/check 使用包含中文、空格、#、% 的临时路径通过。降级仅属 schema 管理，不对真实数据库执行。
 
 依赖沿用 SQLAlchemy/Alembic，无新增包。普通测试用 mock reader 与临时 SQLite，屏蔽未 mock 进程/网络；真实测试独立 integration 标记，只用临时 Workbench DB 读取已有 Zotero metadata，不读取全文或批注。未来 UI/AI/索引不在当前范围。
+
+## Phase 4A 分析边界
+
+```text
+AnalysisService → QuestionRepository / QuestionSourceRepository
+       ↓
+ResearchCorpusBuilder → ZoteroClient（只读、当前内容）
+       ↓
+AnalysisRequest（内存，S1/S2，不含内部 DB 对象）
+       ↓
+AnalysisProvider Protocol → OpenAIAnalysisProvider → official Responses API
+       ↓
+严格 schema / citation validation → label 映射 SourceRef id
+       ↓
+AnalysisRepository → analysis_runs + analysis_source_inputs
+```
+
+AI SDK 仅在 integrations/ai/openai.py；core/application 不导入 SDK。analysis/contracts.py 定义 Protocol 与不可变临时 DTO；schema.py 统一 JSON Schema 及独立应用校验；corpus.py 管理模式、检索、预算和 fingerprint；application/analysis.py 编排短事务。repository 不访问 Zotero 或网络，不暴露 ORM session。无新增 service/queue/vector 系统。
+
+0003 追加两表，旧 0001/0002 未修改。analysis_runs 是运行快照：question_id、status、provider/model、prompt/schema versions、结果 JSON、response ID、usage、UTC 时间、固定安全错误。question_id 索引/FK RESTRICT，CHECK 约束 running/completed/failed 与 result/completed_at/error 组合。analysis_source_inputs 组合主键 analysis/source，analysis/ordinal 唯一，source_id 索引，两个外键 RESTRICT；仅六列 analysis_id/source_id/ordinal/input_kind/content_sha256/input_chars。manifest 与 running run 原子创建，完成时条件更新 status=running；终态无 update/delete 接口。
+
+输出模型使用 source_labels；持久化结果只保留映射后的 source_ids。JSON 的 required keys、额外字段、类型、空值、长度、集合上限、重复 JSON key/label 和未知 label 均独立校验。summary、主要分析点必须引用来源；next_questions 为生成的问题。结构与引用有效不代表语义正确、来源真支持结论，仍需人工审阅；没有 page-level evidence。
+
+Corpus 默认 5 sources / 24,000 chars per source / 60,000 total，具体计算与调用见 README。读取 max_sources+1 个引用以检测超限，不受既有 repository 默认分页100的静默影响。hash 覆盖实际 source content 字符串的 UTF-8 bytes，包含 title/authors/选定输入种类与全文或摘要；label 位于外层，不进入 fingerprint。Question 和 instructions/schema 进入总预算，但不持久化原文；不能仅凭 hashes 完整重建旧请求，Zotero/Question 后续变化是明确限制。
+
+SDK 使用 Responses text.format 的 strict json_schema、store=False、truncation=disabled、4096 output tokens；要求调用者配置支持的 model。无 model/个人 endpoint 硬编码，无 .env loader；key 只在 SDK 内存。官方 SDK lock 2.54.0，新增直接 openai 一项；间接依赖由 uv.lock 固定。HTTP 0 retries、repair 0 次，所有重跑显式创建新 run。Refusal/不完整或空结果失败，原始异常不持久化/日志输出；SDK debug request 日志抑制。store=False 是本次 API 参数，不是对 provider 所有数据保留政策的承诺。
+
+preflight 失败不创建 run，指出安全 SourceRef id；provider/输出失败保留 failed run 与 manifest。保存结果失败独立映射 persistence_failed，数据库持续不可用时可能无法写 failed，保留 running；没有后台恢复/重试。所有 I/O 在 DB 事务外，manifest 表示准备调用时的输入，不证明失败请求已被外部收到。
+
+验证：210 个离线测试（6 个真实测试默认排除）；含官方 SDK + httpx.MockTransport 契约、非法引用、失败脱敏、immutable 终态、rollback/FK/manifest、输入上限与全文 fallback。真实 Zotero abstracts + fake provider + 临时 DB 为 1 passed；OpenAI key/model 未配置，真实测试 1 skipped，NOT TESTED。新真实付费测试使用一个合成摘要，不调用 Zotero；普通 CI 不配置 key，paid 测试额外要求 RUN_OPENAI_INTEGRATION=1。真实全文/非空批注不在本轮验证范围。
+
+官方依据：[Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs?api-mode=responses)。SDK 参数同时核对锁定安装版；升级需重跑 transport 契约与 opt-in 集成。

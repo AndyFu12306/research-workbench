@@ -35,7 +35,7 @@ Workbench 负责 Project、Question、Source relationship、AI Analysis，并逐
 
 Workbench SQLite 是研究领域数据的事实源，与 Zotero 的文献事实源属于不同边界。Project/Question 的标题是研究任务或问题名称，不是复制的 paper title。Phase 3 增加引用及关系，不增加 metadata 缓存、Claim、Evidence、Synthesis、Inbox、AI Analysis 或 UI。
 
-## Phase 3 当前交付
+## Phase 3 已合并的来源关联
 
 将已有 Question 与真实 Zotero bibliographic item 关联；一个 Question 可关联多个来源，一个来源可服务多个 Question。SourceRef 是 provider + scope + external_key 身份引用，不是第二份论文对象；当前只读个人 Zotero library。标题、作者、DOI、journal、abstract、PDF、全文与批注均不持久化。
 
@@ -52,3 +52,11 @@ AI Analysis 长期逐步结构化为 research_question、core_claims、methods�
 ## 权限
 
 初期读取自动允许，外部写入需要明确批准，删除需要强确认。第一阶段 Zotero 写入全部禁止。未来写入采用 `Preview → User Approval → Execute`，不得默认自动修改用户 Library。
+
+## Phase 4A 当前交付
+
+一个 Question 及其已关联来源，可显式生成一次结构化 AI 综合，输出 summary、main_approaches、key_findings、agreements、disagreements、research_gaps、next_questions。重要条目保留 SourceRef IDs；这是 AI 生成分析而非文献事实，不能把引用校验当作结论已经证实。
+
+每次创建独立 AnalysisRun 历史，记录 provider/model、prompt/schema version、usage、结果或安全错误；AnalysisSourceInput 只记录本次来源、顺序、输入类型和内容 fingerprint。源 title/authors/abstract/PDF text 只在内存，不构建文献镜像。Zotero 是文献事实源，Workbench 保存研究工作流与分析，AI provider 只提供计算。
+
+支持 abstracts / fulltext_preferred，明确摘要 fallback，严格缺失和预算策略，无静默省略、无截断。完成和失败历史均不覆盖；无 UI、RAG、完整 Claim/Evidence、后台任务或自动反复分析。后续规模化 chunking / map-reduce / hierarchical synthesis 留给 Phase 4B，须另行授权。

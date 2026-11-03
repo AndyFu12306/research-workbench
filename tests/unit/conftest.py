@@ -1,3 +1,4 @@
+import socket
 from unittest.mock import Mock
 
 import pytest
@@ -7,6 +8,10 @@ from research_workbench.integrations.zotero import client, runner
 
 @pytest.fixture(autouse=True)
 def no_external_io(monkeypatch):
+    blocked = Mock(side_effect=AssertionError("Unmocked network in unit test"))
+    monkeypatch.setattr(socket, "getaddrinfo", blocked)
+    monkeypatch.setattr(socket, "create_connection", blocked)
+    monkeypatch.setattr(socket.socket, "connect", blocked)
     monkeypatch.setattr(
         runner.subprocess,
         "run",

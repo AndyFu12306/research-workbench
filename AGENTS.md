@@ -2,7 +2,8 @@
 
 - 工作前读取 README.md、docs/ROADMAP.md；涉及设计时读取 PRODUCT.md、ARCHITECTURE.md、DECISIONS.md。及时更新对应文档。
 - Zotero 是唯一文献事实源。Workbench 只保存研究数据和来源引用，不复制完整文献库，不重新实现 Zotero / zotero-mcp 已有能力。
-- PR #2 已合并；当前授权 Phase 3，仅增加 SourceRef、QuestionSource、运行时 metadata hydration 和只读 Zotero 验证。禁止 Web UI、AI Analysis、RAG、Embeddings、Inbox、Claim/Evidence、知识图谱或自动化。
+- PR #4 已合并；当前授权 Phase 4A Structured AI Analysis MVP，允许 corpus、独立 OpenAI provider、结构化分析与 immutable AnalysisRun。禁止 Web UI、RAG、Embeddings、Inbox、Claim/Evidence、知识图谱或自动化。
+- AI provider 仅为 compute service。源内容只在内存，持久化分析及来源 fingerprint；不自动加载 .env、不记录 payload/密钥，真实付费测试独立 opt-in。新增 0003，不改 0001/0002。
 - 禁止本阶段写入 Zotero，包括 metadata、Tags、Collections、Notes、Annotations、PDF、删除和批量操作。不得授权本地写入，也不得用云端或直接数据库读取掩盖 Local API 失败。
 - 后续外部写操作必须先展示预览并获得明确批准；删除需强确认。本次授权建立仓库、上下文文档和验证分支，不代表授权 Zotero 写入。
 - 优先 Python 标准库和既有能力；新增依赖说明用途、替代方案及维护成本。初期 Python 后端、SQLite；不 fork zotero-mcp。
