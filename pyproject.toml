@@ -5,10 +5,10 @@ build-backend = "hatchling.build"
 [project]
 name = "research-workbench"
 version = "0.0.0"
-description = "Read-only Zotero integration for Personal Research Workbench"
+description = "Personal research domain persistence and read-only Zotero integration"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = []
+dependencies = ["sqlalchemy>=2.0,<3", "alembic>=1.16,<2"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8,<10", "ruff>=0.14,<1"]
