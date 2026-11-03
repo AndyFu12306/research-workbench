@@ -1,47 +1,92 @@
 # Personal Research Workbench
 
-建立在 Zotero 之上的个人 AI 研究工作台，围绕研究问题组织来源与分析。Zotero 保存文献事实，Workbench 保存研究过程。当前仅有项目上下文文档和只读环境检查，尚无应用、数据库或 Web UI。
+建立在 Zotero 之上的个人 AI 研究工作台。Zotero 是唯一文献事实源，Workbench 保存研究对象及来源引用，不建立第二套文献库。
 
-## 当前阶段
+当前交付 **Phase 1.5：只读 Zotero Integration Adapter**。Phase 1 核心 Spike 已通过，Python launcher 问题已修复；尚无数据库、Project model、Web UI 或 AI Analysis。阶段证据见 [ZOTERO_SPIKE.md](docs/ZOTERO_SPIKE.md)。
 
-Phase 0 产品及架构原则已记录；Phase 1 Zotero Technical Spike **核心只读链路已实际通过**：搜索、item key、metadata、摘要、PDF 全部 20 页。所选论文无批注，非空批注读取尚未验证；Python subprocess 调用 uv tool 启动器存在待修复问题。具体证据见 [验证报告](docs/ZOTERO_SPIKE.md)。当前仍不开始 Workbench 功能开发。
+## 环境与安装
 
-## 开发环境与安装
+本机验证环境：Windows、PowerShell 7.6.5、Python 3.13.17、uv 0.13.6、独立工具 zotero-mcp-server 0.15.2。`.python-version` 指定 3.13；系统默认 Python 3.15.2 不代表项目解释器。
 
-- Windows、PowerShell 7、Git；项目拟使用 Python 3.13。
-- 当前系统默认 Python 3.15.2，另有 Python 3.13.17；显式使用 `py -3.13` 避免调用错解释器。
-- uv 0.13.6 与独立工具 zotero-mcp-server 0.15.2 已安装，未安装任何 extras。
-- 该工具由 `uv tool` 管理，不是项目依赖。尚未创建项目虚拟环境，目前没有应用服务。
-- 将来开始 Python 产品代码时再创建项目隔离环境，无需修改 PowerShell 执行策略：
+Zotero CLI 使用独立工具环境，不是项目 Python 依赖；基础工具包已提供文本提取，不安装 semantic、scite 或 all extras。新机器需要先安装 uv，再安装工具：
 
 ```powershell
-py -3.13 -m venv .venv
-.\.venv\Scripts\python.exe --version
+uv tool install --python 3.13 zotero-mcp-server==0.15.2
 ```
 
-虚拟环境隔离项目依赖，不改变系统 Python。`zotero-cli` 与 `zotero-mcp` 来自同一个外部包 `zotero-mcp-server`。本轮执行 `uv tool install --python 3.13 zotero-mcp-server`，解析到 0.15.2；复现安装可指定 `zotero-mcp-server==0.15.2`。工具入口位于用户 `.local\bin`，首次安装后新终端可能需要刷新 PATH。
+用户启动 Zotero 并启用本机通信。已有本地配置时不必重复 setup；首次可使用已验证的 `zotero-mcp setup --no-claude --skip-semantic-search`。禁止授权写入或配置 Web API key。
 
-## 配置和运行
+本机曾出现 Codex AppData 映射导致 uv launcher 内嵌解释器路径不可达，已通过重装到非映射工具目录解决，见 [ADR-012](docs/DECISIONS.md#adr-012windows-launcher-修复属于安装环境而非适配器特殊分支)。不需要 shell=True 或源码中的个人路径。
 
-`.env.example` 只有候选变量和公开回环地址，目前没有配置加载器。未来本地秘密放 `.env`；该文件受 Git 忽略。第一阶段不需要云端 API key，也不授权 Zotero 写入。
+项目运行时无第三方依赖。开发环境只增加 pytest 和 Ruff：前者测试，后者格式与静态检查；Hatchling 仅用于包构建。dataclass 已满足轻量 DTO 需求，因此没有增加 Pydantic。`uv.lock` 固定项目和开发依赖，工具版本独立管理。
 
-当前没有 Workbench 启动命令。Zotero 已由用户启动；本地只读配置和仓库 Zotero CLI skill 已安装，未授权写入。复测前确认客户端仍运行，并按 [ZOTERO_SPIKE.md](docs/ZOTERO_SPIKE.md) 设置进程级 API 后端变量。CLI metadata 使用 Local API，但 PDF 定位与读取会使用上游的本地文件能力，不应混淆两条路径。
+```powershell
+uv sync --frozen --extra dev
+uv run --frozen --extra dev pytest
+uv run --frozen --extra dev ruff check src tests
+uv run --frozen --extra dev ruff format --check src tests
+```
 
-## 文档入口
+默认 pytest 排除 integration，单元测试会阻止未 mock 的进程与网络调用，无需 Zotero 正在运行。Windows 和 Ubuntu 的基础 CI 仅运行格式、lint 和单元测试，不安装 Zotero；工作流尚未在远程运行。
+
+## 使用适配器
+
+```python
+from research_workbench.integrations.zotero import ZoteroClient
+
+client = ZoteroClient(timeout=30, api_timeout=5)
+health = client.health_check()
+items = client.search_items("agent", limit=5)
+if items:
+    item = client.get_item(items[0].item_key)
+    print(item.title, item.authors, item.abstract)
+```
+
+`search_items` 返回 `tuple[ZoteroItem, ...]`；类型注解说明对象类型，tuple 和 frozen dataclass 防止意外修改。`get_item` 读取完整条目后只返回需要的字段，DTO 仅在内存中存在。只有具备已有 PDF 的来源才能成功执行 `client.get_fulltext(item_key)`；`get_annotations(item_key, limit=100)` 只读有限数量批注，不声称返回全部批注。
+
+`get_fulltext` 若发现 CLI 截断，使用上游 read 命令补读完整页面并核对页码，不能补全时抛异常。初始命令和补读命令各有 timeout，所以一次完整读取最多包含两个有界进程。PDF 提取复用上游本地附件能力，不保证公式、图表精度。
+
+`health_check()` 返回 overall status 及 client、local_api、cli 三项。客户端可用性由 API 成功推断；API 失败时不武断报告进程已退出。overall 仅在 API 和 CLI 均成功时 healthy，一项失败为 degraded，两项均失败为 unavailable。它不遍历文献或读取全文。
+
+适配器统一处理进程发现、超时、UTF-8、退出码和 JSON；上层只需处理 `ZoteroError` 及其细分类型，见 [错误定义](src/research_workbench/integrations/zotero/errors.py)。异常保留失败 stdout / stderr / returncode，成功命令的 stderr 可从 `client.last_stderr` 获取；默认不记录私人内容。一个 client 供一个工作流使用，诊断字段不用于跨线程共享。
+
+## CLI 发现与配置
+
+优先级为构造参数 cli_path → 环境变量 `ZOTERO_CLI_PATH` → 当前 Python PATH 的 `shutil.which()`。显式路径必须是存在、可执行的绝对路径，Windows 只接受原生 .exe，不接受 .cmd/.bat。所有进程通过参数列表与 shell=False 启动。
+
+安装后旧 Codex / 终端可能仍有旧 PATH；重启终端，或在当前终端显式更新 `.local\bin`。也可动态设置覆盖，不在源码硬编码：
+
+```powershell
+$env:ZOTERO_CLI_PATH = (Get-Command zotero-cli).Source
+```
+
+适配器向子进程强制传递 local=true、API backend、个人库 users/0，并清空 Web key 与本地写 key。它不会修改父进程环境、全局配置或 Zotero 数据，不自动回退云端/SQLite metadata。
+
+`.env.example` 只列变量和占位值；当前不自动加载 .env，需要在启动进程前导出环境变量。.env、虚拟环境、数据库、PDF 和 local/ 原始诊断输出均受 Git 忽略。
+
+## 显式集成测试
+
+选择库中已有摘要、已有本地 PDF 的真实论文，查询词应在前 10 个搜索结果中包含它。不要将实际 item key 写进测试源码或提交到 Git。以下尖括号为占位符，需替换后再运行：
+
+```powershell
+$env:ZOTERO_TEST_QUERY = 'agent'
+$env:ZOTERO_TEST_ITEM_KEY = '<已有论文的真实 item key>'
+uv run --frozen --extra dev pytest -m integration -q -rs
+```
+
+选中 integration 后必须有真实可用的 Zotero 和 CLI；health 不通过会失败，不伪装成 skip。未指定 PDF 样本时 workflow 测试明确跳过。可额外设置 `ZOTERO_TEST_ANNOTATED_ITEM_KEY` 验证已有非空批注；未设置时显示 `NOT TESTED WITH NON-EMPTY DATA`，不创建批注、不阻塞 Phase 1.5。
+
+本机结果：63 个单元测试通过；2 个集成测试通过，1 个非空批注样本测试跳过。普通 pytest 选择 63 个单元测试、排除 3 个集成测试。
+
+## 结构与开发流程
+
+`src/research_workbench/integrations/zotero/` 中 client.py 提供业务接口，runner.py 是唯一 subprocess 边界，models.py 是运行时数据结构，errors.py 定义领域错误。未来业务模块统一调用 ZoteroClient，不直接运行 CLI。
+
+工作前核对 Git 目录、状态、分支和 remote；提交前 review diff、检查敏感信息并运行相关检查。当前分支 `feat/zotero-adapter`；main 保留 Phase 1 文档基线，不自动合并。当前无 origin，未创建 GitHub 仓库或推送。
 
 - [长期协作规则](AGENTS.md)
-- [产品定位与领域对象](docs/PRODUCT.md)
-- [架构、依赖与数据边界](docs/ARCHITECTURE.md)
-- [分阶段路线](docs/ROADMAP.md)
-- [架构决定](docs/DECISIONS.md)
-- [Zotero 只读验证报告](docs/ZOTERO_SPIKE.md)
-
-## 基础开发流程
-
-工作前执行 `git status`、`git branch --show-current`、`git remote -v`。功能使用独立分支，形成完整逻辑单元后检查 `git diff`、敏感信息并运行相关验证，再按 Conventional Commits 提交。重要功能经过 PR 和 review 合并 main。
-
-本地仓库已初始化，当前分支为 `feat/zotero-spike`，尚无提交；`main` 是初始化时指定的稳定主分支名称，尚未形成实际分支引用。未配置 origin，未查询或创建 GitHub 仓库，未执行 push。
-
-建议 GitHub 创建顺序：审阅并提交本地初始化内容 → 确认 GitHub 账号和可见性（个人研究项目建议私有）→ 创建名为 `research-workbench` 的空仓库，不预置 README → 配置并核对 origin → 推送当前分支 → 建立稳定 main 后通过 PR 交付后续功能。不推测远程地址，不执行高影响远程操作。
-
-当前无产品代码，因此不引入格式化、静态检查、测试框架或 CI。代码出现时增加相应检查；自动测试出现后再增加简单 GitHub Actions。数据库到 Phase 2 才引入，并在首次 schema 建立时明确迁移方式。日志只记诊断状态，不记录密钥、私人文献全文或整个配置。
+- [产品定位](docs/PRODUCT.md)
+- [架构与集成边界](docs/ARCHITECTURE.md)
+- [阶段路线](docs/ROADMAP.md)
+- [架构决定与 Windows 修复](docs/DECISIONS.md)
+- [验证报告与限制](docs/ZOTERO_SPIKE.md)

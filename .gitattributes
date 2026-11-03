@@ -3,3 +3,5 @@
 *.py text eol=lf
 *.toml text eol=lf
 *.example text eol=lf
+*.yml text eol=lf
+uv.lock text eol=lf

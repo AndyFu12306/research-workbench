@@ -1,8 +1,23 @@
 # Zotero Technical Spike
 
-检查日期：2026-11-03（Asia/Shanghai）。本轮结论：**核心只读链路 PASS**。搜索、真实 item key、metadata、非空 abstract、PDF 全部页面均已实际读取。所选论文没有批注，非空 annotations 读取尚未验证；Python subprocess 调用 uv tool 启动器存在单独的启动问题。没有开始 Workbench 功能开发，也未自动进入 Phase 2。
+检查日期：2026-11-03（Asia/Shanghai）。本轮结论：**核心只读链路 PASS**。搜索、真实 item key、metadata、非空 abstract、PDF 全部页面均已实际读取。所选论文没有批注，非空 annotations 读取尚未验证。Python subprocess 问题已在 Phase 1.5 定位并修复，已交付只读集成适配器；没有开始数据库、Web UI 或 AI Analysis，也未进入 Phase 2。
 
-## 环境与安装
+## Phase 1.5 当前结果
+
+- Core read-only spike: **PASS**。
+- Annotations with non-empty sample: **NOT TESTED WITH NON-EMPTY DATA**，不阻塞 Phase 1.5。
+- Python subprocess integration：进入 Phase 1.5 时为 **being hardened in Phase 1.5**；本轮完成后为 **PASS — hardened and reviewed**。
+- 修复原因与步骤见 [ADR-012](DECISIONS.md#adr-012windows-launcher-修复属于安装环境而非适配器特殊分支)：刷新 PATH 只解决发现问题，工具环境重装至非 AppData 映射目录后，Python 原生 subprocess 才能启动同版本 CLI。未使用 shell=True、python -m 回退或源码中的用户绝对路径。
+- 已实现 ZoteroClient：health_check、search_items、get_item、get_fulltext、get_annotations；DTO 仅在运行时存在，未持久化 metadata。
+- 通过 Python → ZoteroClient → 绝对 CLI executable → Zotero 完成真实验证：health 三项均 healthy，搜索 2 个真实条目，摘要 1,252 字符，PDF 20 页、109,551 字符，annotations 为空数组。元数据经本地 API，PDF 继续复用上游本地文件能力。
+- 测试：普通 pytest 为 63 passed / 3 deselected；显式 integration 为 2 passed / 1 skipped / 63 deselected。跳过项仅为未配置非空批注样本，真实 PDF 样本已通过临时进程环境指定，没有写进仓库。Ruff lint 与格式检查通过。
+- 单元测试覆盖 executable 发现、命令构造、JSON/UTF-8、退出码/错误映射、超时、截断全文补读、空白页、批注解析、健康分级及无代理/无重定向 GET。所有真实 Zotero 操作只读。
+- 开发环境现在有项目 .venv、pytest、Ruff 和 uv.lock；CLI 仍是独立 uv tool，不作为项目依赖。Windows / Ubuntu CI 文件已建立但未在远程执行。
+- 当前分支 feat/zotero-adapter；main 留在 Phase 1 文档基线，未合并。当前无 origin、未 push。阶段完成后停留等待用户 review，不启动下一阶段。
+
+以下保留 Phase 1 现场记录；其中首次安装位置和失败尝试属于历史，不代表修复后的当前状态。
+
+## Phase 1 环境与安装
 
 - Windows / PowerShell 7.6.5；Zotero 10.0.7 已由用户启动，检测到运行进程。
 - Git 2.56.0.windows.3；目录 `C:\Projects\research-workbench`，分支 `feat/zotero-spike`，尚无提交、无 origin。本轮未操作 GitHub。
@@ -31,11 +46,11 @@
 | PDF full text | PASS | 按页读取 1–20 页成功，109,551 字符，20 个连续页面标题且每页非空 |
 | Annotations | PASS | 所选论文 annotations list 成功，返回空数组；仅验证读取接口和空结果处理 |
 | 非空 annotations 内容及页定位 | NOT TESTED | 所选论文没有批注；未创建测试批注，也未扩大扫描整库 |
-| Python subprocess → tool 启动器 | FAIL | 直接调用用户目录中的 zotero-cli.exe 返回 uv trampoline 路径解析错误；见问题记录 |
+| Python subprocess → tool 启动器 | PASS | Phase 1 初测失败；Phase 1.5 修复环境后，从 Python 使用 shell=False 完整验证成功 |
 | MCP 协议握手 | NOT TESTED | 本轮验证 CLI；未启动 MCP 协议服务，不能以安装或 CLI 成功替代握手验收 |
 | Workbench 服务 / 数据库 / UI | NOT TESTED | 未实现，按本轮范围保持不开发 |
 
-核心 PASS 只适用于本机本轮读取验证，不代表所有文献、所有附件格式、长期稳定性或 Python 后端调用方式都已验证。
+核心 PASS 只适用于本机读取与当前 CLI 版本；Phase 1.5 已验证 Python 调用方式，不代表所有文献、所有附件格式、其他 Windows 安装方式或长期稳定性都已验证。
 
 ## 本轮执行方式
 
@@ -110,7 +125,7 @@ PowerShell → zotero-cli → 上游本地附件定位 / PDF 提取 → Zotero �
 
 安装版 tools/read_pdf.py 的本地路径解析仍使用上游 LocalZoteroReader，优先读取 Zotero 本地附件文件；library.py 的附件路径查询也可能直接读 SQLite。这不会因 ZOTERO_BACKEND=api 而完全消失。因此本轮证明了 API 搜索与元数据，以及上游工具读取本地 PDF 的能力，**没有证明 PDF 全文全部经 Local API 传输**。这是如实记录的上游能力边界，未自行访问数据库或用它掩盖 API 失败。
 
-## 问题、实际错误及下一步
+## Phase 1 历史问题、实际错误及后续处理
 
 | 命令 / 尝试 | 状态 | 实际错误或限制 | 层级与处理建议 |
 | --- | --- | --- | --- |
@@ -118,7 +133,7 @@ PowerShell → zotero-cli → 上游本地附件定位 / PDF 提取 → Zotero �
 | Invoke-WebRequest 到 http://127.0.0.1:23119/api/users/0/items?limit=1，5 秒超时、NoProxy | FAIL | HttpRequestException；内层 HttpIOException: The response ended prematurely. (ResponseEnded) | PowerShell HTTP 客户端 / 本地 HTTP 交互边界；根因未确认。保留错误，不等同端口拒绝连接 |
 | Invoke-WebRequest 到 http://localhost:23119/api/users/0/items?limit=1，5 秒超时、NoProxy | FAIL | The request was canceled due to the configured HttpClient.Timeout of 5 seconds elapsing. | 同上；curl 对同一本机 API 已返回有效 JSON，且 API 后端 CLI 业务读取成功。后续单独对照 HTTP 客户端行为，不回退云端或改用数据库掩盖故障 |
 | zotero-cli --json get fulltext '<ITEM_KEY>' | FAIL（该次完整性验收） | 命令本身 exit=0 / ok=true，但 truncated=true，仅读取 10/20 页 | 上游返回内容范围；调用已核实的 read 读取全部 20 页后全文验收通过 |
-| Python subprocess.run([用户 .local/bin/zotero-cli.exe 的绝对路径, '--json', 'config'])，混合斜杠与 pathlib 原生路径均尝试 | FAIL | exit=1，stderr: error: uv trampoline failed to canonicalize script path | uv tool 进程启动层；PowerShell 直接调用成功。根因未确定，需后续核对 uv 启动器路径、Windows 应用目录映射及 Python 子进程环境，不通过改用数据库绕过。正式 Python 后端集成前应修复并重测 |
+| Python subprocess.run([用户 .local/bin/zotero-cli.exe 的绝对路径, '--json', 'config'])，混合斜杠与 pathlib 原生路径均尝试 | FAIL | exit=1，stderr: error: uv trampoline failed to canonicalize script path | uv tool 进程启动层；已在 Phase 1.5 确认 AppData 路径映射与 PE 中记录路径不一致，并通过非映射目录重装同版本工具修复。Python shell=False 集成测试通过，详见 ADR-012 |
 | annotations list 所选论文 | PASS（空结果） | 无已有批注 | 不是接口故障。若需非空批注验收，由用户指定已有批注的来源再读取；不创建批注 |
 
 PowerShell 中临时诊断脚本曾在 Invoke-WebRequest 失败后继续解析空响应，产生级联错误；这些不作为 Zotero 返回内容的证据。后续有效 JSON 验证与 CLI 验证均独立检查成功状态。
@@ -129,12 +144,12 @@ PowerShell 中临时诊断脚本曾在 Invoke-WebRequest 失败后继续解析�
 - uv / 工具环境、用户目录中的本地配置和仓库 skill 安装，是本轮用户明确批准的环境变更。
 - 私人原始诊断输出暂存于受 Git 忽略的 local/，包括少量 metadata、来源 key、全文和空批注响应；不是 Workbench 数据库或长期镜像。后续提交前仍需确认它们不会被纳入 Git。可提交报告只保留脱敏统计。
 - 全文读取只是文本提取能力验证，不保证数学公式、表格或图像内容的语义精度；未额外引入 OCR 或 PDF Reader。
-- 当前分支无提交、无远程；不自动 commit、push、建 PR 或合并。
+- Phase 1 原始检查时无提交、无远程；Phase 1.5 已建立文档基线和 feature branch，按用户要求整理本地逻辑提交，不执行 push、建 PR 或合并。
 - 已核对可纳入 Git 的 12 个文件：UTF-8、本地 Markdown 链接、维护文档行尾空白与常见凭据模式检查通过；对照本轮取得的 4 个真实来源/附件 key，未在这些文件中发现泄漏。local/ 中的原始诊断结果和 .env、数据库、PDF 均由忽略规则排除。没有产品代码，因此本轮不引入单元测试或 CI。
 
 ## 下一步
 
-保留当前阶段，不开发产品功能。优先修复 Python subprocess 启动器问题；如需扩展验收，再对用户指定的已有批注论文完成非空 annotations 读取。只有用户决定继续后，才讨论 Phase 2 的最小数据库。
+Phase 1.5 完成并 review 后停留在本阶段。非空 annotations 继续标记 NOT TESTED WITH NON-EMPTY DATA，可由用户指定已有批注论文补验收；PowerShell Invoke-WebRequest 的历史客户端差异不阻塞已通过的 Python/CLI/API 链路。只有用户决定继续后，才讨论 Phase 2 的最小数据库。
 
 ## 历史与依据
 
