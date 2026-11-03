@@ -1,5 +1,7 @@
 # Zotero Technical Spike
 
+本报告保留 Phase 1 / 1.5 的历史验证证据。PR #1 已由用户合并；当前 Phase 2 只建设 Workbench 自己的数据基础，最新范围见 [ROADMAP.md](ROADMAP.md)，本阶段不重新访问 Zotero。
+
 检查日期：2026-11-03（Asia/Shanghai）。本轮结论：**核心只读链路 PASS**。搜索、真实 item key、metadata、非空 abstract、PDF 全部页面均已实际读取。所选论文没有批注，非空 annotations 读取尚未验证。Python subprocess 问题已在 Phase 1.5 定位并修复，已交付只读集成适配器；没有开始数据库、Web UI 或 AI Analysis，也未进入 Phase 2。
 
 ## Phase 1.5 当前结果

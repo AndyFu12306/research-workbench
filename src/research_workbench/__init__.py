@@ -1,1 +1,1 @@
-"""Personal Research Workbench; currently only the Zotero integration adapter."""
+"""Personal Research Workbench domain persistence and read-only integrations."""

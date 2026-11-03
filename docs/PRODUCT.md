@@ -27,6 +27,14 @@ Workbench 负责 Project、Question、Source relationship、AI Analysis，并逐
 
 暂不实现 Knowledge Graph、完整 Claim/Evidence、Inbox、Automation、Research Memory、多用户、云同步、复杂权限、精美 UI、大规模 RAG 或自定义 PDF Reader。
 
+## Phase 2 当前交付
+
+本阶段只持久化 Workbench 的 Project 与 Question，不建设完整 v0.1。Project 是长期研究任务；Question 是其下的研究问题，一个问题只属于一个项目，不引入多对多。
+
+两个对象均具有 id、title、description、status、created_at、updated_at，Question 另有必填 project_id。状态只有 active、archived。提供创建、读取、有限列表、标题/描述更新与归档；不提供硬删除、恢复状态或复杂 workflow。归档是隐藏和保留，不会自动归档或删除子问题。列表默认排除归档对象，但可明确查询；get 仍可找到归档对象。
+
+Workbench SQLite 是研究领域数据的事实源，与 Zotero 的文献事实源属于不同边界。Project/Question 的标题是研究任务或问题名称，不是复制的 paper title。当前没有 Source、文献引用表、metadata 缓存、Claim、Evidence、Synthesis、Inbox、AI Analysis 或 UI。
+
 ## 信息来源与分析质量
 
 始终区分论文作者原始信息、用户观点、AI 内容和 AI 推断。未来可通过 `origin = source | user | ai` 并附内容类型区分生成和推断；具体 schema 尚未确定。
