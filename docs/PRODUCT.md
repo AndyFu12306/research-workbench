@@ -27,13 +27,21 @@ Workbench 负责 Project、Question、Source relationship、AI Analysis，并逐
 
 暂不实现 Knowledge Graph、完整 Claim/Evidence、Inbox、Automation、Research Memory、多用户、云同步、复杂权限、精美 UI、大规模 RAG 或自定义 PDF Reader。
 
-## Phase 2 当前交付
+## Phase 2 已合并的研究模型
 
 本阶段只持久化 Workbench 的 Project 与 Question，不建设完整 v0.1。Project 是长期研究任务；Question 是其下的研究问题，一个问题只属于一个项目，不引入多对多。
 
 两个对象均具有 id、title、description、status、created_at、updated_at，Question 另有必填 project_id。状态只有 active、archived。提供创建、读取、有限列表、标题/描述更新与归档；不提供硬删除、恢复状态或复杂 workflow。归档是隐藏和保留，不会自动归档或删除子问题。列表默认排除归档对象，但可明确查询；get 仍可找到归档对象。
 
-Workbench SQLite 是研究领域数据的事实源，与 Zotero 的文献事实源属于不同边界。Project/Question 的标题是研究任务或问题名称，不是复制的 paper title。当前没有 Source、文献引用表、metadata 缓存、Claim、Evidence、Synthesis、Inbox、AI Analysis 或 UI。
+Workbench SQLite 是研究领域数据的事实源，与 Zotero 的文献事实源属于不同边界。Project/Question 的标题是研究任务或问题名称，不是复制的 paper title。Phase 3 增加引用及关系，不增加 metadata 缓存、Claim、Evidence、Synthesis、Inbox、AI Analysis 或 UI。
+
+## Phase 3 当前交付
+
+将已有 Question 与真实 Zotero bibliographic item 关联；一个 Question 可关联多个来源，一个来源可服务多个 Question。SourceRef 是 provider + scope + external_key 身份引用，不是第二份论文对象；当前只读个人 Zotero library。标题、作者、DOI、journal、abstract、PDF、全文与批注均不持久化。
+
+attach 验证真实文献后原子保存引用及关系，重复操作不重复建记录；列表实时读取 metadata，也可离线仅列引用。缺失文献显示 unresolved，连接失败显示 unavailable，损坏响应显示 error，均保留研究关系供后续修复。detach 只移除选定 Question 的关联，保留 SourceRef 和 Zotero 内容；不进行孤立引用清理。
+
+本阶段不读取 PDF、不新增依赖、不提供 UI 或分析功能；未来产品展示可直接消费这些状态，但该展示尚未实现。
 
 ## 信息来源与分析质量
 

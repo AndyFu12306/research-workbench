@@ -95,3 +95,27 @@ migration 环境放在 persistence 包内，与 wheel 一起分发；根目录 a
 ## ADR-019：文献事实与研究领域事实分开持久化
 
 Zotero 是 bibliographic source of truth；Workbench SQLite 是 research-domain source of truth。数据库本阶段只有 projects、questions（加 Alembic 版本表），Project/Question 标题属于研究任务，不是文献 metadata 镜像。没有 paper title、authors、DOI、journal、abstract、PDF 或 Zotero 来源表。既有 ZoteroClient 不变，Phase 2 不调用 Zotero。
+
+## ADR-020：来源身份采用 provider / scope / external_key
+
+Phase 3 由用户明确授权，取代旧阶段“尚无 Source”的范围限制。SourceRef 仅持久化本地 id、provider、scope、external_key、created_at；三元组 UNIQUE 防止同一库重复来源，也防止不同 library 的同名 key 被混用。当前 provider 约束 zotero，服务 scope 固定 personal，其他 scope 不向个人库查询。scope 为未来身份预留，不代表已经支持 group library。标准库 frozen dataclass 仍为公共返回值，不增加 Pydantic 或 metadata 数据库。
+
+## ADR-021：Question / Source 多对多，detach 只删除关系
+
+question_sources 仅保存 question_id、source_id、created_at；组合主键直接实现关系唯一性，避免冗余唯一索引。两个 RESTRICT 外键阻止孤立关系；source_id 单独建索引。SQLAlchemy SQLite upsert 保证重复 attach 不新增记录，创建时间保留。用户本轮明确授权 detach，因此允许删除指定本地关联，但不删除 SourceRef、不清理孤立引用、更不删除 Zotero item；Project/Question 的 archive-only 规则不变。
+
+## ADR-022：应用服务编排验证与运行时 hydrate
+
+QuestionSourceService 先确认 Question，再通过 ZoteroClient 读取并校验文献，成功后 repository 单事务创建/复用 SourceRef 和关联，事务内复查 Question。失败不得留下部分引用。CLI 在事务外执行，避免持锁等待外部进程；Zotero 与 SQLite 不做分布式事务，之后来源被删除由 hydrate 如实报告。repository 不依赖 Zotero，低层身份接口不承诺远端验证；业务入口使用 service。metadata 只存在 LinkedSource 的内存 DTO，每次列表实时读取，无持久化镜像或缓存。
+
+## ADR-023：来源失效和服务不可用都保留研究关系
+
+resolved 携带当前内存 metadata；unresolved 表示 missing/deleted 或未支持的 scope；unavailable 表示 CLI/连接/超时问题；error 表示损坏响应等数据错误。列表逐项处理，单个来源失败不抹掉其引用或其他来源；hydrate=False 可离线列关系，detach 同样无需 Zotero。未预期程序异常不吞掉；attach 验证失败直接抛清晰领域错误且不写入。没有自动修复、移除或替换来源。
+
+## ADR-024：严格兼容 CLI 的 missing-item 响应
+
+实际只读探测与安装版源码确认，zotero-mcp-server 0.15.2 的 get metadata 对 missing key 返回成功 JSON 内的精确文本 `No item found with key: <key>`。仅完整匹配该响应映射 ZoteroItemNotFoundError，deleted metadata 映射同类错误并标记 deleted；其他未知文本仍是 ZoteroParseError。避免将缺失、连接失败与损坏响应混为一类。契约单测固定此行为；不 fork 上游、不引入 shell=True 或新依赖。
+
+## ADR-025：追加 0002，不重写已合并 migration
+
+0001 已进入 main，Phase 3 追加 down_revision=0001 的 0002_source_links。空库升级和已有 0001 数据升级走同一历史；升级重复执行安全，并验证研究数据保留和映射一致性。真实集成只读现有 Zotero metadata，Workbench 写入使用临时 SQLite；普通测试完全离线。没有读取 PDF、创建 Zotero 数据或对真实库执行 downgrade。
