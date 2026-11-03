@@ -1,6 +1,6 @@
 # 路线与阶段门槛
 
-当前：**Phase 3 — Question ↔ Zotero Source Association 已实现，进入 PR / CI / review 交付**。日期：2026-11-03（Asia/Shanghai）。[Issue #3](https://github.com/AndyFu12306/research-workbench/issues/3) 跟踪本阶段；不自动 merge，不开始下一阶段。
+当前：**Phase 4A — Structured AI Analysis MVP 已实现，进入 PR / CI / review**。[Issue #5](https://github.com/AndyFu12306/research-workbench/issues/5) 跟踪本轮，分支 feat/ai-analysis。PR #4 已由用户合并；本轮 fetch / switch main / ff-only pull 确认 main = origin/main = 465e92c，工作区干净。日期：2026-11-03（Asia/Shanghai）。不自动 merge，不进入 Phase 4B。
 
 | Phase | 内容 | 状态 |
 | --- | --- | --- |
@@ -8,8 +8,10 @@
 | 1 | Zotero Technical Spike | Core read-only spike: PASS |
 | 1.5 | Zotero Integration Adapter | PR #1 已合并 |
 | 2 | Project + Question + Minimal Database | PR #2 已合并，main 包含 6bb505ab |
-| 3 | Question ↔ Zotero Source Association | 已实现，独立 PR 交付 |
-| 后续 | AI Analysis / Basic UI | 未开始，需另行授权 |
+| 3 | Question ↔ Zotero Source Association | PR #4 已合并 |
+| 4A | Structured AI Analysis MVP | 已实现，Issue #5 / 独立 PR 交付 |
+| 4B | 大 corpus / chunking / map-reduce / hierarchical synthesis | 延后，未授权 |
+| 后续 | Basic UI | 未开始，需另行授权 |
 | 后续 | Inbox / Claim + Evidence / Knowledge Graph / Memory / Automation | 延后 |
 
 原路线中 Project/Question 两个里程碑已纳入 Phase 2；本轮按用户明确命名，将来源关联称为 Phase 3，不重复实现既有模型。
@@ -50,4 +52,16 @@
 
 ## 长期交付
 
-v0.1.0 = Project + Question + Zotero Source + AI Analysis；v0.2.0 = Inbox；v0.3.0 = Claim + Evidence。当前只完成来源关联，不等于发布完整 v0.1 或自动授权后续开发。
+v0.1.0 = Project + Question + Zotero Source + AI Analysis；v0.2.0 = Inbox；v0.3.0 = Claim + Evidence。Phase 4A 增加最小 AI 分析，不等于发布完整 v0.1 或自动授权后续开发。
+
+## Phase 4A 验证与限制
+
+- AnalysisRun 新历史、AnalysisSourceInput manifest、0003 迁移、provider-independent pipeline、OpenAI Responses adapter、严格 schema/citation validation 已实现。
+- 210 个离线测试通过，6 个真实 integration 默认排除；真实 Zotero abstracts + fake provider 为 1 passed。真实 OpenAI key/model 未配置，1 skipped：NOT TESTED；没有用 fake 测试伪装 PASS。
+- 旧 migrations 不变；fresh / sequential 0001→0002→0003 / existing 0002 / repeat head / schema consistency 均测；真实开发数据库未创建。
+- 默认5来源、每篇24k字符、总60k字符，输出4096tokens，超限失败无截断。0自动网络/输出重试；模型配置支持能力由用户提供。
+- 输入只在内存，hash 不可反推完整内容；无 Question 原文快照，不能完整重放历史 prompt。分析与引用需要人工审阅，不能保证事实正确。
+- 个人 Zotero library、顺序 corpus 读取、同步单次调用；不支持大 corpus、缓存、恢复 worker、成本估算或 UI。进程中断/数据库持续不可用可能留下 running。
+- 未读取真实全文或非空 annotations；fulltext 分支用 fake 验证。保持没有 Zotero 写入。
+- Phase 4B 才考虑规模化 chunking/map-reduce/hierarchical synthesis；其余 UI、RAG、graph、Inbox、Claim/Evidence、后台自动化均未实现。
+- 最终 PR head 的 Windows/Ubuntu CI 和 technical self-review 以 PR 报告为准；不自动合并。

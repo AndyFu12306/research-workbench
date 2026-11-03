@@ -119,3 +119,31 @@ resolved 携带当前内存 metadata；unresolved 表示 missing/deleted 或未�
 ## ADR-025：追加 0002，不重写已合并 migration
 
 0001 已进入 main，Phase 3 追加 down_revision=0001 的 0002_source_links。空库升级和已有 0001 数据升级走同一历史；升级重复执行安全，并验证研究数据保留和映射一致性。真实集成只读现有 Zotero metadata，Workbench 写入使用临时 SQLite；普通测试完全离线。没有读取 PDF、创建 Zotero 数据或对真实库执行 downgrade。
+
+## ADR-026：AnalysisRun 是不可覆盖的研究历史
+
+用户授权 Phase 4A。一次显式分析创建新 running run；完成或失败终态不可再次 finalize，条件 UPDATE 防止覆盖。保留版本、模型、usage、结果或固定错误，返回 frozen DTO。无 raw SQL 防篡改/审计或后台恢复承诺；崩溃可能留下 running。preflight 错误不创建 run。分析是 AI 生成研究数据，不是 Zotero 文献事实。
+
+## ADR-027：独立 provider，首个 adapter 使用官方 Responses SDK
+
+AnalysisProvider Protocol 只接受临时 AnalysisRequest 并返回 ProviderResult；业务不导入 OpenAI SDK，provider 不访问 Zotero。首个 adapter 用官方 Responses API + strict JSON schema，SDK 2.54.0，直接依赖 openai>=2,<3，uv.lock 固定间接依赖。标准库 HTTP 替代会增加协议维护，且用户要求官方 SDK；不增加 LLM framework。环境提供 API key/model/timeout，无默认 model、个人路径/endpoint 或 .env 自动加载。store=False、truncation=disabled，不承诺 provider 全局零保留政策。
+
+## ADR-028：Prompt 与 schema 显式版本化并独立校验
+
+analysis-v1 / analysis-schema-v1 独立常量，每个 run 保存。模型只看到 S1/S2 label 与必要内容，不暴露 DB 对象；只根据输入综合，区别共识/分歧/不确定，不虚构引用，源文本不可作为指令。JSON Schema 约束输出之后仍校验 required/type/bounds/unknown keys/duplicate keys/labels；未知 citation 拒绝，合法 label 映射 SourceRef IDs 后保存。lightweight attribution 不等于完整 Claim/Evidence 或语义正确性。
+
+## ADR-029：Manifest 保存输入 fingerprint，不保存文献镜像
+
+每个 run 的 manifest 记录 source_id、ordinal、input_kind、SHA-256 和字符数，不保存 title/authors/abstract/fulltext。hash 对实际 provider source content 字符串的 UTF-8 计算，其中包括用于上下文的 metadata 与输入种类，label 位于外层。manifest 与 running run 原子保存，可追踪失败尝试准备了什么，不保证 provider 已收到。没有原始内容和 Question 快照，无法完整重建旧 prompt；接受此隐私与最小模型边界。
+
+## ADR-030：显式模式与严格 corpus/input budget
+
+abstracts 仅当前摘要，fulltext_preferred 优先完整全文、缺失/不完整且 API 健康时明确 abstract_fallback。连接/超时/来源删除失败，没内容严格拒绝，不静默少一篇。默认最多5来源、每来源24,000字符、总请求60,000字符；全部为字符预算，不是模型 context 保证，超限明确报错，不截断。限制可调小，schema v1 不超过5来源；大 corpus chunking/map-reduce 留给4B。输出最多4096tokens，不完整拒绝。
+
+## ADR-031：失败脱敏、零自动重试与显式付费测试
+
+provider / schema 失败保存 fixed safe code/message，不保存 raw payload/exception、key 或完整 prompt，SDK debug request 日志抑制。数据库失败单独映射；不可写时可能无法落盘 failed，不误称成功。网络重试=0、输出repair=0，显式重跑新建历史，避免重复隐含费用。普通测试屏蔽网络/进程，真实 Zotero marker 与 paid openai_integration marker 均默认排除；key/model 缺失 paid test skip，不能视为 PASS。paid test仅一个合成摘要，CI不放个人key，不外发真实文献做验收。
+
+## ADR-032：追加 0003 与持久化约束
+
+0003 的 down_revision=0002，新建 analysis_runs / analysis_source_inputs，0001/0002 不变。外键 RESTRICT、manifest主键/顺序唯一、status/lifecycle/hash/usage CHECK，与现有SQLite事务和Alembic一致。仅临时库验证空库、逐版、已有0002及重复升级和映射一致性，不迁移真实开发库，不执行真实降级。

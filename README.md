@@ -2,7 +2,7 @@
 
 建立在 Zotero 之上的个人 AI 研究工作台。Zotero 是唯一文献事实源，Workbench 保存研究对象及来源引用，不建立第二套文献库。
 
-当前交付 **Phase 3：Question ↔ Zotero Source Association**。PR #2 已合并，main 包含 `6bb505ab`；本阶段从同步后的 main 创建 `feat/zotero-source-links`，由 [Issue #3](https://github.com/AndyFu12306/research-workbench/issues/3) 跟踪。只建立来源引用和关系，不开发 UI 或 AI Analysis，不自动 merge。
+当前交付 **Phase 4A：Structured AI Analysis MVP**。PR #4 已合并至 main（465e92c）；本轮从同步、干净的 main 创建 `feat/ai-analysis`，由 [Issue #5](https://github.com/AndyFu12306/research-workbench/issues/5) 跟踪。实现 Question + linked Sources → corpus → provider → validated analysis → immutable history，不开发 UI、RAG 或后台任务，不自动 merge。
 
 ## 环境与安装
 
@@ -18,7 +18,7 @@ uv tool install --python 3.13 zotero-mcp-server==0.15.2
 
 本机曾出现 Codex AppData 映射导致 uv launcher 内嵌解释器路径不可达，已通过重装到非映射工具目录解决，见 [ADR-012](docs/DECISIONS.md#adr-012windows-launcher-修复属于安装环境而非适配器特殊分支)。不需要 shell=True 或源码中的个人路径。
 
-Phase 2 新增运行时依赖 SQLAlchemy 2.x 和 Alembic，当前锁定 2.1.6 / 1.20.1。SQLAlchemy 管理映射与事务，Alembic 管理 schema 历史；不再叠加其他 ORM。标准库 sqlite3 是底层驱动，但单独使用需要自行维护上述能力。pytest 和 Ruff 分别用于测试与代码检查；Hatchling 仅用于包构建。领域返回值仍用 dataclass，不增加 Pydantic。`uv.lock` 固定项目和开发依赖，Zotero CLI 工具独立管理。
+Phase 2 新增运行时依赖 SQLAlchemy 2.x 和 Alembic，当前锁定 2.1.6 / 1.20.1。SQLAlchemy 管理映射与事务，Alembic 管理 schema 历史；不再叠加其他 ORM。标准库 sqlite3 是底层驱动，但单独使用需要自行维护上述能力。pytest 和 Ruff 分别用于测试与代码检查；Hatchling 仅用于包构建。领域返回值仍用 dataclass；Phase 4A 的官方 OpenAI SDK 间接依赖 Pydantic，但业务 DTO 和校验不使用它。`uv.lock` 固定项目和开发依赖，Zotero CLI 工具独立管理。
 
 ```powershell
 uv sync --frozen --extra dev
@@ -31,7 +31,7 @@ uv run --frozen --extra dev ruff format --check src tests
 
 ## Workbench 数据库与领域接口
 
-两类数据各自有清晰边界：Zotero 是文献事实源；Workbench SQLite 是研究项目与问题的事实源。当前数据库包含 projects、questions、sources、question_sources 及 Alembic 自己的版本表，不保存 paper title、authors、DOI、abstract、PDF 或任何 Zotero metadata。Project 的 title 是研究任务名称，Question 的 title 是用户的研究问题。
+两类数据各自有清晰边界：Zotero 是文献事实源；Workbench SQLite 是研究项目与问题的事实源。当前数据库包含 projects、questions、sources、question_sources、analysis_runs、analysis_source_inputs 及 Alembic 版本表，不保存 paper title、authors、DOI、abstract、PDF 或任何 Zotero metadata。Project 的 title 是研究任务名称，Question 的 title 是用户的研究问题。
 
 默认文件为**启动工作目录**下的 `data/research_workbench.db`，不是源码目录或用户固定路径。可通过 `WORKBENCH_DATABASE_PATH` 或 `Database(path=...)` 覆盖；构造参数优先。路径可以包含空格、中文、`#` 和 `%`，应指定文件路径而非数据库 URL。运行文件及 SQLite journal/WAL 均受 Git 忽略。当前不自动加载 .env，需显式导出进程环境。
 
@@ -44,7 +44,7 @@ uv run --frozen --extra dev alembic current
 uv run --frozen --extra dev alembic check
 ```
 
-第一份 migration `0001` 保持不变；新增 `0002` 建立 sources、question_sources、唯一身份、外键和索引，支持已有 0001 数据库升级。迁移能从空库重复建立，也能重复运行 upgrade 而保留已有数据。迁移文件随 Python 包一起分发；若指定的库已有其他表却没有 Alembic 版本记录，会拒绝迁移，避免误用其他应用的数据库。不要指向 Zotero 数据库。schema downgrade 会移除表，不应对真实数据执行，除非先有明确批准的备份和恢复方案。
+第一份 migration `0001` 保持不变；新增 `0002` 建立 sources、question_sources、唯一身份、外键和索引，支持已有 0001 数据库升级。新增 `0003` 管理分析历史和 fingerprint manifest，`0001` / `0002` 均未修改。迁移能从空库重复建立，也能重复运行 upgrade 而保留已有数据。迁移文件随 Python 包一起分发；若指定的库已有其他表却没有 Alembic 版本记录，会拒绝迁移，避免误用其他应用的数据库。不要指向 Zotero 数据库。schema downgrade 会移除表，不应对真实数据执行，除非先有明确批准的备份和恢复方案。
 
 Python 调用示例（会在选定的 Workbench 数据库中创建自己的研究数据）：
 
@@ -145,7 +145,7 @@ attach 先确认 Question 并通过 ZoteroClient 验证文献，再在单个数�
 
 ## 结构与开发流程
 
-`domain/` 定义研究领域值；`persistence/` 管理 SQLite、repositories 和 migrations；`application/source_links.py` 编排验证、关联与临时 hydrate；`integrations/zotero/` 是唯一 Zotero 读取入口，runner 是唯一 subprocess 入口。没有新增依赖。
+`domain/` 定义研究领域值；`persistence/` 管理 SQLite、repositories 和 migrations；`application/source_links.py` 编排验证、关联与临时 hydrate；`integrations/zotero/` 是唯一 Zotero 读取入口，runner 是唯一 subprocess 入口。Phase 3 没有新增依赖；Phase 4A 增加官方 OpenAI SDK。
 
 远程仓库：[AndyFu12306/research-workbench](https://github.com/AndyFu12306/research-workbench)。Phase 3 使用独立 Issue、分支与 PR；公开前检查全部新增历史、测试和敏感信息，不提交数据库、私人文献数据或诊断文件。最终 CI 与 review 以 PR 当前 head 为准，不自动开始下一阶段。
 
@@ -155,3 +155,57 @@ attach 先确认 Question 并通过 ZoteroClient 验证文献，再在单个数�
 - [阶段路线](docs/ROADMAP.md)
 - [架构决定与 Windows 修复](docs/DECISIONS.md)
 - [验证报告与限制](docs/ZOTERO_SPIKE.md)
+
+## Structured AI Analysis（Phase 4A）
+
+Zotero 是 bibliographic source of truth；Workbench 是 research workflow + AI analysis source of truth；AI provider 是 compute service，不是事实源。输出是 AI 生成的研究综合，来源 ID 只能追踪到输入文献，不证明每个结论已被人工核实。
+
+新增直接依赖 `openai>=2,<3`，lock 为 2.54.0。官方 SDK 提供 Responses API 类型、HTTP 错误与连接生命周期；自行用 urllib/httpx 调 REST 会增加协议维护，用户也明确要求官方 SDK。它间接增加 HTTPX、Pydantic 等依赖；不增加其他 AI framework、ORM 或 JSON-schema 包，锁文件统一管理。
+
+环境变量必须在启动 Python 前显式设置，`.env` 不自动加载，不在 DB 保存 key：
+
+```powershell
+$env:OPENAI_API_KEY = '<your-api-key>'
+$env:OPENAI_MODEL = '<model-supporting-Responses-Structured-Outputs>'
+$env:OPENAI_TIMEOUT_SECONDS = '60'
+```
+
+model 没有源码默认值，需要账户可用且支持 strict Structured Outputs 的模型；未配置时抛 AnalysisConfigurationError。SDK 使用其官方默认 endpoint，程序不硬编码个人 endpoint / organization；不为 CI 配置真实 key。调用会将选定 Question 和来源内容发送给 provider，需主动调用下面的服务或显式 paid integration 才会发生。
+
+```python
+from research_workbench.analysis.corpus import InputBudget, ResearchCorpusBuilder
+from research_workbench.application.analysis import AnalysisService
+from research_workbench.integrations.ai.openai import OpenAIAnalysisProvider
+from research_workbench.persistence.analysis_repository import AnalysisRepository
+
+# database 已升级，question_id 已存在并关联真实 Zotero 文献；client 是 ZoteroClient。
+with OpenAIAnalysisProvider() as provider:
+    service = AnalysisService(database, ResearchCorpusBuilder(client, InputBudget()), provider)
+    run = service.run_analysis(question_id, mode="abstracts")
+    assert run.status == "completed"
+    history = AnalysisRepository(database).list_by_question(question_id)
+```
+
+模式 `abstracts` 仅用当前 title/authors/abstract；`fulltext_preferred` 读取完整 PDF text，不能读取或提取不完整时，只在 Local API 仍健康且有当前摘要时明确使用 `abstract_fallback`。超时、连接不可用、来源删除直接失败；无可用内容严格报 AnalysisCorpusIncompleteError，不遗漏论文。当前真实集成仅验证 abstracts，全文分支由离线 fake 测试覆盖。
+
+默认输入上限：5 个来源，每来源规范 JSON 内容 24,000 字符，总请求 60,000 字符。总量包含渲染后的 Question/source 输入、instructions 和 schema 文本；均为 Unicode 字符数而非 token。预算是保守的 MVP 操作上限，不保证任意配置模型的 context 能容纳；模型不支持或 token 超限会明确失败。可通过 InputBudget 调小，max_sources 不可超过 v1 的 5。超限直接 AnalysisInputTooLargeError，不截断、不自动摘要或 chunk。Responses 设置 truncation=disabled，输出最多 4096 tokens；不完整输出拒绝保存。
+
+`AnalysisRequest` / `CorpusSource` 是临时 frozen dataclass，repr 排除内容。每个 source 的 content 是实际发给 provider 的规范 JSON 字符串（含当前 title/authors/input_kind/text），manifest 保存该字符串 UTF-8 的 SHA-256 和 Unicode 字符数；不保存字符串本身。label S1/S2 依本次顺序分配，输出经严格本地校验后仅保存映射的 SourceRef IDs，S99 等非法引用拒绝。summary 和重要条目包含 text/source_ids；next_questions 是后续研究问题。来源引用是 lightweight attribution，不是页级证据或正确性保证。
+
+每次创建新 AnalysisRun：running → completed 或 failed，终态不再更新；返回不可变值。manifest 与 running run 在调用前短事务保存，记录准备发送的输入（失败不保证 provider 已收到）。provider / validation 失败保存固定安全错误码和消息，不保存 raw exception、prompt 或 provider payload。缺少 Question、无来源、检索失败、输入超限等 preflight 在创建 run 前直接抛错；关系保持不变。存储不可用时无法保证落盘 failed，可能保留 running，需要人工检查；没有恢复 worker。
+
+没有 DB transaction 跨 Zotero/HTTP I/O。完成结果与状态原子落盘；manifest 作为历史保留，detach 不删旧分析。repository 通过条件 UPDATE 限制终态再写；这不是阻止管理员直接 SQL 改文件的审计系统。provider_response_id 只接受安全标识，usage 可为空，不保存固定价格。SDK 自动网络重试=0，输出 repair/retry=0；重新运行需显式操作，并产生新历史。SDK 请求 debug 日志被抑制；本阶段不增加日志系统。
+
+验证命令：
+
+```powershell
+# 完全离线：210 passed，6 个 integration 默认排除
+uv run --frozen --extra dev pytest
+# 真实 Zotero + fake provider；临时 Workbench DB，abstracts，已验证 1 passed
+uv run --frozen --extra dev pytest -m integration tests/integration/test_analysis_zotero_integration.py -q -rs
+# 明确选择付费测试；1 个合成摘要，不外发私人 Zotero 内容
+$env:RUN_OPENAI_INTEGRATION = '1'
+uv run --frozen --extra dev pytest -m openai_integration tests/integration/test_analysis_openai_integration.py -q -rs
+```
+
+本机未配置 key/model：**Real OpenAI provider: NOT TESTED**，显式测试 1 skipped。SDK 的 HTTP transport mock 测试通过，不等于真实 provider PASS。普通测试屏蔽 socket/DNS、Zotero HTTP 和 subprocess；CI 不调用服务，两个真实 marker 默认排除；paid 测试还需 RUN_OPENAI_INTEGRATION=1，避免其他 marker 表达式意外选中。真实 Zotero 集成 1 passed；Ruff、迁移和 wheel 资源检查通过，最终 Windows/Ubuntu CI 与技术 review 见 PR。已合并的 Phase 3 验证是历史记录，不混为本轮结果。
