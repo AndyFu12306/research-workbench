@@ -16,6 +16,8 @@ __pycache__/
 .mypy_cache/
 .coverage
 htmlcov/
+coverage.xml
+coverage.json
 build/
 dist/
 *.egg-info/
@@ -33,6 +35,10 @@ data/
 local/
 artifacts/
 reports/
+tmp/
+temp/
+*.tmp
+*.temp
 zotero-storage/
 
 # Editors and OS
