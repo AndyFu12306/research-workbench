@@ -167,3 +167,19 @@ deepseek_integration默认与现有两个real markers一起排除。RUN_DEEPSEEK
 ## ADR-037：外发私人Zotero内容需单独授权
 
 B额外要求RUN_DEEPSEEK_ZOTERO_E2E=1和用户明确选择的ZOTERO_TEST_ITEM_KEY；旧item配置不自动代表同意。无key/授权则skip，不随机搜索。只发送当前title/authors和abstract，禁止全文/annotations读取，只写临时Workbench DB。测试检查generated analysis、manifest/hash、usage/id与内容不落库；报告只含allowlisted运行元数据。A/B都实际PASS才能标DeepSeek FULLY VALIDATED，OpenAI验收仍独立。
+
+## ADR-038：DeepSeek生产实现采用Option B，非运行时fallback
+
+用户提供证据：Flash Chat plain和Responses plain可用，但Responses json_object与最小json_schema重复503；Pro Responses plain超时。官方Chat JSON mode具备明确接口，因此选择DeepSeek-only Chat Completions JSON mode + Workbench严格校验。此决定替代ADR-034/035中的DeepSeek Responses传输选择，不改变OpenAI。Chat JSON尚未真实验证，是待验收修复，不声称可靠性已证实；不继续盲目请求，不实现自动协议fallback。
+
+## ADR-039：小段provider-specific序列化指令可追溯
+
+共享research instructions和analysis-schema-v1不变，用现有OUTPUT_SCHEMA生成compact JSON并附加小段JSON序列化要求，避免复制巨大prompt/另一套schema。新组合版本analysis-v1.deepseek-json-v1保存到既有prompt_version列。service/repository只增加通用可选版本传递，默认原analysis-v1；OpenAI和旧history不变，无schema迁移。离线测试验证prompt不超过既有v1保守字符预算。
+
+## ADR-040：JSON mode不替代严格应用校验，5xx安全分类
+
+Chat只负责生成JSON对象候选，adapter完整JSON解析，不接受围栏/前后说明文字，不提取、不修补；保留原JSON让应用检测重复key和完整schema/来源约束。empty JSON mode、invalid JSON、incomplete/refusal分别固定安全code，schema/citation失败仍invalid_output；S99不放行。HTTP503及其他5xx映射provider_unavailable，不保存provider prose/payload。usage/id归一化到既有DTO；finish_reason非正常stop不作为成功，0自动重试。
+
+## ADR-041：代码与真实能力分开验收
+
+离线MockTransport和CI不能证明新Chat JSON生产兼容。Codex不使用真实key，仅提供既有synthetic integration命令给用户；完整真实A通过后才允许独立同意且指定item的B。隐私gate、临时DB、无全文/Zotero写操作不变。新实现未真实PASS前保持NOT FULLY VALIDATED，不能把旧Chat plain PASS冒充结构化分析PASS，不进入4B。

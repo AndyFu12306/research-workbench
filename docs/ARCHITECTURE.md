@@ -150,18 +150,22 @@ preflight 失败不创建 run，指出安全 SourceRef id；provider/输出失�
 
 官方依据：[Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs?api-mode=responses)。SDK 参数同时核对锁定安装版；升级需重跑 transport 契约与 opt-in 集成。
 
-## Phase 4A.1 独立 DeepSeek adapter
+## Phase 4A.1 DeepSeek Option B 修复
 
 ```text
 AnalysisService → AnalysisProvider Protocol
-                    ├─ OpenAIAnalysisProvider → OpenAI Responses
-                    └─ DeepSeekAnalysisProvider → DeepSeek Responses
+                    ├─ OpenAIAnalysisProvider → Responses json_schema（不变）
+                    └─ DeepSeekAnalysisProvider → Chat JSON mode
+                               ↓
+                    shared schema / source-label validation
+                               ↓
+                    immutable run + manifest / existing 0003
 ```
 
-两者复用安装的 OpenAI SDK、业务 AnalysisRequest/ProviderResult、INSTRUCTIONS和OUTPUT_SCHEMA。保持OpenAI adapter未修改；没有为了DRY重构Phase4A。DeepSeek endpoint、参数、typed响应/可选metadata及错误映射仅在新adapter内，SDK身份不影响provider=deepseek。service只将安全错误目录中已知code原样保存，无厂商判断。现有0003和所有表均不变。
+DeepSeek adapter内部将共享INSTRUCTIONS、小段JSON序列化instruction和现有OUTPUT_SCHEMA拼成system message，用户message仍为AnalysisRequest.render_input()。发送response_format=json_object和max_tokens=4096；不再发送Responses text.format，不自动切换协议，不使用plain-text/regex fallback。JSON mode只作为生成格式，不是服务端schema保证；adapter完整解析JSON且保留原文给应用二次校验，因此重复keys、S99及不匹配schema均拒绝，不被json.loads重写掩盖。
 
-新adapter显式使用api.deepseek.com，不继承OpenAI key/org/project；必填DEEPSEEK key/model，无默认model、无.env loader。strict json_schema请求后应用仍验证，未知标签S99仍拒绝。文档说明store/truncation不支持，所以不发送；不做自动协议/文本回退。ID可为UUID或None，usage缺字段为None；不采集reasoning或raw response。错误仅允许固定目录码，SDK异常上下文抑制，request debug日志压低至WARNING，0 retries。
+DeepSeek-only序列化指令显式版本化，组合prompt_version为analysis-v1.deepseek-json-v1。AnalysisService只通过通用可选metadata传递版本，不导入SDK、不识别DeepSeek。AnalysisRepository沿用既有列，参数默认analysis-v1，兼容OpenAI及已有providers，旧分析不改。Protocol必需接口、业务schema、源fingerprint与Zotero边界不变，无migration/依赖变更。
 
-官方[Responses guide](https://api-docs.deepseek.com/guides/responses_api/)及[API](https://api-docs.deepseek.com/api/create-response/)为参数依据；strict字段的实际保证和当前模型接受完整schema仍待付费实测。离线transport测试不证明真实服务器行为。
+Chat adapter严格处理finish_reason和空JSON，HTTP5xx映射安全provider_unavailable。usage使用prompt_tokens/completion_tokens，response id保留原值或None。只处理message.content，不存reasoning_content或raw SDK响应；零自动付费重试。endpoint/key/model配置及日志保护沿用既有边界。
 
-真实测试由用户在同一PowerShell运行，见README。Level A只发合成摘要，B另需RUN_DEEPSEEK_ZOTERO_E2E=1和明确consented item key；同次A fixture通过后才能读取/发送B摘要。B不搜索、不读PDF/annotations；只写临时Workbench DB。代码已提供guarded B，实际执行严格等A先通过。报告只打印白名单运行元数据，不打印key、raw source/prompt/response。默认pytest排除deepseek_integration、openai_integration、integration；CI不接真实服务。当前A/B均NOT TESTED。
+选型证据和风险见DEEPSEEK_VALIDATION.md。普通CI完全离线；既有synthetic fixture与隐私门槛保留，观察wrapper传递组合prompt版本以验证真实history。新Chat模式A/B尚未实测，不能据mock或Chat plain成功标FULLY VALIDATED。

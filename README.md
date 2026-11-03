@@ -2,7 +2,7 @@
 
 建立在 Zotero 之上的个人 AI 研究工作台。Zotero 是唯一文献事实源，Workbench 保存研究对象及来源引用，不建立第二套文献库。
 
-当前交付 **Phase 4A.1：DeepSeek Provider + Real Provider Validation**。[PR #6](https://github.com/AndyFu12306/research-workbench/pull/6) 已合并，main 基线 aeb28b7；本轮在 `feat/deepseek-provider`，由 [Issue #7](https://github.com/AndyFu12306/research-workbench/issues/7) 跟踪。新增独立 DeepSeek provider，保留 OpenAI 和现有分析契约，不自动 merge、不进入 Phase 4B。真实付费验证由用户在本机运行；尚无真实 DeepSeek PASS 证据。
+当前修复 **DeepSeek Structured Output：Option B**。[PR #8](https://github.com/AndyFu12306/research-workbench/pull/8) 已合并（main 基线 aceca63）；本轮由 [Issue #9](https://github.com/AndyFu12306/research-workbench/issues/9) 跟踪，在 `fix/deepseek-structured-output` 开发。DeepSeek 改用官方 Chat JSON mode + Workbench 严格校验；OpenAI 保持 Responses。真实 Chat JSON 分析仍待用户验收，不自动 merge、不进入 Phase 4B。
 
 ## 环境与安装
 
@@ -210,15 +210,19 @@ uv run --frozen --extra dev pytest -m openai_integration tests/integration/test_
 
 本机未配置 key/model：**Real OpenAI provider: NOT TESTED**，显式测试 1 skipped。SDK 的 HTTP transport mock 测试通过，不等于真实 provider PASS。普通测试屏蔽 socket/DNS、Zotero HTTP 和 subprocess；CI 不调用服务，两个真实 marker 默认排除；paid 测试还需 RUN_OPENAI_INTEGRATION=1，避免其他 marker 表达式意外选中。真实 Zotero 集成 1 passed；Ruff、迁移和 wheel 资源检查通过，最终 Windows/Ubuntu CI 与技术 review 见 PR。已合并的 Phase 3 验证是历史记录，不混为本轮结果。
 
-## DeepSeek provider（Phase 4A.1）
+## DeepSeek provider（Option B 修复）
 
 ```text
 AnalysisProvider
-├── OpenAIAnalysisProvider
-└── DeepSeekAnalysisProvider
+├── OpenAIAnalysisProvider   → Responses + json_schema
+└── DeepSeekAnalysisProvider → Chat Completions + JSON mode
+                                      ↓
+                         Workbench 严格 schema / citation validation
 ```
 
-`integrations/ai/deepseek.py` 使用既有官方 OpenAI SDK 2.54.0 调用 DeepSeek Responses；SDK 兼容不改变 provider 身份，成功/失败历史均记录 provider=deepseek。没有新增依赖、migration 或另一套业务 schema。AnalysisService 不识别厂商；仅注入 provider：
+选择依据：用户人工验证Flash Chat plain、Responses plain均PASS，但Responses json_object及minimal json_schema重复503；Pro Responses plain超时。不能认定strict是唯一原因，也不能据此认定Chat JSON已PASS。完整事实及验收门槛见 [DeepSeek validation](docs/DEEPSEEK_VALIDATION.md)。
+
+`integrations/ai/deepseek.py`复用已安装官方OpenAI SDK 2.54.0，固定DeepSeek endpoint，无新增依赖/migration。接口保持AnalysisProvider/ProviderResult，运行记录provider=deepseek；OpenAI adapter、analysis-schema-v1及Zotero边界不变。这是明确切换生产实现，不是遇错自动fallback。
 
 ```python
 from research_workbench.integrations.ai.deepseek import DeepSeekAnalysisProvider
@@ -228,13 +232,15 @@ with DeepSeekAnalysisProvider() as provider:
     run = service.run_analysis(question_id, "abstracts")
 ```
 
-配置来自进程环境：`DEEPSEEK_API_KEY`、`DEEPSEEK_MODEL` 必填；`DEEPSEEK_TIMEOUT_SECONDS` 缺失/空值使用60秒，必须正且有限；`RUN_DEEPSEEK_INTEGRATION=1` 仅为真实测试 opt-in。应用没有默认 model，不读取 .env，不依赖 OPENAI_API_KEY，也不继承 OpenAI organization/project headers。
+进程环境要求仍是DEEPSEEK_API_KEY、DEEPSEEK_MODEL必填，无默认model、不加载.env。DEEPSEEK_TIMEOUT_SECONDS缺失/空值默认60秒，SDK max_retries=0；HTTP timeout不是整个调用的墙钟截止时间。RUN_DEEPSEEK_INTEGRATION只用于显式真实测试。当前模型由账户可用能力和用户选择决定，代码不固定Flash/Pro。
 
-2026-11-03 核对 [DeepSeek Responses guide](https://api-docs.deepseek.com/guides/responses_api/) 与 [API reference](https://api-docs.deepseek.com/api/create-response/)：官方 endpoint 是 https://api.deepseek.com，支持 Responses / json_schema；当前模型示例为 deepseek-flash、deepseek-v4-pro。示例不是源码默认或长期可用保证，选择账户实际可用模型。
+官方 [JSON Output](https://api-docs.deepseek.com/guides/json_mode/) 和 [Chat API](https://api-docs.deepseek.com/api/create-chat-completion/)支持response_format={type:json_object}，要求prompt明确JSON，且可能返回空白。JSON mode不是schema保证：adapter只做严格JSON语法检查（拒绝NaN等非标准常量），不提取围栏、不正则修补、不重试；应用层再次执行analysis-schema-v1、额外字段/类型/数量/重复key/来源label校验，S99始终拒绝，只有映射SourceRef IDs后的结果可完成入库。
 
-adapter 发送现有 analysis-schema-v1、strict=true、同一 prompt 和4096 output token上限；应用层仍校验完整结构与所有 source_labels，再映射来源ID。官方文档未单独说明 strict 字段的保证，因此仅发送 strict 请求不算真实验收。DeepSeek guide 标记 store/truncation 参数不支持，adapter 不发送它们；不回退 Chat Completions/普通 JSON/普通文本，不放松校验。预算仍为5来源、每来源24k字符、总60k字符；context超限和不完整输出失败，不自动截断或重试。推理 tokens 可能消耗输出预算，真实兼容性仍待验证。
+system消息由共享INSTRUCTIONS + 小段DeepSeek JSON序列化指令 + 现有OUTPUT_SCHEMA的compact JSON组成，不复制业务prompt/schema。DeepSeek保存组合prompt_version=analysis-v1.deepseek-json-v1；业务schema仍analysis-schema-v1。服务仅传递可选provider版本，默认analysis-v1，OpenAI/Fake行为不变。repository在已有prompt_version列保存该值，旧history不改。离线测试确认新system消息不超过现有v1预算预留的instructions+schema字符数；source预算未扩张。
 
-错误只用固定安全码/消息：authentication、rate_limit、quota、timeout、network、model_unavailable、invalid_request、structured_output、responses_incompatible、sdk_incompatible、incomplete、refusal。HTTP状态/已知机器code可分类；未知错误保留 generic provider_failed，不解析/记录原始错误 prose，无法根据通用400/404准确断言厂商根因。服务通过统一安全错误目录持久化分类，无 DeepSeek 分支。UUID response id 和缺失的可选 usage/id 归一化为既有 ProviderResult；缺失值为 None，不猜 token。原始 SDK response、reasoning 或错误正文不入库、不日志输出。网络重试0，output repair0。
+Chat响应必须只有一个choice、assistant文本、finish_reason=stop；length/aborted拒绝为incomplete，content_filter/refusal拒绝，工具调用/异常结构拒绝。空/空白内容为provider_empty_json，非法JSON为provider_invalid_json，schema/引用失败仍为invalid_output。HTTP5xx（含503）或insufficient_system_resource为provider_unavailable，只存固定安全消息；不保存provider prose或raw response。其余认证、quota、限流、网络、超时和model错误继续安全分类。prompt_tokens/completion_tokens映射input_tokens/output_tokens，缺失为None；chat completion id映射既有response-id字段。
+
+max_tokens=4096，网络与repair重试均0，结果不完整就失败，不增预算或静默截断。每次显式重跑仍创建新的immutable AnalysisRun。JSON/schema正确不保证论文结论真实，仍需人工审阅。
 
 ### 用户运行 Level A：synthetic + real DeepSeek
 
@@ -275,4 +281,4 @@ $env:RUN_DEEPSEEK_INTEGRATION = '0'
 $env:RUN_DEEPSEEK_ZOTERO_E2E = '0'
 ```
 
-本轮验证：**250 offline passed，8 integration deselected**；两条DeepSeek integration被正确收集，关闭opt-in时 **2 skipped**，不调用真实服务。**Level A: NOT TESTED；Level B: NOT TESTED；DeepSeek workflow: NOT FULLY VALIDATED**。由用户实际运行后再记录PASS与安全元数据，不能把离线MockTransport当作付费API验收。OpenAI真实验收仍NOT TESTED，与DeepSeek分开。Windows/Ubuntu CI仅运行离线格式/lint/tests，最终结果见交付PR，不放入真实key。
+本轮修复验证：**268 offline passed，8 integration deselected**；关闭真实测试开关时2 skipped。Codex没有读取真实key或发出真实请求。**Chat JSON Level A: NOT TESTED；Level B: NOT TESTED；DeepSeek workflow: NOT FULLY VALIDATED**。旧Responses结构化路径的人工503为历史失败证据，不混同于新Chat实现结果。OpenAI真实验收状态仍独立。最终Windows/Ubuntu CI、technical self-review及公开历史安全检查见交付PR。
