@@ -1,6 +1,6 @@
 # 路线与阶段门槛
 
-当前：**Phase 4A — Structured AI Analysis MVP 已实现，进入 PR / CI / review**。[Issue #5](https://github.com/AndyFu12306/research-workbench/issues/5) 跟踪本轮，分支 feat/ai-analysis。PR #4 已由用户合并；本轮 fetch / switch main / ff-only pull 确认 main = origin/main = 465e92c，工作区干净。日期：2026-11-03（Asia/Shanghai）。不自动 merge，不进入 Phase 4B。
+当前：**Phase 4A.1 — DeepSeek Provider + Real Provider Validation 代码已实现，进入独立 PR / CI / review**。[Issue #7](https://github.com/AndyFu12306/research-workbench/issues/7)，分支 feat/deepseek-provider。PR #6 已合并，基线 main = origin/main = aeb28b7，开始时工作区干净。日期：2026-11-03（Asia/Shanghai）。不自动merge、不进入Phase4B。
 
 | Phase | 内容 | 状态 |
 | --- | --- | --- |
@@ -9,7 +9,8 @@
 | 1.5 | Zotero Integration Adapter | PR #1 已合并 |
 | 2 | Project + Question + Minimal Database | PR #2 已合并，main 包含 6bb505ab |
 | 3 | Question ↔ Zotero Source Association | PR #4 已合并 |
-| 4A | Structured AI Analysis MVP | 已实现，Issue #5 / 独立 PR 交付 |
+| 4A | Structured AI Analysis MVP | PR #6 已合并；真实 OpenAI 仍 NOT TESTED |
+| 4A.1 | DeepSeek provider + real validation | 代码已实现；Level A/B 均 NOT TESTED |
 | 4B | 大 corpus / chunking / map-reduce / hierarchical synthesis | 延后，未授权 |
 | 后续 | Basic UI | 未开始，需另行授权 |
 | 后续 | Inbox / Claim + Evidence / Knowledge Graph / Memory / Automation | 延后 |
@@ -65,3 +66,12 @@ v0.1.0 = Project + Question + Zotero Source + AI Analysis；v0.2.0 = Inbox；v0.
 - 未读取真实全文或非空 annotations；fulltext 分支用 fake 验证。保持没有 Zotero 写入。
 - Phase 4B 才考虑规模化 chunking/map-reduce/hierarchical synthesis；其余 UI、RAG、graph、Inbox、Claim/Evidence、后台自动化均未实现。
 - 最终 PR head 的 Windows/Ubuntu CI 和 technical self-review 以 PR 报告为准；不自动合并。
+
+## Phase 4A.1 代码与验收门槛
+
+- 独立DeepSeekAnalysisProvider，既有SDK 2.54.0，0新依赖/0migration。OpenAI及schema/contract保持；service只有统一安全错误码持久化改动，无provider-specific逻辑。
+- 250个离线测试通过，8个integration默认排除；DeepSeek真实测试关闭opt-in时2 skipped。Ruff及双平台CI为交付检查，最终head结果见PR。
+- Level A：synthetic + real DeepSeek = **NOT TESTED**；Level B：consented Zotero abstract + real DeepSeek = **NOT TESTED**。真实测试由用户在本机配置后运行，当前不能标FULLY VALIDATED。
+- B只有同次A成功后才执行，独立外发开关和item key必需，不自动搜索、不读全文/批注、不写Zotero。通过后仅记录安全的日期/SDK/model/status/usage/id presence与验证结果，不记录文本或credential。
+- 已查官方Responses/json_schema文档，strict参数完整schema实际兼容性仍需用户实测。未知400/404不能仅凭generic response断言根因；无prose猜测/无限retry/普通文本回退。
+- 仅A+B都真实PASS才标 DeepSeek real workflow FULLY VALIDATED；不据此自动授权4B。OpenAI真实状态单独记录，不被DeepSeek覆盖。

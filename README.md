@@ -2,7 +2,7 @@
 
 建立在 Zotero 之上的个人 AI 研究工作台。Zotero 是唯一文献事实源，Workbench 保存研究对象及来源引用，不建立第二套文献库。
 
-当前交付 **Phase 4A：Structured AI Analysis MVP**。PR #4 已合并至 main（465e92c）；本轮从同步、干净的 main 创建 `feat/ai-analysis`，由 [Issue #5](https://github.com/AndyFu12306/research-workbench/issues/5) 跟踪。实现 Question + linked Sources → corpus → provider → validated analysis → immutable history，不开发 UI、RAG 或后台任务，不自动 merge。
+当前交付 **Phase 4A.1：DeepSeek Provider + Real Provider Validation**。[PR #6](https://github.com/AndyFu12306/research-workbench/pull/6) 已合并，main 基线 aeb28b7；本轮在 `feat/deepseek-provider`，由 [Issue #7](https://github.com/AndyFu12306/research-workbench/issues/7) 跟踪。新增独立 DeepSeek provider，保留 OpenAI 和现有分析契约，不自动 merge、不进入 Phase 4B。真实付费验证由用户在本机运行；尚无真实 DeepSeek PASS 证据。
 
 ## 环境与安装
 
@@ -209,3 +209,70 @@ uv run --frozen --extra dev pytest -m openai_integration tests/integration/test_
 ```
 
 本机未配置 key/model：**Real OpenAI provider: NOT TESTED**，显式测试 1 skipped。SDK 的 HTTP transport mock 测试通过，不等于真实 provider PASS。普通测试屏蔽 socket/DNS、Zotero HTTP 和 subprocess；CI 不调用服务，两个真实 marker 默认排除；paid 测试还需 RUN_OPENAI_INTEGRATION=1，避免其他 marker 表达式意外选中。真实 Zotero 集成 1 passed；Ruff、迁移和 wheel 资源检查通过，最终 Windows/Ubuntu CI 与技术 review 见 PR。已合并的 Phase 3 验证是历史记录，不混为本轮结果。
+
+## DeepSeek provider（Phase 4A.1）
+
+```text
+AnalysisProvider
+├── OpenAIAnalysisProvider
+└── DeepSeekAnalysisProvider
+```
+
+`integrations/ai/deepseek.py` 使用既有官方 OpenAI SDK 2.54.0 调用 DeepSeek Responses；SDK 兼容不改变 provider 身份，成功/失败历史均记录 provider=deepseek。没有新增依赖、migration 或另一套业务 schema。AnalysisService 不识别厂商；仅注入 provider：
+
+```python
+from research_workbench.integrations.ai.deepseek import DeepSeekAnalysisProvider
+
+with DeepSeekAnalysisProvider() as provider:
+    service = AnalysisService(database, ResearchCorpusBuilder(client), provider)
+    run = service.run_analysis(question_id, "abstracts")
+```
+
+配置来自进程环境：`DEEPSEEK_API_KEY`、`DEEPSEEK_MODEL` 必填；`DEEPSEEK_TIMEOUT_SECONDS` 缺失/空值使用60秒，必须正且有限；`RUN_DEEPSEEK_INTEGRATION=1` 仅为真实测试 opt-in。应用没有默认 model，不读取 .env，不依赖 OPENAI_API_KEY，也不继承 OpenAI organization/project headers。
+
+2026-11-03 核对 [DeepSeek Responses guide](https://api-docs.deepseek.com/guides/responses_api/) 与 [API reference](https://api-docs.deepseek.com/api/create-response/)：官方 endpoint 是 https://api.deepseek.com，支持 Responses / json_schema；当前模型示例为 deepseek-flash、deepseek-v4-pro。示例不是源码默认或长期可用保证，选择账户实际可用模型。
+
+adapter 发送现有 analysis-schema-v1、strict=true、同一 prompt 和4096 output token上限；应用层仍校验完整结构与所有 source_labels，再映射来源ID。官方文档未单独说明 strict 字段的保证，因此仅发送 strict 请求不算真实验收。DeepSeek guide 标记 store/truncation 参数不支持，adapter 不发送它们；不回退 Chat Completions/普通 JSON/普通文本，不放松校验。预算仍为5来源、每来源24k字符、总60k字符；context超限和不完整输出失败，不自动截断或重试。推理 tokens 可能消耗输出预算，真实兼容性仍待验证。
+
+错误只用固定安全码/消息：authentication、rate_limit、quota、timeout、network、model_unavailable、invalid_request、structured_output、responses_incompatible、sdk_incompatible、incomplete、refusal。HTTP状态/已知机器code可分类；未知错误保留 generic provider_failed，不解析/记录原始错误 prose，无法根据通用400/404准确断言厂商根因。服务通过统一安全错误目录持久化分类，无 DeepSeek 分支。UUID response id 和缺失的可选 usage/id 归一化为既有 ProviderResult；缺失值为 None，不猜 token。原始 SDK response、reasoning 或错误正文不入库、不日志输出。网络重试0，output repair0。
+
+### 用户运行 Level A：synthetic + real DeepSeek
+
+在项目根目录、同一个 PowerShell 配置并运行；key 输入被遮蔽，变量不回显：
+
+```powershell
+uv sync --frozen --extra dev
+$secure = Read-Host 'DeepSeek API key' -AsSecureString
+$env:DEEPSEEK_API_KEY = [System.Net.NetworkCredential]::new('', $secure).Password
+$env:DEEPSEEK_MODEL = Read-Host 'DeepSeek model ID (for example deepseek-flash)'
+$env:DEEPSEEK_TIMEOUT_SECONDS = '60'
+$env:RUN_DEEPSEEK_INTEGRATION = '1'
+$env:RUN_DEEPSEEK_ZOTERO_E2E = '0'
+if ($env:DEEPSEEK_API_KEY) { 'DeepSeek API key: set' } else { 'DeepSeek API key: missing' }
+uv run --frozen --extra dev pytest -m deepseek_integration tests/integration/test_analysis_deepseek_integration.py::test_synthetic_deepseek_analysis -q -rPs --tb=short
+```
+
+只有1个合成问题/摘要，FakeZoteroClient，无私人内容；通过真实 AnalysisService、严格校验和临时SQLite保存 completed历史。不是裸 HTTP200 判定。成功输出仅含model、SDK版本、status、tokens、response-id是否存在、manifest/security结果，不输出原始文本或响应。
+
+### Level A 通过后，用户运行 Level B：选定 Zotero 摘要 + real DeepSeek
+
+启动本地 Zotero，确保 Local API / zotero-cli 可用。只能选择明确愿意将当前 title/authors/abstract 发给 DeepSeek 的文献。旧的测试 item key 不代表本次授权，需重新确认选择并单独开启以下开关：
+
+```powershell
+$env:ZOTERO_TEST_ITEM_KEY = Read-Host 'Zotero item key whose abstract you consent to send to DeepSeek'
+$env:RUN_DEEPSEEK_ZOTERO_E2E = '1'
+uv run --frozen --extra dev pytest -m deepseek_integration tests/integration/test_analysis_deepseek_integration.py -q -rPs --tb=short
+```
+
+本命令会在同次运行重新完成A一次，再运行B一次（共最多两次模型请求，不是自动 retry）。module fixture 只复用本次A的真实成功，不能用旧缓存/环境flag伪装A通过。若A失败，B不执行。缺少显式 item key / 独立外发授权时B跳过，不搜索随机文献。B只处理1 Question + 1 source，abstracts模式；临时Project/Question/数据库，禁止 PDF / annotations 调用。测试核对完成历史、source attribution、manifest/hash和usage/id，并检查临时DB不存在完整原始摘要、源content、prompt或key。只有生成分析与provenance入库；生成分析内容仍需人工核实。
+
+不需要将key发送给Codex。完成后可清除当前终端中的key：
+
+```powershell
+Remove-Item Env:DEEPSEEK_API_KEY
+Remove-Variable secure
+$env:RUN_DEEPSEEK_INTEGRATION = '0'
+$env:RUN_DEEPSEEK_ZOTERO_E2E = '0'
+```
+
+本轮验证：**250 offline passed，8 integration deselected**；两条DeepSeek integration被正确收集，关闭opt-in时 **2 skipped**，不调用真实服务。**Level A: NOT TESTED；Level B: NOT TESTED；DeepSeek workflow: NOT FULLY VALIDATED**。由用户实际运行后再记录PASS与安全元数据，不能把离线MockTransport当作付费API验收。OpenAI真实验收仍NOT TESTED，与DeepSeek分开。Windows/Ubuntu CI仅运行离线格式/lint/tests，最终结果见交付PR，不放入真实key。

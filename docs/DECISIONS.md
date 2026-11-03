@@ -147,3 +147,23 @@ provider / schema 失败保存 fixed safe code/message，不保存 raw payload/e
 ## ADR-032：追加 0003 与持久化约束
 
 0003 的 down_revision=0002，新建 analysis_runs / analysis_source_inputs，0001/0002 不变。外键 RESTRICT、manifest主键/顺序唯一、status/lifecycle/hash/usage CHECK，与现有SQLite事务和Alembic一致。仅临时库验证空库、逐版、已有0002及重复升级和映射一致性，不迁移真实开发库，不执行真实降级。
+
+## ADR-033：DeepSeek 是独立的一等 provider
+
+用户授权Phase4A.1。AnalysisProvider下保留OpenAI并增加DeepSeekAnalysisProvider，selection由composition注入，不把OpenAI类改成暗中访问另一厂商的通用类。既有AnalysisRequest/ProviderResult、analysis-schema-v1与immutable history不变，0001–0003不变；不是Phase4B。
+
+## ADR-034：SDK复用不改变provider身份
+
+复用已锁定官方OpenAI SDK 2.54.0，0新依赖，不新增requests或非官方SDK。DeepSeek显式endpoint为api.deepseek.com，使用Responses而非Chat Completions，运行记录provider=deepseek及显式环境model。key/model必填，无默认model/自动.env，不继承OpenAI凭据及account headers。
+
+## ADR-035：差异仅限adapter，安全错误目录保持通用
+
+官方DeepSeek文档支持Responses/json_schema，但store/truncation不支持；新adapter仅发送需要的参数及strict=true，不更改OpenAI行为。strict保证和实际schema接受仍需实测，应用验证与S99拒绝始终保留。optional usage/id缺失返回None，不猜值；不持久化reasoning/raw response。typed HTTP/机器code映射固定安全目录，不保存错误prose；service仅识别统一allowlist，无DeepSeek分支。未知400/404不猜精确根因，网络与输出重试均0。
+
+## ADR-036：真实验证必须分级与显式opt-in
+
+deepseek_integration默认与现有两个real markers一起排除。RUN_DEEPSEEK_INTEGRATION=1、key、model全部满足才可付费调用；用户在自己的同一PowerShell运行，Codex不需要知道key。Level A用1合成摘要经过AnalysisService；Level B同次必须先通过A，不用环境缓存flag伪造成功。代码提供gated B，但未通过A不会执行B的检索/外发。2条测试关闭flag均SKIP，不将fake或skip记作PASS。
+
+## ADR-037：外发私人Zotero内容需单独授权
+
+B额外要求RUN_DEEPSEEK_ZOTERO_E2E=1和用户明确选择的ZOTERO_TEST_ITEM_KEY；旧item配置不自动代表同意。无key/授权则skip，不随机搜索。只发送当前title/authors和abstract，禁止全文/annotations读取，只写临时Workbench DB。测试检查generated analysis、manifest/hash、usage/id与内容不落库；报告只含allowlisted运行元数据。A/B都实际PASS才能标DeepSeek FULLY VALIDATED，OpenAI验收仍独立。
