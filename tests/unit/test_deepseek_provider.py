@@ -3,7 +3,7 @@ import logging
 
 import httpx
 import pytest
-from analysis_fakes import FakeZoteroClient, valid_output
+from analysis_fakes import FakeAnalysisProvider, FakeZoteroClient, valid_output
 from deepseek_validation_support import consented_zotero_item, require_deepseek_config
 
 from research_workbench.analysis.contracts import INSTRUCTIONS, AnalysisRequest, CorpusSource
@@ -28,34 +28,24 @@ def wire(monkeypatch):
         "status": 200,
         "error": None,
         "body": {
-            "id": "00000000-0000-0000-0000-000000000001",
-            "object": "response",
-            "created_at": 0,
-            "status": "completed",
+            "id": "chatcmpl-synthetic",
+            "object": "chat.completion",
+            "created": 0,
             "model": "configured-model",
-            "output": [
-                {"type": "reasoning", "id": "reasoning_fake", "summary": []},
+            "choices": [
                 {
-                    "type": "message",
-                    "id": "message_fake",
-                    "status": "completed",
-                    "role": "assistant",
-                    "content": [
-                        {
-                            "type": "output_text",
-                            "text": json.dumps(valid_output()),
-                            "annotations": [],
-                        }
-                    ],
-                },
+                    "index": 0,
+                    "finish_reason": "stop",
+                    "message": {"role": "assistant", "content": json.dumps(valid_output())},
+                }
             ],
-            "usage": {"input_tokens": 41, "output_tokens": 23, "total_tokens": 64},
+            "usage": {"prompt_tokens": 41, "completion_tokens": 23, "total_tokens": 64},
         },
     }
 
     def transport(request):
         state["calls"].append(json.loads(request.content))
-        assert str(request.url) == "https://api.deepseek.com/responses"
+        assert str(request.url) == "https://api.deepseek.com/chat/completions"
         assert request.headers["Authorization"] == "Bearer synthetic-secret"
         assert not request.headers.get("OpenAI-Organization")
         assert not request.headers.get("OpenAI-Project")
@@ -103,7 +93,7 @@ def test_explicit_configuration_required(env):
         adapter.DeepSeekAnalysisProvider(environ=env)
 
 
-def test_responses_request_normalization_and_no_payload_logging(wire, caplog):
+def test_chat_json_request_normalization_and_no_payload_logging(wire, caplog):
     caplog.set_level(logging.DEBUG)
     with adapter.DeepSeekAnalysisProvider(environ=ENV) as provider:
         result = provider.generate(request())
@@ -113,15 +103,18 @@ def test_responses_request_normalization_and_no_payload_logging(wire, caplog):
     assert json.loads(result.output_json) == valid_output()
     assert len(wire["calls"]) == 1
     sent = wire["calls"][0]
-    assert sent["model"] == ENV["DEEPSEEK_MODEL"] and sent["instructions"] == INSTRUCTIONS
-    assert sent["text"]["format"] == {
-        "type": "json_schema",
-        "name": "research_analysis",
-        "schema": OUTPUT_SCHEMA,
-        "strict": True,
-    }
-    assert sent["max_output_tokens"] == 4096
-    assert "store" not in sent and "truncation" not in sent and "tools" not in sent
+    assert sent["model"] == ENV["DEEPSEEK_MODEL"]
+    system = sent["messages"][0]
+    assert system == {"role": "system", "content": adapter._system_message()}
+    assert system["content"].startswith(INSTRUCTIONS + "\n")
+    assert json.loads(system["content"].split("\n")[-1]) == OUTPUT_SCHEMA
+    assert sent["messages"][1] == {"role": "user", "content": request().render_input()}
+    assert sent["response_format"] == {"type": "json_object"}
+    assert sent["max_tokens"] == 4096
+    assert set(sent) == {"model", "messages", "response_format", "max_tokens"}
+    # Existing v1 corpus budget conservatively reserves the uncompressed schema.
+    assert len(system["content"]) <= len(INSTRUCTIONS) + len(json.dumps(OUTPUT_SCHEMA))
+    assert adapter.DeepSeekAnalysisProvider.prompt_version == "analysis-v1.deepseek-json-v1"
     assert "PRIVATE_SOURCE_SENTINEL" not in caplog.text and "synthetic-secret" not in caplog.text
 
 
@@ -131,7 +124,7 @@ def test_optional_metadata_is_not_invented(wire, missing):
         wire["body"].pop("usage")
         wire["body"].pop("id")
     elif missing == "usage_output":
-        wire["body"]["usage"].pop("output_tokens")
+        wire["body"]["usage"].pop("completion_tokens")
     else:
         wire["body"].pop("id")
     with adapter.DeepSeekAnalysisProvider(environ=ENV) as provider:
@@ -153,7 +146,10 @@ def test_optional_metadata_is_not_invented(wire, missing):
         (429, "insufficient_quota", None, "quota"),
         (429, None, None, "rate_limit"),
         (404, "model_not_found", None, "model_unavailable"),
-        (404, None, None, "responses_incompatible"),
+        (404, None, None, "invalid_request"),
+        (500, None, None, "unavailable"),
+        (503, "service_unavailable_error", None, "unavailable"),
+        (504, None, None, "unavailable"),
         (400, None, "text.format", "structured_output"),
         (400, "invalid_json_schema", None, "structured_output"),
         (400, None, None, "invalid_request"),
@@ -197,24 +193,36 @@ def test_network_failures_are_safe(wire, error_type, code):
     "case,code",
     [
         ("incomplete", "provider_incomplete"),
+        ("aborted", "provider_incomplete"),
         ("refusal", "provider_refusal"),
-        ("failed", "provider_model_unavailable"),
-        ("empty", "provider_sdk_incompatible"),
+        ("filter", "provider_refusal"),
+        ("resource", "provider_unavailable"),
+        ("empty", "provider_empty_json"),
+        ("whitespace", "provider_empty_json"),
+        ("null", "provider_empty_json"),
+        ("no_choices", "provider_sdk_incompatible"),
+        ("tool", "provider_sdk_incompatible"),
         ("bad_usage", "provider_sdk_incompatible"),
     ],
 )
 def test_non_success_responses_are_rejected(wire, case, code):
-    if case == "incomplete":
-        wire["body"]["status"] = "incomplete"
+    choice = wire["body"]["choices"][0]
+    if case in {"incomplete", "aborted", "filter", "resource", "tool"}:
+        choice["finish_reason"] = {
+            "incomplete": "length",
+            "aborted": "aborted",
+            "filter": "content_filter",
+            "resource": "insufficient_system_resource",
+            "tool": "tool_calls",
+        }[case]
     elif case == "refusal":
-        wire["body"]["output"][1]["content"] = [{"type": "refusal", "refusal": "private reason"}]
-    elif case == "failed":
-        wire["body"]["status"] = "failed"
-        wire["body"]["error"] = {"code": "model_not_found", "message": "private provider message"}
-    elif case == "empty":
-        wire["body"]["output"] = []
+        choice["message"]["refusal"] = "private reason"
+    elif case in {"empty", "whitespace", "null"}:
+        choice["message"]["content"] = {"empty": "", "whitespace": " \n ", "null": None}[case]
+    elif case == "no_choices":
+        wire["body"]["choices"] = []
     else:
-        wire["body"]["usage"]["input_tokens"] = -1
+        wire["body"]["usage"]["prompt_tokens"] = -1
     with adapter.DeepSeekAnalysisProvider(environ=ENV) as provider:
         with pytest.raises(AnalysisProviderFailure) as error:
             provider.generate(request())
@@ -222,25 +230,43 @@ def test_non_success_responses_are_rejected(wire, case, code):
 
 
 @pytest.mark.parametrize(
-    "output",
-    ["invalid json", json.dumps(valid_output("S99")), json.dumps({"summary": "bad schema"})],
+    "output,error_type,error_code",
+    [
+        ("invalid json", AnalysisProviderFailure, "provider_invalid_json"),
+        ('```json\n{"answer":"OK"}\n```', AnalysisProviderFailure, "provider_invalid_json"),
+        ('prefix {"answer":"OK"}', AnalysisProviderFailure, "provider_invalid_json"),
+        ('{"value":NaN}', AnalysisProviderFailure, "provider_invalid_json"),
+        (json.dumps(valid_output("S99")), AnalysisOutputValidationError, "invalid_output"),
+        (json.dumps({"summary": "bad schema"}), AnalysisOutputValidationError, "invalid_output"),
+        ("{}", AnalysisOutputValidationError, "invalid_output"),
+        ("[]", AnalysisOutputValidationError, "invalid_output"),
+        (
+            json.dumps(valid_output()).replace('"summary":', '"summary": {}, "summary":', 1),
+            AnalysisOutputValidationError,
+            "invalid_output",
+        ),
+    ],
 )
 def test_service_keeps_strict_validation_with_deepseek(
-    wire, database, projects, questions, links, output
+    wire, database, projects, questions, links, output, error_type, error_code
 ):
     question = questions.create(projects.create("Synthetic project").id, "Synthetic question")
     links.attach_reference(question.id, "FAKE0001")
-    wire["body"]["output"][1]["content"][0]["text"] = output
+    wire["body"]["choices"][0]["message"]["content"] = output
     with adapter.DeepSeekAnalysisProvider(environ=ENV) as provider:
         service = AnalysisService(database, ResearchCorpusBuilder(FakeZoteroClient()), provider)
-        with pytest.raises(AnalysisOutputValidationError):
+        with pytest.raises(error_type):
             service.run_analysis(question.id)
     run = AnalysisRepository(database).list_by_question(question.id)[0]
-    assert run.status == "failed" and run.error_code == "invalid_output"
+    assert run.status == "failed" and run.error_code == error_code
+    assert len(wire["calls"]) == 1
 
 
+@pytest.mark.parametrize(
+    "status,code", [(401, "provider_authentication"), (503, "provider_unavailable")]
+)
 def test_provider_identity_and_categorized_failure_persist_without_service_branch(
-    wire, database, projects, questions, links
+    wire, database, projects, questions, links, status, code
 ):
     question = questions.create(projects.create("Synthetic project").id, "Synthetic question")
     link = links.attach_reference(question.id, "FAKE0001")
@@ -248,13 +274,15 @@ def test_provider_identity_and_categorized_failure_persist_without_service_branc
         service = AnalysisService(database, ResearchCorpusBuilder(FakeZoteroClient()), provider)
         completed = service.run_analysis(question.id)
         assert completed.provider == "deepseek" and completed.model == ENV["DEEPSEEK_MODEL"]
+        assert completed.prompt_version == adapter.DEEPSEEK_PROMPT_VERSION
+        assert completed.schema_version == "analysis-schema-v1"
         assert json.loads(completed.result_json)["summary"]["source_ids"] == [link.source_id]
-        wire["status"] = 401
+        wire["status"] = status
         wire["body"] = {"error": {"message": "synthetic-secret"}}
         with pytest.raises(AnalysisProviderFailure):
             service.run_analysis(question.id)
     runs = AnalysisRepository(database).list_by_question(question.id)
-    assert runs[1].error_code == "provider_authentication" and runs[1].status == "failed"
+    assert runs[1].error_code == code and runs[1].status == "failed"
     assert "synthetic-secret" not in runs[1].error_message
     assert links.list_for_question(question.id) == (link,)
     assert AnalysisRepository(database).get(completed.id) == completed
@@ -282,3 +310,31 @@ def test_real_test_gates_accept_explicit_consent_only():
         consented_zotero_item({"ZOTERO_TEST_ITEM_KEY": "FAKE0001", "RUN_DEEPSEEK_ZOTERO_E2E": "1"})
         == "FAKE0001"
     )
+
+
+def test_invalid_json_error_does_not_expose_model_output(wire, caplog):
+    caplog.set_level(logging.DEBUG)
+    wire["body"]["choices"][0]["message"]["content"] = "synthetic-secret PRIVATE_SOURCE_SENTINEL"
+    with adapter.DeepSeekAnalysisProvider(environ=ENV) as provider:
+        with pytest.raises(AnalysisProviderFailure) as error:
+            provider.generate(request())
+    assert error.value.code == "provider_invalid_json" and error.value.__suppress_context__
+    assert "synthetic-secret" not in str(error.value) + caplog.text
+    assert "PRIVATE_SOURCE_SENTINEL" not in str(error.value) + caplog.text
+
+
+def test_prompt_version_upgrade_keeps_existing_history(wire, database, projects, questions, links):
+    question = questions.create(projects.create("Synthetic project").id, "Synthetic question")
+    links.attach_reference(question.id, "FAKE0001")
+    legacy = FakeAnalysisProvider()
+    legacy.provider = "deepseek"
+    old = AnalysisService(database, ResearchCorpusBuilder(FakeZoteroClient()), legacy).run_analysis(
+        question.id
+    )
+    with adapter.DeepSeekAnalysisProvider(environ=ENV) as provider:
+        new = AnalysisService(
+            database, ResearchCorpusBuilder(FakeZoteroClient()), provider
+        ).run_analysis(question.id)
+    assert old.prompt_version == "analysis-v1"
+    assert new.prompt_version == adapter.DEEPSEEK_PROMPT_VERSION and new.id != old.id
+    assert AnalysisRepository(database).get(old.id) == old

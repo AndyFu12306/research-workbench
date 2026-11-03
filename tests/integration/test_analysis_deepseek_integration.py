@@ -11,6 +11,7 @@ from analysis_fakes import FakeZoteroClient
 from deepseek_validation_support import consented_zotero_item, require_deepseek_config
 from sqlalchemy import inspect
 
+from research_workbench.analysis.contracts import PROMPT_VERSION
 from research_workbench.analysis.corpus import ResearchCorpusBuilder
 from research_workbench.application.analysis import AnalysisService
 from research_workbench.application.source_links import QuestionSourceService
@@ -38,6 +39,7 @@ class ObservedProvider:
     def __init__(self, provider):
         self.provider = provider.provider
         self.model = provider.model
+        self.prompt_version = getattr(provider, "prompt_version", PROMPT_VERSION)
         self.inner = provider
         self.request = None
         self.result = None
@@ -57,6 +59,7 @@ def _verify(db, run, observed, abstract, source_id, level):
         run.provider == "deepseek" and run.model == os.environ["DEEPSEEK_MODEL"].strip(),
         "Provider identity/model was not persisted correctly",
     )
+    _check(run.prompt_version == observed.prompt_version, "Prompt version mismatch")
     result = json.loads(run.result_json)
     points = [result["summary"]] + [
         p
