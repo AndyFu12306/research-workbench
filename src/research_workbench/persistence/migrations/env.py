@@ -3,7 +3,10 @@
 from alembic import context
 from sqlalchemy import URL, inspect
 
-from research_workbench.persistence import source_models  # noqa: F401 -- register source mappings
+from research_workbench.persistence import (
+    analysis_models,  # noqa: F401 -- register analysis mappings
+    source_models,  # noqa: F401 -- register source mappings
+)
 from research_workbench.persistence.config import resolve_database_path
 from research_workbench.persistence.database import Database
 from research_workbench.persistence.errors import MigrationError

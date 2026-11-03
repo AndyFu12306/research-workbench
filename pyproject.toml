@@ -8,7 +8,11 @@ version = "0.0.0"
 description = "Personal research domain persistence and read-only Zotero integration"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = ["sqlalchemy>=2.0,<3", "alembic>=1.16,<2"]
+dependencies = [
+    "sqlalchemy>=2.0,<3",
+    "alembic>=1.16,<2",
+    "openai>=2,<3",
+]
 
 [project.optional-dependencies]
 dev = ["pytest>=8,<10", "ruff>=0.14,<1"]
@@ -18,9 +22,9 @@ packages = ["src/research_workbench"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src"]
-addopts = "-m 'not integration'"
-markers = ["integration: read-only tests requiring a running local Zotero and installed CLI"]
+pythonpath = ["src", "tests"]
+addopts = "-m 'not integration and not openai_integration'"
+markers = ["integration: explicit local Zotero integration", "openai_integration: explicit paid OpenAI integration requiring key and model"]
 
 [tool.ruff]
 target-version = "py313"

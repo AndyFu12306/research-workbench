@@ -24,6 +24,8 @@ def test_upgrade_head_from_fresh_database(tmp_path, monkeypatch, filename):
             "questions",
             "sources",
             "question_sources",
+            "analysis_runs",
+            "analysis_source_inputs",
         }
         assert {c["name"] for c in inspector.get_columns("projects")} == {
             "id",
@@ -50,7 +52,7 @@ def test_upgrade_head_from_fresh_database(tmp_path, monkeypatch, filename):
         with database._engine.connect() as connection:
             assert (
                 connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
-                == "0002"
+                == "0003"
             )
             assert compare_metadata(MigrationContext.configure(connection), Base.metadata) == []
         project = ProjectRepository(database).create("Created in migrated database")
