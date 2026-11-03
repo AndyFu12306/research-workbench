@@ -40,11 +40,20 @@
 - Ruff 格式和 lint 通过；配置 uv.lock、标准 src 目录、测试隔离与最小 Windows / Ubuntu CI（远程尚未运行）。
 - 文档与代码 review 完成：确认只读命令、无个人路径、无 metadata 持久化，错误/截断不被伪装为成功。review 中修复成功 stderr 保留、HTTP 重定向禁用和正常空白页处理。
 
+## GitHub Initial Integration
+
+- 远端为用户创建的 public 仓库 AndyFu12306/research-workbench，不重新创建或修改权限。
+- 首次公开 push 前，检查全部 3 个初始提交、35 个不同历史 blob 及 27 个 tracked files；未发现敏感信息、真实 Zotero key、PDF、数据库或正文 dump。后续工作流文档提交同样检查后再推送，不改写历史。
+- origin 已配置为指定 HTTPS URL；main 与 feat/zotero-adapter 已分别推送并设置 upstream。
+- 已创建 [PR #1](https://github.com/AndyFu12306/research-workbench/pull/1)，base=main、head=feat/zotero-adapter。远程 CI 已触发，检查本地相同代码的格式、lint 与离线测试。
+- 本次重新验证：63 个单元测试通过；2 个真实集成测试通过、1 个非空批注样本跳过；Ruff 对整个仓库 format/check 通过。PR review 覆盖数据边界、进程调用、错误处理、测试隔离、安全与文档。
+- 不改业务代码，不自动合并；main 仍保留文档基线，用户决定 PR 是否合并。Phase 2 尚未开始。
+
 ## 剩余限制与后续门槛
 
 1. Annotations with non-empty sample：NOT TESTED WITH NON-EMPTY DATA。用户可指定已有批注论文补验，不创建数据，不阻塞本阶段。
 2. PowerShell Invoke-WebRequest 历史提前断开/超时尚未单独查明；Python GET 与 API 后端 CLI 已通过，不据此判定架构不可行。
-3. Windows launcher 修复只针对本机已定位原因；其他安装环境需要按 ADR-012 诊断，不能假设全平台已验收。CI 文件尚未推送执行。
+3. Windows launcher 修复只针对本机已定位原因；其他安装环境需要按 ADR-012 诊断，不能假设全平台 Zotero 链路已验收。CI 已触发，但远程 CI 只验证离线代码，不连接真实 Zotero。
 4. 当前只支持个人库、CLI schema=1 / 已测版本 0.15.2；批注读取有显式 limit，PDF 文字提取不保证图表公式精度。空白或扫描 PDF 的 OCR 不在本阶段范围。
 5. 停留在 feat/zotero-adapter，用户 review 后再决定是否合并或推进 Phase 2。没有数据库、Project model、Web UI 或 AI Analysis。
 

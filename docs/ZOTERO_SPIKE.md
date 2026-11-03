@@ -12,8 +12,8 @@
 - 通过 Python → ZoteroClient → 绝对 CLI executable → Zotero 完成真实验证：health 三项均 healthy，搜索 2 个真实条目，摘要 1,252 字符，PDF 20 页、109,551 字符，annotations 为空数组。元数据经本地 API，PDF 继续复用上游本地文件能力。
 - 测试：普通 pytest 为 63 passed / 3 deselected；显式 integration 为 2 passed / 1 skipped / 63 deselected。跳过项仅为未配置非空批注样本，真实 PDF 样本已通过临时进程环境指定，没有写进仓库。Ruff lint 与格式检查通过。
 - 单元测试覆盖 executable 发现、命令构造、JSON/UTF-8、退出码/错误映射、超时、截断全文补读、空白页、批注解析、健康分级及无代理/无重定向 GET。所有真实 Zotero 操作只读。
-- 开发环境现在有项目 .venv、pytest、Ruff 和 uv.lock；CLI 仍是独立 uv tool，不作为项目依赖。Windows / Ubuntu CI 文件已建立但未在远程执行。
-- 当前分支 feat/zotero-adapter；main 留在 Phase 1 文档基线，未合并。当前无 origin、未 push。阶段完成后停留等待用户 review，不启动下一阶段。
+- 开发环境现在有项目 .venv、pytest、Ruff 和 uv.lock；CLI 仍是独立 uv tool，不作为项目依赖。Windows / Ubuntu CI 已在 GitHub PR 上触发，仅执行离线检查，最新结果见 PR checks。
+- 当前分支 feat/zotero-adapter；main 留在 Phase 1 文档基线，未合并。GitHub Initial Integration 已配置指定 public origin 并推送两个分支，[PR #1](https://github.com/AndyFu12306/research-workbench/pull/1) 等待用户决定是否合并，不启动下一阶段。
 
 以下保留 Phase 1 现场记录；其中首次安装位置和失败尝试属于历史，不代表修复后的当前状态。
 
@@ -144,8 +144,8 @@ PowerShell 中临时诊断脚本曾在 Invoke-WebRequest 失败后继续解析�
 - uv / 工具环境、用户目录中的本地配置和仓库 skill 安装，是本轮用户明确批准的环境变更。
 - 私人原始诊断输出暂存于受 Git 忽略的 local/，包括少量 metadata、来源 key、全文和空批注响应；不是 Workbench 数据库或长期镜像。后续提交前仍需确认它们不会被纳入 Git。可提交报告只保留脱敏统计。
 - 全文读取只是文本提取能力验证，不保证数学公式、表格或图像内容的语义精度；未额外引入 OCR 或 PDF Reader。
-- Phase 1 原始检查时无提交、无远程；Phase 1.5 已建立文档基线和 feature branch，按用户要求整理本地逻辑提交，不执行 push、建 PR 或合并。
-- 已核对可纳入 Git 的 12 个文件：UTF-8、本地 Markdown 链接、维护文档行尾空白与常见凭据模式检查通过；对照本轮取得的 4 个真实来源/附件 key，未在这些文件中发现泄漏。local/ 中的原始诊断结果和 .env、数据库、PDF 均由忽略规则排除。没有产品代码，因此本轮不引入单元测试或 CI。
+- Phase 1 原始检查时无提交、无远程；Phase 1.5 已建立本地文档基线和 feature branch。后续 GitHub Initial Integration 按用户单独授权完成普通 push 和 PR 创建，不 force push、不改写历史、不自动合并。
+- Phase 1 文档初始化时核对了 12 个文件，未发现凭据或真实来源 key。GitHub Initial Integration 在首次公开推送前进一步检查全部 3 个初始提交、35 个不同历史 blob、27 个 tracked files，并与本地 4 个真实来源/附件 key 和 5 段私人内容前缀对照，未发现泄漏。local/、.env、数据库、PDF、虚拟环境均未跟踪；后续文档提交也需审阅。测试和 CI 已在 Phase 1.5 引入。
 
 ## 下一步
 

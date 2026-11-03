@@ -62,7 +62,7 @@ Spike 诊断层为 Workbench、zotero-cli、zotero-mcp、Zotero Local API、Zote
 
 运行时零第三方依赖。开发依赖仅 pytest、Ruff；Hatchling 用于包构建，uv.lock 固定开发解析结果。单元测试 mock 进程和网络，默认排除 integration；真实测试由 `pytest -m integration` 显式选择，PDF 样本通过进程环境指定，不提交真实 item key。
 
-当前本机 63 个单元测试通过；2 个集成测试通过，1 个非空批注样本测试跳过。已建立 Windows / Ubuntu 最小 CI 工作流，仅执行依赖安装、格式/lint、单元测试；尚未在远程执行。将来替换 CLI 或接入其他 Zotero 路径，应保持 ZoteroClient DTO 与错误边界，业务代码不感知 subprocess。
+当前本机 63 个单元测试通过；2 个集成测试通过，1 个非空批注样本测试跳过。Windows / Ubuntu 最小 CI 仅执行依赖安装、格式/lint、单元测试，已由 GitHub PR 触发，结果见 [PR #1 checks](https://github.com/AndyFu12306/research-workbench/pull/1/checks)。将来替换 CLI 或接入其他 Zotero 路径，应保持 ZoteroClient DTO 与错误边界，业务代码不感知 subprocess。
 
 ## 配置、依赖与安全
 

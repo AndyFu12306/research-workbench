@@ -27,7 +27,7 @@ uv run --frozen --extra dev ruff check src tests
 uv run --frozen --extra dev ruff format --check src tests
 ```
 
-默认 pytest 排除 integration，单元测试会阻止未 mock 的进程与网络调用，无需 Zotero 正在运行。Windows 和 Ubuntu 的基础 CI 仅运行格式、lint 和单元测试，不安装 Zotero；工作流尚未在远程运行。
+默认 pytest 排除 integration，单元测试会阻止未 mock 的进程与网络调用，无需 Zotero 正在运行。Windows 和 Ubuntu 的基础 CI 仅运行格式、lint 和单元测试，不安装 Zotero；GitHub Initial Integration 已触发远程 CI，最新结果以 PR checks 为准。
 
 ## 使用适配器
 
@@ -82,7 +82,9 @@ uv run --frozen --extra dev pytest -m integration -q -rs
 
 `src/research_workbench/integrations/zotero/` 中 client.py 提供业务接口，runner.py 是唯一 subprocess 边界，models.py 是运行时数据结构，errors.py 定义领域错误。未来业务模块统一调用 ZoteroClient，不直接运行 CLI。
 
-工作前核对 Git 目录、状态、分支和 remote；提交前 review diff、检查敏感信息并运行相关检查。当前分支 `feat/zotero-adapter`；main 保留 Phase 1 文档基线，不自动合并。当前无 origin，未创建 GitHub 仓库或推送。
+工作前核对 Git 目录、状态、分支和 remote；提交前 review diff、检查敏感信息并运行相关检查。当前分支 `feat/zotero-adapter`；main 保留 Phase 1 文档基线，不自动合并。
+
+远程仓库为 public [AndyFu12306/research-workbench](https://github.com/AndyFu12306/research-workbench)，origin 使用该仓库的 HTTPS clone URL。main 与 feat/zotero-adapter 已分别推送并建立 upstream；[PR #1](https://github.com/AndyFu12306/research-workbench/pull/1) 提议 feature → main，等待用户决定是否合并。不自动推进 Phase 2。公开推送前已检查全部初始历史，私人诊断输出仍只存在受忽略的 local/。
 
 - [长期协作规则](AGENTS.md)
 - [产品定位](docs/PRODUCT.md)
