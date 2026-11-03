@@ -1,13 +1,13 @@
 # 路线与阶段门槛
 
-当前：**Phase 2 — Workbench Domain Model + Minimal Database**。Project/Question 与 SQLite 已实现并通过本地测试；交付需完成 PR review 和 Windows/Ubuntu CI，最后由用户决定是否合并。后续功能仍未授权。日期：2026-11-03（Asia/Shanghai）。
+当前：**Phase 2 — Workbench Domain Model + Minimal Database 已实现并验证，等待用户 merge 决定**。[PR #2](https://github.com/AndyFu12306/research-workbench/pull/2) 提交 Project/Question 与 SQLite；本地测试和 Windows/Ubuntu CI 均通过，PR diff review 未发现阻塞问题。后续功能仍未授权。日期：2026-11-03（Asia/Shanghai）。
 
 | Phase | 内容 | 状态 |
 | --- | --- | --- |
 | 0 | 产品 / 架构设计 | 原则已记录 |
 | 1 | Zotero Technical Spike | Core read-only spike: PASS |
 | 1.5 | Zotero Integration Adapter | PR #1 已由用户合并，合并后双平台 CI 通过 |
-| 2 | Project + Question + Minimal Database | 已实现并本地验证，当前 feature branch 待 PR 交付 |
+| 2 | Project + Question + Minimal Database | PR #2 待用户决定是否合并，不自动 merge |
 | 3 | Project model（原里程碑） | 按本轮用户范围并入 Phase 2，不重复实现 |
 | 4 | Question model（原里程碑） | 按本轮用户范围并入 Phase 2，不重复实现 |
 | 5 | Zotero Source association | 未开始 |
@@ -38,6 +38,7 @@
 - 普通测试 114 passed，3 个 Zotero integration deselected；新增 51 个数据库测试不依赖网络、GitHub、Zotero 或用户数据。沿用双平台 CI，自动包含 migration 测试。
 - 未访问 Zotero、未修改 ZoteroClient、未初始化真实开发数据库。无 Web UI、AI Analysis、RAG、Inbox、Claim/Evidence 或知识图谱。
 - 仓库尚无 Issues，本阶段以单一 PR 追踪，不为每个函数增加管理对象。PR 的 CI、review 和最终交付结论以 GitHub 当前 head 为准。
+- [实现提交的双平台 CI](https://github.com/AndyFu12306/research-workbench/actions/runs/41588511385) 已成功，包含依赖安装、格式、lint 和 114 个普通测试；后续仅补充交付文档，最终 head 的运行结果继续以 PR checks 为准。开发数据库未创建，迁移均在临时文件中验证。
 
 ## 本阶段交付门槛
 

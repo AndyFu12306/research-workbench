@@ -4,6 +4,8 @@
 
 当前交付 **Phase 2：Project / Question 领域模型与最小 SQLite 持久化**。PR #1 的只读 Zotero Adapter 已合并至 main；本阶段只建立 Workbench 自己的数据基础，不访问 Zotero，不提供 Web UI 或 AI Analysis。历史集成证据见 [ZOTERO_SPIKE.md](docs/ZOTERO_SPIKE.md)。
 
+交付 PR：[PR #2](https://github.com/AndyFu12306/research-workbench/pull/2)。本地普通测试 114 passed，Windows/Ubuntu CI 均已通过；完整验证、review 与最终 head 状态见 PR，等待用户决定是否合并。
+
 ## 环境与安装
 
 本机验证环境：Windows、PowerShell 7.6.5、Python 3.13.17、uv 0.13.6、独立工具 zotero-mcp-server 0.15.2。`.python-version` 指定 3.13；系统默认 Python 3.15.2 不代表项目解释器。
