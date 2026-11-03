@@ -158,3 +158,9 @@ Phase 1.5 完成并 review 后停留在本阶段。非空 annotations 继续标�
 上一轮检查时 Zotero 未运行、Local API 拒绝连接，uv 与 CLI 未找到，所有文献能力均未测试；本轮已用实际结果替换旧状态，不将过去失败推断成架构不可行。
 
 本轮以安装版 0.15.2 的 --help、skill 和源文件为主要命令与数据路径依据。辅助资料：[上游仓库](https://github.com/54yyyu/zotero-mcp)、[Zotero API 官方文档](https://www.zotero.org/support/dev/web_api/v3/basics)。上游 main 文档可能变化，复测以固定安装版本为准。
+
+## Phase 3 metadata 关联复测（2026-11-03）
+
+历史 Core read-only spike 仍为 PASS；非空 annotations 仍 NOT TESTED WITH NON-EMPTY DATA。本轮新增 metadata-only source-link integration：**1 passed**，验证真实文献、重复 attach、运行时 hydrate、detach 后来源可读，Workbench 只使用临时数据库。没有重跑 PDF 或批注读取。首次运行 health 因 localhost:23119 拒绝连接失败（Local API 层，CLI 配置正常）；用户启动 Zotero 后同一测试通过，无回退。
+
+只读 missing-item 探测确认 0.15.2 返回成功 envelope 内的精确缺失文本，adapter 新增类型化 ZoteroItemNotFoundError；缺失与损坏响应通过 mock 契约测试区分，不写入 Zotero。Phase 3 的 schema / 服务边界与 ADR-020 至 ADR-025 见架构文档，最终 CI / review 见交付 PR。

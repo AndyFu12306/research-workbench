@@ -18,7 +18,13 @@ def test_upgrade_head_from_fresh_database(tmp_path, monkeypatch, filename):
     command.upgrade(config, "head")
     with Database(path) as database:
         inspector = inspect(database._engine)
-        assert set(inspector.get_table_names()) == {"alembic_version", "projects", "questions"}
+        assert set(inspector.get_table_names()) == {
+            "alembic_version",
+            "projects",
+            "questions",
+            "sources",
+            "question_sources",
+        }
         assert {c["name"] for c in inspector.get_columns("projects")} == {
             "id",
             "title",
@@ -44,7 +50,7 @@ def test_upgrade_head_from_fresh_database(tmp_path, monkeypatch, filename):
         with database._engine.connect() as connection:
             assert (
                 connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
-                == "0001"
+                == "0002"
             )
             assert compare_metadata(MigrationContext.configure(connection), Base.metadata) == []
         project = ProjectRepository(database).create("Created in migrated database")

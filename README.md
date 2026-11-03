@@ -2,9 +2,7 @@
 
 建立在 Zotero 之上的个人 AI 研究工作台。Zotero 是唯一文献事实源，Workbench 保存研究对象及来源引用，不建立第二套文献库。
 
-当前交付 **Phase 2：Project / Question 领域模型与最小 SQLite 持久化**。PR #1 的只读 Zotero Adapter 已合并至 main；本阶段只建立 Workbench 自己的数据基础，不访问 Zotero，不提供 Web UI 或 AI Analysis。历史集成证据见 [ZOTERO_SPIKE.md](docs/ZOTERO_SPIKE.md)。
-
-交付 PR：[PR #2](https://github.com/AndyFu12306/research-workbench/pull/2)。本地普通测试 114 passed，Windows/Ubuntu CI 均已通过；完整验证、review 与最终 head 状态见 PR，等待用户决定是否合并。
+当前交付 **Phase 3：Question ↔ Zotero Source Association**。PR #2 已合并，main 包含 `6bb505ab`；本阶段从同步后的 main 创建 `feat/zotero-source-links`，由 [Issue #3](https://github.com/AndyFu12306/research-workbench/issues/3) 跟踪。只建立来源引用和关系，不开发 UI 或 AI Analysis，不自动 merge。
 
 ## 环境与安装
 
@@ -33,7 +31,7 @@ uv run --frozen --extra dev ruff format --check src tests
 
 ## Workbench 数据库与领域接口
 
-两类数据各自有清晰边界：Zotero 是文献事实源；Workbench SQLite 是研究项目与问题的事实源。当前数据库只有 projects、questions 及 Alembic 自己的版本表，不保存 paper title、authors、DOI、abstract、PDF 或任何 Zotero metadata。Project 的 title 是研究任务名称，Question 的 title 是用户的研究问题。
+两类数据各自有清晰边界：Zotero 是文献事实源；Workbench SQLite 是研究项目与问题的事实源。当前数据库包含 projects、questions、sources、question_sources 及 Alembic 自己的版本表，不保存 paper title、authors、DOI、abstract、PDF 或任何 Zotero metadata。Project 的 title 是研究任务名称，Question 的 title 是用户的研究问题。
 
 默认文件为**启动工作目录**下的 `data/research_workbench.db`，不是源码目录或用户固定路径。可通过 `WORKBENCH_DATABASE_PATH` 或 `Database(path=...)` 覆盖；构造参数优先。路径可以包含空格、中文、`#` 和 `%`，应指定文件路径而非数据库 URL。运行文件及 SQLite journal/WAL 均受 Git 忽略。当前不自动加载 .env，需显式导出进程环境。
 
@@ -46,7 +44,7 @@ uv run --frozen --extra dev alembic current
 uv run --frozen --extra dev alembic check
 ```
 
-第一份 migration 是 `0001`，建立两个领域表、questions.project_id 外键和索引。迁移能从空库重复建立，也能重复运行 upgrade 而保留已有数据。迁移文件随 Python 包一起分发；若指定的库已有其他表却没有 Alembic 版本记录，会拒绝迁移，避免误用其他应用的数据库。不要指向 Zotero 数据库。schema downgrade 会移除表，不应对真实数据执行，除非先有明确批准的备份和恢复方案。
+第一份 migration `0001` 保持不变；新增 `0002` 建立 sources、question_sources、唯一身份、外键和索引，支持已有 0001 数据库升级。迁移能从空库重复建立，也能重复运行 upgrade 而保留已有数据。迁移文件随 Python 包一起分发；若指定的库已有其他表却没有 Alembic 版本记录，会拒绝迁移，避免误用其他应用的数据库。不要指向 Zotero 数据库。schema downgrade 会移除表，不应对真实数据执行，除非先有明确批准的备份和恢复方案。
 
 Python 调用示例（会在选定的 Workbench 数据库中创建自己的研究数据）：
 
@@ -68,7 +66,7 @@ repository 内部处理 session、commit 和 rollback；调用者得到不可变
 
 ProjectRepository 提供 create/get/list/update/archive；QuestionRepository 提供 create/get/list_by_project/update/archive。列表默认只返回 active，可设 include_archived=True，按 id 排序，支持 limit/offset；list_by_project 对无结果的项目返回空 tuple。归档可重复执行，不硬删除，也不自动改变子 Question 状态。归档对象仍可通过 get 找到；本阶段没有恢复状态、跨项目移动或复杂 workflow。
 
-所有正式表由 Alembic 建立；测试也实际跑 migration，并使用 pytest 临时文件。测试不会读写默认开发数据库、用户 home 数据或真实 Zotero。SQLite 每个连接都启用 foreign_keys，并使用明确事务管理；只做 archive 的业务接口没有 delete 方法。
+所有正式表由 Alembic 建立；测试也实际跑 migration，并使用 pytest 临时文件。测试不会读写默认开发数据库、用户 home 数据或真实 Zotero。SQLite 每个连接都启用 foreign_keys，并使用明确事务管理；Project/Question 只归档；唯一 detach 接口仅删除 Workbench 的 Question–Source 关系，不删除 SourceRef 或 Zotero item。
 
 ## 使用适配器
 
@@ -117,15 +115,39 @@ uv run --frozen --extra dev pytest -m integration -q -rs
 
 选中 integration 后必须有真实可用的 Zotero 和 CLI；health 不通过会失败，不伪装成 skip。未指定 PDF 样本时 workflow 测试明确跳过。可额外设置 `ZOTERO_TEST_ANNOTATED_ITEM_KEY` 验证已有非空批注；未设置时显示 `NOT TESTED WITH NON-EMPTY DATA`，不创建批注、不阻塞 Phase 1.5。
 
-Phase 2 当前普通测试为 **114 passed，3 个 Zotero integration deselected**，其中 51 个新增数据库测试。先前 Phase 1.5 的真实 Zotero 验证为 2 passed、1 skipped；本阶段不重新访问 Zotero，不能把历史结果当作新的读取记录。
+Phase 3 普通离线测试 **161 passed，4 integration deselected**。只运行新增的 metadata 关联测试：
+
+```powershell
+uv run --frozen --extra dev pytest -m integration tests/integration/test_source_links_integration.py -q -rs
+```
+
+该测试使用临时 Workbench 数据库，读取当前个人库中已有文献，验证 attach、重复 attach、运行时 hydrate、detach 与来源仍可读；不读取 PDF 或批注。旧的完整 integration 命令会包含 PDF 测试，不属于 Phase 3 验证范围。本轮 Local API 曾连接被拒绝，准确失败在 health；用户启动 Zotero 后同一测试通过：**1 passed**，最新交付证据见 PR。历史全文和非空批注状态见 Spike。
+
+## Question 与来源关联
+
+```python
+from research_workbench.application import QuestionSourceService
+
+service = QuestionSourceService(database, client)
+# question.id 来自 Workbench；item_key 来自 client.search_items 的真实结果。
+linked = service.attach_zotero_source(question.id, item_key)
+assert linked.source.external_key == item_key
+current = service.list_question_sources(question.id)  # 每次读取当前 metadata
+references = service.list_question_sources(question.id, hydrate=False)  # 可离线列引用
+service.detach_source(question.id, linked.source.id)  # 只移除本地关系
+```
+
+SourceRef 只保存 id、provider、scope、external_key、created_at。当前服务只支持 zotero / personal；唯一身份为三元组，不能把不同 library 的同名 key 混用。QuestionSource 是多对多关系，包含 question_id、source_id、created_at，组合主键确保重复关联不增加记录。
+
+attach 先确认 Question 并通过 ZoteroClient 验证文献，再在单个数据库事务中创建/复用引用与关系。验证失败不写入数据库；重复 attach 幂等，但仍重新验证。列表默认实时 hydrate；每项返回 resolved / unresolved / unavailable / error 和可选内存 metadata。删除/缺失的 Zotero item、CLI 不可用或响应损坏都保留原引用和关系。detach 不需要 Zotero 在线，保留无关联的 SourceRef。
+
+这些 dataclass 是不可变运行时返回值，metadata 不会传给持久化层。repository 不访问 Zotero；业务应使用 QuestionSourceService 完成外部验证，底层 repository 只负责引用数据。
 
 ## 结构与开发流程
 
-`src/research_workbench/domain/` 定义研究领域值；`persistence/` 包含配置、内部 ORM 映射、Database、两个 repository 和 migrations。`integrations/zotero/` 保持原样，仍是独立只读边界。未来 UI/CLI 通过 repository 访问研究数据、通过 ZoteroClient 读取文献，不直接使用 session 或 subprocess。
+`domain/` 定义研究领域值；`persistence/` 管理 SQLite、repositories 和 migrations；`application/source_links.py` 编排验证、关联与临时 hydrate；`integrations/zotero/` 是唯一 Zotero 读取入口，runner 是唯一 subprocess 入口。没有新增依赖。
 
-工作前核对 Git 目录、状态、分支和 remote；提交前 review diff、检查敏感信息并运行相关检查。本阶段从包含 PR #1 合并提交的最新 main 创建 `feat/workbench-domain-model`，通过独立 PR 交付，不自动合并。
-
-远程仓库为 public [AndyFu12306/research-workbench](https://github.com/AndyFu12306/research-workbench)，origin 使用该仓库的 HTTPS clone URL。[PR #1](https://github.com/AndyFu12306/research-workbench/pull/1) 已由用户合并，合并后 Windows/Ubuntu CI 通过。Phase 2 的公开 push 前继续检查完整新增历史，不提交数据库或私人诊断输出；未开始 Source、Web UI、AI Analysis 等后续能力。
+远程仓库：[AndyFu12306/research-workbench](https://github.com/AndyFu12306/research-workbench)。Phase 3 使用独立 Issue、分支与 PR；公开前检查全部新增历史、测试和敏感信息，不提交数据库、私人文献数据或诊断文件。最终 CI 与 review 以 PR 当前 head 为准，不自动开始下一阶段。
 
 - [长期协作规则](AGENTS.md)
 - [产品定位](docs/PRODUCT.md)

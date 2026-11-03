@@ -8,7 +8,7 @@ Zotero                 文献事实层
 Research Workbench     AI 研究认知层
 ```
 
-目标形态为 Browser → Frontend → Python Backend；后端分别访问 Workbench SQLite 和 Zotero 集成适配器。数据库不是请求必须穿过的网络层。当前实现只读 Zotero Adapter，以及 Phase 2 的 Project/Question 本地持久化；没有 Web 应用、UI 或 AI Analysis。
+目标形态为 Browser → Frontend → Python Backend；后端分别访问 Workbench SQLite 和 Zotero 集成适配器。数据库不是请求必须穿过的网络层。当前实现只读 Zotero Adapter、Phase 2 的 Project/Question 持久化，以及 Phase 3 的来源关联应用服务；没有 Web 应用、UI 或 AI Analysis。
 
 ```text
 Browser → Frontend → Python Backend
@@ -33,7 +33,7 @@ Agent Client → zotero-mcp（MCP）→ 上游提供的 Zotero 能力
 
 ## 数据所有权
 
-Zotero = bibliographic source of truth；Workbench SQLite = research-domain source of truth。Phase 2 实际仅创建 `projects` 与 `questions`，另有 Alembic 版本表。`source_links`、`ai_analyses` 是后续目标，尚未实现；任何文献 metadata 都不进入当前 schema。
+Zotero = bibliographic source of truth；Workbench SQLite = research-domain source of truth。Phase 2 创建 `projects` 与 `questions`；Phase 3 的 migration `0002` 增加 `sources` 与 `question_sources`，另有 Alembic 版本表。`ai_analyses` 尚未实现；任何文献 metadata 都不进入 schema。
 
 来源引用可包含 source_id、zotero_item_key、project_id、question_id。后续 schema 需要明确 library 身份：item key 不应被假设为跨个人库与 group library 全局唯一。第一阶段不由此扩展多用户功能。
 
@@ -43,7 +43,7 @@ title、authors、DOI、journal、publication_date、abstract、PDF、attachment
 
 ## 数据流与故障边界
 
-未来数据流：创建 Project → 创建 Question → 查询 Zotero → 选择来源引用 → 按需读取内容 → 生成并保存有来源标识的 AI Analysis。Zotero 不可用时准确报告失败，不用过期副本伪装实时事实。
+当前数据流：创建 Project → 创建 Question → 查询 Zotero → 验证并关联来源引用 → 按需 hydrate metadata。AI Analysis 是未来目标。Zotero 不可用时准确报告失败，不用过期副本伪装实时事实。
 
 Spike 诊断层为 Workbench、zotero-cli、zotero-mcp、Zotero Local API、Zotero Client。记录退出码、HTTP 状态、缺失依赖、空字段和附件可用性；无 PDF、摘要或 annotation 不等于接口故障，也不等于该能力已完成正向验收。
 
@@ -62,7 +62,7 @@ Spike 诊断层为 Workbench、zotero-cli、zotero-mcp、Zotero Local API、Zote
 
 Zotero Adapter 自身仍使用标准库。Phase 2 的持久化模块增加 SQLAlchemy 2.x 与 Alembic；开发依赖为 pytest、Ruff，Hatchling 用于构建，uv.lock 固定解析版本。普通测试屏蔽未 mock 的进程和网络；Zotero integration 显式选择。数据库测试运行真实本地 SQLite 与 migration，但文件全部来自 pytest 临时目录。
 
-本阶段本机 114 个普通测试通过，3 个 Zotero integration 默认排除；历史 Zotero 集成结果见 Spike 报告，不在 Phase 2 重跑。现有 Windows / Ubuntu CI 自动覆盖新增数据库和 migration 测试，无需 Zotero、网络服务或真实研究数据。将来替换 Zotero 集成路径应保持 ZoteroClient DTO 与错误边界，业务不感知 subprocess。
+Phase 2 的 114 个普通测试现扩展至 Phase 3 的 161 个，4 个 Zotero integration 默认排除；本阶段仅显式运行新的 metadata 关联集成测试，历史全文证据不作为本轮新验证。现有 Windows / Ubuntu CI 自动覆盖新增数据库和 migration 测试，无需 Zotero、网络服务或真实研究数据。将来替换 Zotero 集成路径应保持 ZoteroClient DTO 与错误边界，业务不感知 subprocess。
 
 ## Phase 2 持久化边界
 
@@ -76,7 +76,7 @@ Zotero Adapter 自身仍使用标准库。Phase 2 的持久化模块增加 SQLAl
 ```
 
 - `domain/models.py`：不可变 Project、Question 与 ResearchStatus，不依赖 ORM 或 Zotero。
-- `persistence/models.py`：内部 ProjectRow、QuestionRow 一对多映射，外键 RESTRICT，project_id 有索引。没有多对多、级联删除或文献字段。
+- `persistence/models.py`：内部 ProjectRow、QuestionRow 一对多映射，外键 RESTRICT，project_id 有索引。Project/Question 自身没有多对多或级联删除；Phase 3 单独映射来源多对多。没有文献字段。
 - `persistence/repositories.py`：两个明确的 repository，内部每次操作独立 session/transaction；成功 commit，失败 rollback。返回领域值，不暴露 ORM session、延迟关系或 generic repository 框架。get 缺失返回 None，修改缺失实体抛 EntityNotFoundError。
 - `persistence/database.py`：文件数据库生命周期、SQLite foreign_keys 连接配置、有限 busy timeout、显式 upgrade。Python 3.13 的 sqlite3 使用 autocommit=False；设置外键 PRAGMA 时暂时切换到自动提交，随后恢复，保证连接和迁移事务行为明确。
 - `persistence/config.py`：显式文件路径 > WORKBENCH_DATABASE_PATH > 启动 cwd 下 data/research_workbench.db。不硬编码个人路径，不自动读取 .env 或用户 home 数据；测试始终覆盖为临时文件。通过 SQLAlchemy URL 对象传入路径，兼容空格、中文、#、%。
@@ -96,3 +96,24 @@ Zotero Adapter 自身仍使用标准库。Phase 2 的持久化模块增加 SQLAl
 - 不记录密钥或完整配置，不提交数据库、PDF、全文、私人文献标识和原始诊断输出。可提交报告只保留脱敏状态。
 - 第一阶段 Zotero 业务只允许 GET 和经核实的只读 CLI；不执行 authorize-local、导入、编辑、删除或重建语义索引。用户本轮明确批准 `setup --no-claude --skip-semantic-search` 与 `install-skill`，仅用于本地连接配置与仓库 skill 安装，不授予 Zotero 写权限。
 - 不引入微服务、Redis、消息队列、Kubernetes、多服务 Docker 或复杂云部署；随实际需求演进。
+
+## Phase 3 应用与来源边界
+
+```text
+调用者 → QuestionSourceService → ZoteroClient → shell=False runner → zotero-cli
+                 ↓                    ↓
+        QuestionSourceRepository    内存 ZoteroItem（不持久化）
+                 ↓
+     sources + question_sources / SQLite
+```
+
+- SourceRef 字段严格为 id、provider、scope、external_key、created_at；当前 provider 约束 zotero。scope 为 library 身份，三元组唯一。repository 可保存明确的未来 scope，服务只 hydrate personal，其他 scope 返回 unsupported_scope，绝不向个人库查询同名 key。
+- QuestionSource 为 question_id、source_id、created_at；组合主键去重，两个 RESTRICT 外键防孤立关系，source_id 独立索引用于反向访问，question_id 使用主键前缀索引。没有 bibliography 列、JSON payload、PDF 路径或内容 blob。
+- attach 先只读确认 Question，随后在数据库事务外调用 ZoteroClient.get_item，校验身份和 bibliographic 类型。成功后 repository 在一个事务中复查 Question、upsert SourceRef、upsert 关系；任一步异常均回滚。不存在持有数据库锁等待 CLI 的操作。Zotero 外部删除仍可能发生在验证和 commit 之间；下次 hydrate 会如实标记。
+- repositories 不导入 Zotero；应用服务是用户操作入口。返回 frozen dataclass，不暴露 ORM/session。SourceRepository 提供底层身份操作，不承诺外部来源已验证。
+- 列表按 source_id 有限分页（默认 100），顺序实时 hydrate，无长期缓存；hydrate=False 完全离线。缺失/回收站 item → unresolved，命令/超时/CLI 缺失/API 不可用 → unavailable，解析或类型错误 → error。每项独立处理，保留引用；意外程序异常不吞掉。
+- 安装版 CLI 0.15.2 对缺失 item 返回 exit=0、ok=true 和精确文本 `No item found with key: <key>`。adapter 仅识别完整匹配，映射 ZoteroItemNotFoundError；其他未知 prose 仍为 ParseError。回收站项同样映射 typed error，并携带 deleted 标记。这是兼容边界，不是根据空结果推断成功。
+- detach 是用户明确批准的本地关系删除；不删除 SourceRef、不调用 Zotero。无关联引用保留，不自动清理。Project/Question 仍只归档。
+- Alembic 新版 0002 的 down_revision 为 0001；不改旧 migration。测试验证空库到 head、0001 数据保留升级、重复升级、实际约束与 ORM/schema 无差异。CLI upgrade/current/check 使用包含中文、空格、#、% 的临时路径通过。降级仅属 schema 管理，不对真实数据库执行。
+
+依赖沿用 SQLAlchemy/Alembic，无新增包。普通测试用 mock reader 与临时 SQLite，屏蔽未 mock 进程/网络；真实测试独立 integration 标记，只用临时 Workbench DB 读取已有 Zotero metadata，不读取全文或批注。未来 UI/AI/索引不在当前范围。

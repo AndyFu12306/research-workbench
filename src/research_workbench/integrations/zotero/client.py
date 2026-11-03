@@ -9,7 +9,7 @@ from pathlib import Path
 from urllib.error import URLError
 from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_opener
 
-from .errors import ZoteroError, ZoteroParseError, ZoteroUnavailableError
+from .errors import ZoteroError, ZoteroItemNotFoundError, ZoteroParseError, ZoteroUnavailableError
 from .models import (
     ComponentHealth,
     ZoteroAnnotation,
@@ -139,11 +139,15 @@ class ZoteroClient:
     def get_item(self, item_key: str) -> ZoteroItem:
         key = _item_key(item_key)
         record = _object(self._runner.run_json(["get", "metadata", key]))
+        # CLI 0.15.2 emits ok=true/data.text for a missing item (verified against the Local API).
+        # Match this exact known response, never a general "not found" substring in an error.
+        if record.get("text") == f"No item found with key: {key}":
+            raise ZoteroItemNotFoundError("The Zotero item could not be found.")
         data = _object(record.get("data"))
         if record.get("key") != key or data.get("key") != key:
             raise ZoteroParseError("Metadata response key does not match the requested item.")
         if data.get("deleted"):
-            raise ZoteroParseError("The returned item is in Zotero's trash.")
+            raise ZoteroItemNotFoundError("The Zotero item is in the trash.", deleted=True)
         return _parse_item(data)
 
     def get_fulltext(self, item_key: str) -> ZoteroFulltext:

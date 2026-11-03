@@ -7,6 +7,7 @@ import pytest
 from research_workbench.integrations.zotero import (
     ZoteroClient,
     ZoteroCliNotFoundError,
+    ZoteroItemNotFoundError,
     ZoteroParseError,
     ZoteroUnavailableError,
 )
@@ -77,12 +78,33 @@ def test_metadata_normalizes_raw_response(api):
 
 @pytest.mark.parametrize(
     "field,value",
-    [("key", "OTHER001"), ("title", None), ("creators", "invalid"), ("deleted", True)],
+    [("key", "OTHER001"), ("title", None), ("creators", "invalid")],
 )
 def test_metadata_rejects_mismatch_and_bad_fields(api, field, value):
     data = item_data()
     data[field] = value
     api._runner.run_json.return_value = {"key": KEY, "data": data}
+    with pytest.raises(ZoteroParseError):
+        api.get_item(KEY)
+
+
+def test_missing_item_success_envelope_is_a_typed_not_found(api):
+    api._runner.run_json.return_value = {"text": f"No item found with key: {KEY}"}
+    with pytest.raises(ZoteroItemNotFoundError) as error:
+        api.get_item(KEY)
+    assert not error.value.deleted
+
+
+def test_deleted_item_is_a_typed_not_found(api):
+    data = {**item_data(), "deleted": True}
+    api._runner.run_json.return_value = {"key": KEY, "data": data}
+    with pytest.raises(ZoteroItemNotFoundError) as error:
+        api.get_item(KEY)
+    assert error.value.deleted
+
+
+def test_unrecognized_metadata_text_is_not_classified_as_missing(api):
+    api._runner.run_json.return_value = {"text": "Error: dependency not found"}
     with pytest.raises(ZoteroParseError):
         api.get_item(KEY)
 
