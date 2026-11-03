@@ -53,8 +53,10 @@ class AnalysisRepository:
         provider: str,
         model: str,
         sources: tuple[AnalysisSourceInput, ...],
+        prompt_version: str = PROMPT_VERSION,
     ) -> AnalysisRun:
         provider, model = _name(provider, 64), _name(model, 128)
+        prompt_version = _name(prompt_version, 64)
         if not sources or [s.ordinal for s in sources] != list(range(1, len(sources) + 1)):
             raise ValueError("A non-empty, contiguous source manifest is required.")
         if len({s.source_id for s in sources}) != len(sources):
@@ -67,7 +69,7 @@ class AnalysisRepository:
                 status="running",
                 provider=provider,
                 model=model,
-                prompt_version=PROMPT_VERSION,
+                prompt_version=prompt_version,
                 schema_version=SCHEMA_VERSION,
             )
             session.add(row)

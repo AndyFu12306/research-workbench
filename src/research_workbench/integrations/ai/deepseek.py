@@ -1,12 +1,18 @@
-"""DeepSeek identity and Responses differences stay inside this adapter."""
+"""DeepSeek Chat JSON mode; business schema/citation validation stays in the application."""
 
+import json
 import logging
 import math
 import os
 
 import openai
 
-from research_workbench.analysis.contracts import INSTRUCTIONS, AnalysisRequest, ProviderResult
+from research_workbench.analysis.contracts import (
+    INSTRUCTIONS,
+    PROMPT_VERSION,
+    AnalysisRequest,
+    ProviderResult,
+)
 from research_workbench.analysis.errors import (
     AnalysisConfigurationError,
     AnalysisProviderError,
@@ -14,10 +20,21 @@ from research_workbench.analysis.errors import (
 )
 from research_workbench.analysis.schema import OUTPUT_SCHEMA
 
+DEEPSEEK_PROMPT_VERSION = PROMPT_VERSION + ".deepseek-json-v1"
+JSON_SERIALIZATION_INSTRUCTION = "Return one JSON object matching this schema. No Markdown:"
+
+
+def _system_message() -> str:
+    # Reuse the source-of-truth schema instead of copying the business prompt or examples.
+    schema = json.dumps(OUTPUT_SCHEMA, ensure_ascii=False, separators=(",", ":"))
+    return INSTRUCTIONS + "\n" + JSON_SERIALIZATION_INSTRUCTION + "\n" + schema
+
 
 def _request_failure(status: int | None, code: object, param: object) -> AnalysisProviderError:
     # Use typed status and known machine codes, never provider prose or raw payloads.
-    if status == 401 or status == 403:
+    if status is not None and 500 <= status <= 599:
+        kind = "unavailable"
+    elif status == 401 or status == 403:
         kind = "authentication"
     elif status == 402 or code in ("insufficient_quota", "insufficient_balance", "quota_exceeded"):
         kind = "quota"
@@ -26,7 +43,7 @@ def _request_failure(status: int | None, code: object, param: object) -> Analysi
     elif code in ("model_not_found", "model_not_available", "invalid_model") or param == "model":
         kind = "model_unavailable"
     elif status == 404:
-        kind = "responses_incompatible"
+        kind = "invalid_request"
     elif code in (
         "unsupported_response_format",
         "invalid_json_schema",
@@ -47,35 +64,54 @@ def _token_count(usage, name: str) -> int | None:
     return value
 
 
+def _invalid_constant(_value):
+    raise ValueError("Non-standard JSON constant")
+
+
 def _normalize(response) -> ProviderResult:
-    status = getattr(response, "status", None)
-    if status == "incomplete":
+    choices = getattr(response, "choices", None)
+    if not isinstance(choices, list) or len(choices) != 1:
+        raise AnalysisProviderFailure("provider_sdk_incompatible")
+    choice = choices[0]
+    reason = getattr(choice, "finish_reason", None)
+    message = getattr(choice, "message", None)
+    if reason == "insufficient_system_resource":
+        raise AnalysisProviderFailure("provider_unavailable")
+    if reason in {"length", "aborted"}:
         raise AnalysisProviderFailure("provider_incomplete")
-    if status == "failed":
-        error = getattr(response, "error", None)
-        raise _request_failure(None, getattr(error, "code", None), None)
-    if status != "completed":
+    if reason == "content_filter" or getattr(message, "refusal", None):
+        raise AnalysisProviderFailure("provider_refusal")
+    if (
+        reason != "stop"
+        or getattr(message, "role", None) != "assistant"
+        or getattr(message, "tool_calls", None)
+    ):
         raise AnalysisProviderFailure("provider_sdk_incompatible")
-    for item in response.output:
-        if getattr(item, "type", None) != "message":
-            continue  # Do not retain reasoning text or treat it as the final analysis.
-        for part in getattr(item, "content", ()):
-            if getattr(part, "type", None) == "refusal":
-                raise AnalysisProviderFailure("provider_refusal")
-    text = response.output_text
-    if not isinstance(text, str) or not text.strip():
+    text = getattr(message, "content", None)
+    if text is None or (isinstance(text, str) and not text.strip()):
+        raise AnalysisProviderFailure("provider_empty_json")
+    if not isinstance(text, str):
         raise AnalysisProviderFailure("provider_sdk_incompatible")
+    if len(text) > 200_000:
+        raise AnalysisProviderFailure("provider_invalid_json")
+    try:
+        json.loads(text, parse_constant=_invalid_constant)
+    except (ValueError, TypeError, RecursionError):
+        raise AnalysisProviderFailure("provider_invalid_json") from None
+    # Keep the original JSON: the application independently rejects bad schema,
+    # duplicate keys and unknown/duplicate source labels. No extraction/repair here.
     usage = getattr(response, "usage", None)
     return ProviderResult(
         text,
         getattr(response, "id", None),
-        _token_count(usage, "input_tokens"),
-        _token_count(usage, "output_tokens"),
+        _token_count(usage, "prompt_tokens"),
+        _token_count(usage, "completion_tokens"),
     )
 
 
 class DeepSeekAnalysisProvider:
     provider = "deepseek"
+    prompt_version = DEEPSEEK_PROMPT_VERSION
 
     def __init__(self, *, environ=None) -> None:
         env = os.environ if environ is None else environ
@@ -107,21 +143,14 @@ class DeepSeekAnalysisProvider:
 
     def generate(self, request: AnalysisRequest) -> ProviderResult:
         try:
-            response = self._client.responses.create(
+            response = self._client.chat.completions.create(
                 model=self.model,
-                instructions=INSTRUCTIONS,
-                input=request.render_input(),
-                text={
-                    "format": {
-                        "type": "json_schema",
-                        "name": "research_analysis",
-                        "schema": OUTPUT_SCHEMA,
-                        "strict": True,
-                    }
-                },
-                max_output_tokens=4096,
-                # DeepSeek docs: stateless, store/truncation parameters are unsupported.
-                # Local budget enforcement is unchanged; never fall back to plain text.
+                messages=[
+                    {"role": "system", "content": _system_message()},
+                    {"role": "user", "content": request.render_input()},
+                ],
+                response_format={"type": "json_object"},
+                max_tokens=4096,
             )
         except openai.APITimeoutError:
             raise AnalysisProviderFailure("provider_timeout") from None

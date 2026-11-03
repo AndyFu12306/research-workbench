@@ -1,6 +1,6 @@
 """Synchronous analysis orchestration. No SDK imports and no transaction across I/O."""
 
-from research_workbench.analysis.contracts import AnalysisProvider
+from research_workbench.analysis.contracts import PROMPT_VERSION, AnalysisProvider
 from research_workbench.analysis.corpus import ResearchCorpusBuilder, manifest
 from research_workbench.analysis.errors import (
     FAILURE_MESSAGES,
@@ -44,6 +44,7 @@ class AnalysisService:
             provider=self._provider.provider,
             model=self._provider.model,
             sources=manifest(request),
+            prompt_version=getattr(self._provider, "prompt_version", PROMPT_VERSION),
         )
         try:
             result = self._provider.generate(request)

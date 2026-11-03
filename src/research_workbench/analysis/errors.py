@@ -41,6 +41,9 @@ class AnalysisProviderError(AnalysisError):
 
 
 PROVIDER_FAILURE_MESSAGES = {
+    "provider_unavailable": "The provider service is temporarily unavailable.",
+    "provider_invalid_json": "The provider returned invalid JSON.",
+    "provider_empty_json": "The provider returned empty JSON-mode content.",
     "provider_authentication": "Provider authentication or access was rejected.",
     "provider_rate_limit": "Provider rate limit reached.",
     "provider_quota": "Provider billing or quota is unavailable.",
