@@ -15,6 +15,14 @@ class ZoteroUnavailableError(ZoteroError):
     layer = "local_api"
 
 
+class ZoteroItemNotFoundError(ZoteroError):
+    layer = "zotero_item"
+
+    def __init__(self, message: str, *, deleted: bool = False) -> None:
+        super().__init__(message)
+        self.deleted = deleted
+
+
 class ZoteroCommandError(ZoteroError):
     """Raw diagnostics are retained for debugging, not automatically logged."""
 
