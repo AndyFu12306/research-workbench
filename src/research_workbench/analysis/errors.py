@@ -40,6 +40,31 @@ class AnalysisProviderError(AnalysisError):
     message = "The analysis provider request failed."
 
 
+PROVIDER_FAILURE_MESSAGES = {
+    "provider_authentication": "Provider authentication or access was rejected.",
+    "provider_rate_limit": "Provider rate limit reached.",
+    "provider_quota": "Provider billing or quota is unavailable.",
+    "provider_timeout": "The provider request timed out.",
+    "provider_network": "The provider network connection failed.",
+    "provider_model_unavailable": "The configured provider model is unavailable.",
+    "provider_invalid_request": "The provider rejected the request parameters.",
+    "provider_structured_output": "The provider rejected structured output configuration.",
+    "provider_responses_incompatible": "The provider Responses endpoint is unavailable.",
+    "provider_sdk_incompatible": "The provider response could not be normalized safely.",
+    "provider_incomplete": "The provider returned an incomplete response.",
+    "provider_refusal": "The provider refused to produce the analysis.",
+}
+
+
+class AnalysisProviderFailure(AnalysisProviderError):
+    """Only fixed, provider-neutral diagnostic codes may cross the adapter boundary."""
+
+    def __init__(self, code: str) -> None:
+        self.message = PROVIDER_FAILURE_MESSAGES[code]
+        self.code = code
+        super().__init__()
+
+
 class AnalysisConfigurationError(AnalysisError):
     code = "invalid_configuration"
     message = "Configure a supported model, API key and positive finite timeout."
@@ -56,6 +81,7 @@ class AnalysisPersistenceError(AnalysisError):
 
 
 FAILURE_MESSAGES = {
+    **PROVIDER_FAILURE_MESSAGES,
     "provider_failed": AnalysisProviderError.message,
     "invalid_output": AnalysisOutputValidationError.message,
     "analysis_failed": AnalysisError.message,

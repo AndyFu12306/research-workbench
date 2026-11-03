@@ -3,6 +3,7 @@
 from research_workbench.analysis.contracts import AnalysisProvider
 from research_workbench.analysis.corpus import ResearchCorpusBuilder, manifest
 from research_workbench.analysis.errors import (
+    FAILURE_MESSAGES,
     AnalysisError,
     AnalysisPersistenceError,
     AnalysisProviderError,
@@ -65,9 +66,7 @@ class AnalysisService:
         except AnalysisError as exc:
             self._runs.fail_run(
                 run.id,
-                exc.code
-                if exc.code in {"invalid_output", "provider_failed"}
-                else "analysis_failed",
+                exc.code if exc.code in FAILURE_MESSAGES else "analysis_failed",
             )
             raise
         except Exception:
