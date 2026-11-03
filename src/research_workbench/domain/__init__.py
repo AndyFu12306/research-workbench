@@ -1,5 +1,5 @@
 """Workbench-owned research objects, independent of Zotero and SQLAlchemy."""
 
-from .models import Project, Question, ResearchStatus
+from .models import Project, Question, QuestionSource, ResearchStatus, SourceRef
 
-__all__ = ["Project", "Question", "ResearchStatus"]
+__all__ = ["Project", "Question", "QuestionSource", "ResearchStatus", "SourceRef"]

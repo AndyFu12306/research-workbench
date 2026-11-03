@@ -29,3 +29,23 @@ class Question:
     status: ResearchStatus
     created_at: datetime
     updated_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class SourceRef:
+    id: int
+    provider: str
+    scope: str
+    external_key: str
+    created_at: datetime
+
+
+@dataclass(frozen=True, slots=True)
+class QuestionSource:
+    question_id: int
+    source: SourceRef
+    created_at: datetime
+
+    @property
+    def source_id(self) -> int:
+        return self.source.id

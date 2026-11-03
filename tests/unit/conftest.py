@@ -24,3 +24,40 @@ def executable(tmp_path):
     path.write_bytes(b"unit-test-placeholder")
     path.chmod(0o755)
     return path.resolve()
+
+
+@pytest.fixture
+def database(tmp_path):
+    from research_workbench.persistence import Database
+
+    with Database(tmp_path / "test database #百分%.db") as database:
+        database.upgrade()
+        yield database
+
+
+@pytest.fixture
+def projects(database):
+    from research_workbench.persistence import ProjectRepository
+
+    return ProjectRepository(database)
+
+
+@pytest.fixture
+def questions(database):
+    from research_workbench.persistence import QuestionRepository
+
+    return QuestionRepository(database)
+
+
+@pytest.fixture
+def sources(database):
+    from research_workbench.persistence import SourceRepository
+
+    return SourceRepository(database)
+
+
+@pytest.fixture
+def links(database):
+    from research_workbench.persistence import QuestionSourceRepository
+
+    return QuestionSourceRepository(database)

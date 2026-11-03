@@ -3,6 +3,7 @@
 from .database import Database
 from .errors import EntityNotFoundError, MigrationError, PersistenceError
 from .repositories import ProjectRepository, QuestionRepository
+from .source_repositories import QuestionSourceRepository, SourceRepository
 
 __all__ = [
     "Database",
@@ -11,4 +12,6 @@ __all__ = [
     "PersistenceError",
     "ProjectRepository",
     "QuestionRepository",
+    "QuestionSourceRepository",
+    "SourceRepository",
 ]
