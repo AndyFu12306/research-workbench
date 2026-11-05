@@ -427,10 +427,12 @@ class DocumentAnalysisRepository:
                 )
         return config, rows, row
 
-    def start_stage(self, *args, **kwargs):
+    def start_stage(
+        self, execution_id: int, ordinal: int, request: StageRequest, estimate: RequestEstimate
+    ) -> None:
         with self._database._session() as session:
-            self._assert_standalone(session, args[0])
-            return self._start_stage(session, *args, **kwargs)
+            self._assert_standalone(session, execution_id)
+            return self._start_stage(session, execution_id, ordinal, request, estimate)
 
     def _start_stage(
         self,
@@ -511,10 +513,16 @@ class DocumentAnalysisRepository:
         )
         _require(changed.rowcount == 1, "immutable_run")
 
-    def complete_stage(self, *args, **kwargs):
+    def complete_stage(
+        self,
+        execution_id: int,
+        ordinal: int,
+        result: ValidatedStageResult,
+        metadata: ProviderResult,
+    ) -> DocumentRun:
         with self._database._session() as session:
-            self._assert_standalone(session, args[0])
-            return self._complete_stage(session, *args, **kwargs)
+            self._assert_standalone(session, execution_id)
+            return self._complete_stage(session, execution_id, ordinal, result, metadata)
 
     def _complete_stage(
         self,
@@ -559,10 +567,19 @@ class DocumentAnalysisRepository:
             _require(changed.rowcount == 1, "immutable_run")
         return DocumentRun(**self._run(session, execution_id))
 
-    def fail_run(self, *args, **kwargs):
+    def fail_run(
+        self, execution_id, code, *, interrupted=False, metadata=None, response_received=False
+    ):
         with self._database._session() as session:
-            self._assert_standalone(session, args[0])
-            return self._fail_run(session, *args, **kwargs)
+            self._assert_standalone(session, execution_id)
+            return self._fail_run(
+                session,
+                execution_id,
+                code,
+                interrupted=interrupted,
+                metadata=metadata,
+                response_received=response_received,
+            )
 
     def _fail_run(
         self,
