@@ -16,6 +16,7 @@ from research_workbench.analysis.document_pipeline import (
     ExecutionBudget,
     Pricing,
     RequestEstimate,
+    render_document_question,
 )
 from research_workbench.analysis.errors import AnalysisError
 from research_workbench.analysis.planning import MapBudgetPlanner, MapTemplate, PlanningBudget
@@ -73,6 +74,7 @@ class DocumentAnalysisService:
 
     def run_analysis(self, question_id: int, source_id: int) -> DocumentRun:
         question, source = self._runs.get_selection(question_id, source_id)
+        question_input = render_document_question(question.title, question.description)
         if (source.provider, source.scope) != ("zotero", "personal"):
             raise DocumentAnalysisError("source_unavailable")
         if not all(
@@ -92,7 +94,7 @@ class DocumentAnalysisService:
         except Exception:
             raise DocumentAnalysisError("source_unavailable") from None
         plan = self._planner.build(
-            question.title,
+            question_input,
             (document,),
             MapTemplate(
                 stage_instructions("map"),
@@ -103,7 +105,7 @@ class DocumentAnalysisService:
             StageRequest(
                 "map",
                 CONTRACT_VERSIONS["map"],
-                question.title,
+                question_input,
                 (document,),
                 budget=self._stage_budget,
                 chunks=(call.input.chunk,),
@@ -158,7 +160,7 @@ class DocumentAnalysisService:
             request = StageRequest(
                 stage,
                 CONTRACT_VERSIONS[stage],
-                question.title,
+                question_input,
                 (document,),
                 budget=self._stage_budget,
                 chunking=plan.chunking,

@@ -1,11 +1,12 @@
 """Bounded document execution configuration and safe, immutable history values."""
 
+import json
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from typing import Protocol
 
-from .chunking import require_int
+from .chunking import require_int, require_text
 from .errors import FAILURE_MESSAGES
 from .stage_contracts import StageProvider, StageRequest
 
@@ -24,6 +25,19 @@ class DocumentAnalysisError(ValueError):
     def __init__(self, code="invalid_plan"):
         self.code = code if code in PIPELINE_ERRORS else "analysis_failed"
         super().__init__(PIPELINE_ERRORS[self.code])
+
+
+def render_document_question(title: str, description: str) -> str:
+    """Canonical, ephemeral Question snapshot shared by planning and persistence checks."""
+    if type(title) is not str or type(description) is not str:
+        raise DocumentAnalysisError("invalid_plan")
+    rendered = json.dumps(
+        {"title": title, "description": description},
+        ensure_ascii=False,
+        separators=(",", ":"),
+    )
+    require_text(rendered)
+    return rendered
 
 
 @dataclass(frozen=True, slots=True)

@@ -9,7 +9,7 @@ import pytest
 from sqlalchemy import delete, event, select, update
 from sqlalchemy.exc import SQLAlchemyError
 
-from research_workbench.analysis.chunking import ChunkingConfig
+from research_workbench.analysis.chunking import ChunkingConfig, PlanningLimitError, fingerprint
 from research_workbench.analysis.contracts import ProviderResult
 from research_workbench.analysis.document_pipeline import (
     DocumentAnalysisError,
@@ -18,7 +18,11 @@ from research_workbench.analysis.document_pipeline import (
     RequestEstimate,
 )
 from research_workbench.analysis.errors import AnalysisProviderFailure
-from research_workbench.analysis.stage_contracts import CONTRACT_VERSIONS
+from research_workbench.analysis.stage_contracts import (
+    CONTRACT_VERSIONS,
+    StageBudget,
+    StageBudgetError,
+)
 from research_workbench.analysis.stage_validation import validate_stage_output
 from research_workbench.application.document_analysis import DocumentAnalysisService
 from research_workbench.integrations.ai.stages import prepare_stage_call
@@ -705,3 +709,139 @@ def test_cost_and_token_preflight_exact_boundaries(setup_pipeline):
     with pytest.raises(DocumentAnalysisError):
         execute(s, execution_budget=replace(exact, max_estimated_tokens=tokens - 1), pricing=price)
     assert len(s.provider.calls) == before
+
+
+@pytest.mark.parametrize("description", ["", 'PRIVATE_DESCRIPTION_SENTINEL 中文 "scope"\n细节'])
+def test_complete_question_snapshot_shared_by_planner_maps_reduce_and_hash(
+    setup_pipeline, questions, monkeypatch, description
+):
+    s = setup_pipeline
+    questions.update(s.question.id, description=description)
+    service = s.service()
+    planned = []
+    original = service._planner.build
+
+    def capture(question, documents, template):
+        plan = original(question, documents, template)
+        planned.extend(call.input.question for call in plan.calls)
+        return plan
+
+    monkeypatch.setattr(service._planner, "build", capture)
+    run = service.run_analysis(s.question.id, s.source.id)
+    expected = json.dumps(
+        {"title": QUESTION, "description": description}, ensure_ascii=False, separators=(",", ":")
+    )
+    assert planned == [expected] * run.chunk_count
+    assert [r.question for r in s.provider.calls] == [expected] * (run.chunk_count + 1)
+    assert run.question_sha256 == fingerprint(expected)
+
+
+def test_description_edit_changes_next_input_and_fingerprint_without_mutating_history(
+    setup_pipeline, questions
+):
+    s = setup_pipeline
+    questions.update(s.question.id, description="PRIVATE_DESCRIPTION_FIRST")
+    first = execute(s)
+    first_input = s.provider.calls[0].question
+    first_history = s.repo.get_stages(first.id)
+    questions.update(s.question.id, description="PRIVATE_DESCRIPTION_SECOND")
+    second = execute(s)
+    second_input = s.provider.calls[first.chunk_count + 1].question
+    assert first_input != second_input
+    assert json.loads(first_input) == {
+        "title": QUESTION,
+        "description": "PRIVATE_DESCRIPTION_FIRST",
+    }
+    assert json.loads(second_input) == {
+        "title": QUESTION,
+        "description": "PRIVATE_DESCRIPTION_SECOND",
+    }
+    assert first.question_sha256 != second.question_sha256
+    assert first.question_sha256 == fingerprint(first_input)
+    assert second.question_sha256 == fingerprint(second_input)
+    assert s.repo.get(first.id) == first and s.repo.get_stages(first.id) == first_history
+
+
+def test_description_edit_after_plan_commit_does_not_mix_snapshots(setup_pipeline, questions):
+    s = setup_pipeline
+    questions.update(s.question.id, description="PRIVATE_DESCRIPTION_SNAPSHOT")
+
+    def changed_after_start(request):
+        if len(s.provider.calls) == 1:
+            questions.update(s.question.id, description="PRIVATE_DESCRIPTION_NEXT_RUN")
+
+    s.provider.callback = changed_after_start
+    run = execute(s)
+    expected = json.dumps(
+        {"title": QUESTION, "description": "PRIVATE_DESCRIPTION_SNAPSHOT"},
+        ensure_ascii=False,
+        separators=(",", ":"),
+    )
+    assert all(r.question == expected for r in s.provider.calls)
+    assert run.question_sha256 == fingerprint(expected)
+    assert questions.get(s.question.id).description == "PRIVATE_DESCRIPTION_NEXT_RUN"
+
+
+def test_description_change_during_planning_rejects_stale_plan_before_model_call(
+    setup_pipeline, questions, monkeypatch
+):
+    s = setup_pipeline
+    questions.update(s.question.id, description="PRIVATE_DESCRIPTION_BEFORE")
+    service = s.service()
+    original = service._planner.build
+
+    def changed(question, documents, template):
+        plan = original(question, documents, template)
+        questions.update(s.question.id, description="PRIVATE_DESCRIPTION_AFTER")
+        return plan
+
+    monkeypatch.setattr(service._planner, "build", changed)
+    with pytest.raises(DocumentAnalysisError) as exc:
+        service.run_analysis(s.question.id, s.source.id)
+    assert exc.value.code == "invalid_plan"
+    assert s.provider.calls == [] and s.repo.list_by_question(s.question.id) == ()
+
+
+@pytest.mark.parametrize("limit", ["planner", "provider"])
+def test_description_exceeding_budget_rejected_before_model_call(
+    setup_pipeline, questions, caplog, capsys, limit
+):
+    s = setup_pipeline
+    description = "PRIVATE_DESCRIPTION_BUDGET_SENTINEL" + "中" * (
+        9000 if limit == "planner" else 3000
+    )
+    questions.update(s.question.id, description=description)
+    kwargs = {} if limit == "planner" else {"stage_budget": StageBudget(max_input_tokens=6000)}
+    error = PlanningLimitError if limit == "planner" else StageBudgetError
+    with pytest.raises(error) as exc:
+        execute(s, **kwargs)
+    assert s.provider.calls == [] and s.repo.list_by_question(s.question.id) == ()
+    assert "PRIVATE_DESCRIPTION" not in str(exc.value) + repr(exc.value) + caplog.text
+    assert capsys.readouterr() == ("", "")
+
+
+def test_complete_question_not_copied_into_analysis_history_logs_exceptions_or_repr(
+    setup_pipeline, questions, caplog, capsys
+):
+    s = setup_pipeline
+    description = 'PRIVATE_DESCRIPTION_PRIVACY_SENTINEL "中文"\nnext'
+    questions.update(s.question.id, description=description)
+    run = execute(s)
+    complete_question = s.provider.calls[0].question
+    assert json.loads(complete_question)["description"] == description
+    with s.db._session() as session:
+        history = repr(
+            [session.execute(select(table)).all() for table in (executions, chunks, stages, inputs)]
+        )
+    # Question.description already belongs to the research-domain table; only hashes,
+    # not a second text/prompt snapshot, may enter the analysis-history tables.
+    assert description not in history and "PRIVATE_DESCRIPTION_PRIVACY_SENTINEL" not in history
+    assert complete_question.encode() not in s.db.path.read_bytes()
+    assert "PRIVATE_DESCRIPTION" not in repr((run, s.repo.get_stages(run.id))) + caplog.text
+    s.provider.error_at = len(s.provider.calls) + 1
+    s.provider.error = RuntimeError(complete_question)
+    with pytest.raises(DocumentAnalysisError) as exc:
+        execute(s)
+    assert "PRIVATE_DESCRIPTION" not in str(exc.value) + repr(exc.value) + caplog.text
+    assert exc.value.__suppress_context__
+    assert capsys.readouterr() == ("", "")

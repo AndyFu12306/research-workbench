@@ -18,6 +18,7 @@ from research_workbench.analysis.document_pipeline import (
     RequestEstimate,
     StageInput,
     StageRun,
+    render_document_question,
 )
 from research_workbench.analysis.planning import MapPlan
 from research_workbench.analysis.stage_contracts import (
@@ -278,7 +279,10 @@ class DocumentAnalysisRepository:
             _require(
                 doc.identity == SourceIdentity(source.provider, source.scope, source.external_key)
             )
-            _require(fingerprint(question.title) == fingerprint(plan.calls[0].input.question))
+            question_hash = fingerprint(
+                render_document_question(question.title, question.description)
+            )
+            _require(question_hash == fingerprint(plan.calls[0].input.question))
             result = session.execute(
                 insert(executions).values(
                     question_id=question_id,
@@ -289,7 +293,7 @@ class DocumentAnalysisRepository:
                     source_fingerprint=doc.source_fingerprint,
                     content_sha256=doc.content_sha256,
                     input_chars=len(doc.text),
-                    question_sha256=fingerprint(question.title),
+                    question_sha256=question_hash,
                     chunk_count=count,
                     config_json=_json(config),
                     created_at=utc_now(),

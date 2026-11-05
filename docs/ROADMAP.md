@@ -104,3 +104,7 @@ v0.1.0 = Project + Question + Zotero Source + AI Analysis；v0.2.0 = Inbox；v0.
 验收覆盖合成长文献/单块、混合及全部空结果、Map失败/拒答/超时、Reduce动态超限、持久化遗漏/篡改、事务提交失败/回滚、中断/强退残留running、终态不可覆盖/显式重跑、历史重开、detach追溯、局部引用/跨执行隔离、预算/费用和隐私，以及0003旧库升级/重复升级/映射一致性和Phase4A全量回归。实际测试与最终head双平台CI证据在本轮PR记录；不将Fake/Mock或跳过标记转记真实PASS。新阶段真实API与旧Level B均仍未测。4B.4–4B.5及真实付费/全文外发均未授权。
 
 4B.3本机实际验收：**674 passed，8 integration deselected**（新增执行/迁移73项）；Ruff check/format、锁检查、临时Alembic upgrade/current/check/repeat、wheel迁移资源检查和新增diff安全/技术自审通过。最终head Windows/Ubuntu CI以PR记录为准。真实AI/Zotero均未调用。
+
+PR #18 合并前修复：补齐 Question.description。先新增回归并确认旧代码7项失败，再统一 title/description JSON 快照、规划/阶段请求和完整问题指纹，并在 create_run 事务中重验数据库当前字段；未修改迁移、阶段契约或 Phase 4A。补充8项离线测试，覆盖空描述、描述更新、计划期间/提交后变更、Planner/Provider预算及隐私。最终验证与新 head 双平台 CI 记录在现有 PR #18，保持 Open，不创建新分支/PR，不进入4B.4。
+
+本次修复本机验证：**682 passed，8 deselected**；迁移回归19项通过，Ruff check/format、锁检查及变更敏感信息扫描通过。真实服务未调用；最终 head 双平台 CI 结果以 PR #18 为准。

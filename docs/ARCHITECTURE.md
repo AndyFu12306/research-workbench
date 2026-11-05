@@ -344,3 +344,5 @@ Map结果保存前再次执行validate_stage_output并匹配request与计划。R
 调用前running/unknown只代表准备调用，不证明服务端接收。返回候选后即使校验/落盘失败也尽力保留安全usage/id和response_received；无可靠元数据不猜测费用。KeyboardInterrupt尽力保存interrupted并重新抛出；SystemExit/强杀/断电/持续DB失败可能留下running。无后台检测、自动重试、缓存复用或恢复；重新运行是新历史。request_sha256明确为渲染阶段输入hash，不含HTTP headers/完整prompt；无原文无法完整重放历史模型请求。hash不是匿名化。
 
 合成FakeReader/FakeStageProvider/真实临时SQLite覆盖完整服务及故障，真实SDK MockTransport核对estimate_stage与最终参数相同。新StageProvider真实兼容性仍NOT TESTED，旧Zotero摘要Level B未测且独立；无真实API/Zotero读取，无新依赖，Phase4A旧行为保持。单次Reduce的context/输出上限与信息损失仍是明确限制，不进入4B.4。
+
+PR #18 合并前修复：单文献问题输入统一由 `render_document_question(title, description)` 生成固定字段顺序、UTF-8 Unicode、紧凑 JSON（空 description 也保留该字段）。Planner、所有 Map 和 Reduce 复用同一内存快照；`question_sha256` 对此完整字符串计算。create_run 在计划落盘事务中重新读取当前 title/description，以同一函数计算并核对指纹；计划期间任一字段变化均拒绝且不调用模型。计划提交后字段变化不混入当前执行。完整输入进入既有预算检查，不持久化第二份问题文本或 Prompt；Question 自身的 title/description 仍是研究领域数据。旧历史不改写，Phase 4A、迁移及阶段契约不变。
