@@ -1,7 +1,7 @@
 """Pure arithmetic over explicit annotations. Never inspect prose for truth."""
 
 from .contracts import Opportunity, require
-from .validation import LAYERS, review_targets, unique
+from .validation import LAYERS, review_targets, unique, validate_source_support
 
 
 def count(rows):
@@ -38,14 +38,24 @@ def retention_verdict(fact_id, retentions):
     final = next((r for r in trace if r.layer == "cross_document_reduce"), None)
     if final is None:
         return "unscored"
-    # A source-correct reappearance is not evidence of faithful retention.
-    if any(r.availability == "insufficient" and r.outcome == "preserved" for r in trace):
+    # Faithful retention requires the whole trace, not just a correct final value.
+    # Known loss takes precedence; pending judgments remain I/U, never success.
+    if any(
+        r.outcome in ("partial", "absent", "distorted") or r.availability == "insufficient"
+        for r in trace
+    ):
         return "fail"
+    if any(r.outcome == "unscored" or r.availability == "unscored" for r in trace):
+        return "unscored"
+    if any(r.outcome == "indeterminate" or r.availability == "indeterminate" for r in trace):
+        return "indeterminate"
     return verdict(final.outcome, "preserved")
 
 
 def semantic_metrics(case, assessment):
     """Counts stage observations, not independent answers; report per-stage as well."""
+    for claim in assessment.claims:
+        validate_source_support(claim)
     metrics = {}
     for axis in ("upstream_support", "source_support"):
         metrics[axis] = count(

@@ -27,6 +27,8 @@ frozen dataclass防止意外字段赋值；tuple固定顺序，不等于防恶�
    两轴均为 supported/partial/unsupported/contradicted/indeterminate/unscored，不能互推。
 4. 每个引用来源分别标supports/opposes/conditional/irrelevant/indeterminate，并附证据。
    最终集合判定人工完成，不投票、不按块数或文献数计算独立证据。条件不同不自动构成直接矛盾。
+   确定性一致性底线：若所有引用均为opposes/irrelevant，不得同时标source_support=supported；
+   严格加载与直接评分入口均拒绝这种矛盾。conditional、混合证据仍由人工审定，存在支持也不自动证明整体支持。
 5. 事实在每层标 explicit_complete/collectively_sufficient/insufficient/indeterminate/unscored。
    collectively_sufficient必须指出多个实际输入、合成理由和相反/限定信息。不要要求每个Map包含跨块完整事实。
 6. 原文60→Map90为首次失真；下游忠实90，上游轴通过但来源轴失败，是继承错误。
@@ -69,7 +71,7 @@ count中的pass表示“该事件发生”，严重错误和信息损失指标�
 | kind_correct | source_summary/ai_inference标注正确 / 可判定原子主张 |
 | critical_fact_retention | 全链路忠实保留的关键fact / 关键fact机会 |
 | qualification_retention | 全链路忠实保留的限定fact / 限定fact机会 |
-| end_to_end_retention | 最终保留且非无支持重现的fact / 全部要求保留fact |
+| end_to_end_retention | 全链路保留且各层输入充分的fact / 全部要求保留fact |
 | relation_classification | 正确关系分类 / 要求关系 |
 | conflict_recall | 正确报告必需冲突 / 必需冲突；非冲突关系NA |
 | conflict_precision | 正确冲突断言 / 实际冲突断言；无断言NA |
@@ -82,6 +84,10 @@ partial不算supported或完整保留。原子主张的kind及必需关系分类
 分层损失另列applicable、insufficient、indeterminate_input/output、unscored_input/output；
 这些排除项不能静默隐藏。显式包含Chunk→Map集合的首次提取损失；上游已缺失不重复归因。
 原文正确但无上游支持的重现单列，不能提高全链路忠实保留率；来源支持轴仍可以判supported。
+端到端判定检查整条事实轨迹：任一层partial/absent/distorted或输入insufficient时为fail；
+没有已知失败时，任一unscored保留为U，否则任一indeterminate保留为I；只有全链路明确保留且输入充分才可pass。
+已知失败优先于未决，不能把它变成成功或借未评分移出失败分母。Q13_ambiguous的Map集合已partial，
+即使Document/Cross后来preserved，F1仍为fail；若只有输入歧义、没有已知丢失，则保持I而非通过。
 claims按阶段观测计数，by_stage独立展示；不能把多层重复事实当多个独立回答。
 重叠Chunk按fact_id只占一个保留机会。无主张的支持率NA；有必需事实仍须评价召回，假空不通过。
 预期拒绝没有语义分数，安全拒绝只通过边界测试；非预期中断/失败的完成率为0。

@@ -141,6 +141,13 @@ def review_targets(case, assessment):
     return targets
 
 
+def validate_source_support(claim):
+    """Reject a categorical contradiction, without voting or inferring support."""
+    if claim.source_support == "supported":
+        require(bool(claim.citations))
+        require(not all(j.stance in ("opposes", "irrelevant") for j in claim.citations))
+
+
 def validate_assessment(case, candidate, assessment):
     typed(type(assessment), canonical(assessment))
     require(assessment.version == "quality-assessment-v1" and assessment.revision > 0)
@@ -177,6 +184,7 @@ def validate_assessment(case, candidate, assessment):
         for j in c.citations:
             evidence(case, j.evidence)
             require(bool(j.evidence) and {s.source for s in j.evidence} == {j.source})
+        validate_source_support(c)
         for p in c.predecessor_claims:
             require(p in prior and stage_positions[prior[p].stage] < stage_positions[c.stage])
             require(prior[p].finding in c.upstream_refs)
