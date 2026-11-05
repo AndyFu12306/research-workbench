@@ -1,6 +1,6 @@
 # 路线与阶段门槛
 
-当前：**Phase 4A.1 — DeepSeek Responses hardening（Option A）**。[Issue #11](https://github.com/AndyFu12306/research-workbench/issues/11)，分支 `codex/deepseek-responses-hardening`；基于已合并PR #8的main=aceca63，不基于PR #10。日期2026-11-05（Asia/Shanghai）。用户已确定Responses + strict schema + 本地严格校验；Chat PR #10保留未合并。Responses原型和Chat均有单次真实Level A PASS，正式hardening Provider也已由用户单次真实验收PASS（1 passed in 8.40s），真实Zotero Level B未测。不自动merge、不进入4B。
+当前：**Phase 4B.1 — 确定性分块与有界 Map 输入计划**。[Issue #13](https://github.com/AndyFu12306/research-workbench/issues/13)，分支 `codex/phase4b-chunk-planning`，独立 worktree；基于已合并 PR #12 的 main `b3d36a0`。日期 2026-11-05（Asia/Shanghai）。总体方案为分块 Map → 文献内 Reduce → 跨文献 Reduce；本轮仅授权离线分块和 Map 输入规划，不执行模型、不读取真实 Zotero 或密钥。旧 Chat PR #10 已关闭未合并，旧 worktree 保留。真实 Zotero Level B 仍 NOT TESTED，不自动 merge。
 
 | Phase | 内容 | 状态 |
 | --- | --- | --- |
@@ -10,12 +10,21 @@
 | 2 | Project + Question + Minimal Database | PR #2 已合并，main 包含 6bb505ab |
 | 3 | Question ↔ Zotero Source Association | PR #4 已合并 |
 | 4A | Structured AI Analysis MVP | PR #6 已合并；真实 OpenAI 仍 NOT TESTED |
-| 4A.1 | DeepSeek provider + hardening | PR #8已合并；原型/Chat/正式hardening各单次A PASS；真实Zotero B待测 |
-| 4B | 大 corpus / chunking / map-reduce / hierarchical synthesis | 延后，未授权 |
+| 4A.1 | DeepSeek provider + hardening | PR #8 / #12 已合并；正式 Level A 单次真实 PASS；真实 Zotero B 待测 |
+| 4B.1 | 确定性 chunking / 有界 Map 输入计划 | 本轮交付，离线验证；不执行 Map |
+| 4B.2–4B.5 | 阶段契约 / 单文献 / 跨文献 Reduce / 受控验收 | 架构方向已审核，实现需另行授权 |
 | 后续 | Basic UI | 未开始，需另行授权 |
 | 后续 | Inbox / Claim + Evidence / Knowledge Graph / Memory / Automation | 延后 |
 
 原路线中 Project/Question 两个里程碑已纳入 Phase 2；本轮按用户明确命名，将来源关联称为 Phase 3，不重复实现既有模型。
+
+## Phase 4B 分期与验收
+
+- **4B.1**：精确 `[start, end)`、段落优先、超长段安全切分、有限重叠、来源隔离、版本和 hash；预算包括 Question、指令、格式包装、输出预留和安全余量，限制输入字符数、来源数、Chunk 数、Map 调用数及估算总量。超限拒绝；Map 一块一计划调用，不预测 Reduce 动态输入。
+- **4B.2**：后续设计严格 Map/Reduce 输出契约、局部引用和阶段 provider 能力；保留 v1 generate 行为。本轮 MapTemplate 只是调用者提供的规划材料，不是已实现的阶段 schema。
+- **4B.3 / 4B.4**：单篇文献分层编排与历史，再扩展多文献分层综合。需要时另设计新 migration，不改 0001–0003；不把生成摘要伪装成原文。
+- **4B.5**：冲突和信息损失的质量评估，以及用户独立 opt-in 的真实验收。旧 Level B 摘要验收与 4B 全文/分层验收分别记录，均不能由离线测试代替。
+- 本轮验收：合成中英文、emoji、CRLF、空白/超长段、重叠和完整覆盖、确定性/hash/来源隔离、预算临界值、数量限制及隐私测试；完整离线回归、Ruff、锁检查、最终 PR head 双平台 CI 和自审。具体结果见 PR，不自动合并。
 
 ## 已完成的前置阶段
 
@@ -76,9 +85,11 @@ v0.1.0 = Project + Question + Zotero Source + AI Analysis；v0.2.0 = Inbox；v0.
 - 已查官方Responses/json_schema文档，strict参数完整schema实际兼容性仍需用户实测。未知400/404不能仅凭generic response断言根因；无prose猜测/无限retry/普通文本回退。
 - 仅A+B都真实PASS才标 DeepSeek real workflow FULLY VALIDATED；不据此自动授权4B。OpenAI真实状态单独记录，不被DeepSeek覆盖。
 
-## Responses hardening 交付门槛（2026-11-05）
+## Responses hardening 交付门槛（2026-11-05，历史阶段记录）
 
 - Option A方向已确定；仅Responses adapter、安全错误目录、回归测试/验收入口与文档。OpenAI、共享prompt/schema、corpus、Zotero、数据库/migrations、依赖不改。
 - 315离线测试通过，8真实测试默认排除；Ruff和锁检查通过。包含503/404、完整响应结构、JSON/重复key/引用、failed分类持久化、usage/id和immutable history。最终双平台CI和self-review见独立PR。
 - Responses原型A单次真实PASS（10.494s，1049/1397 input/output tokens）与Chat A单次PASS均为用户证据，不代表正式hardening版本或长期可靠性验收。历史故障保留，见DEEPSEEK_VALIDATION.md。
 - 正式版本已由用户在独立worktree运行synthetic A单次PASS（2026-11-05，1049/925 tokens、immutable/manifest/security通过）；真实Zotero B仍需独立外发同意及明确item key，未在本轮执行。保留analysis-v1 / analysis-schema-v1、4096预算、零retry/fallback。PR #10未关闭/合并，4B未授权。
+
+以上保留当时的阶段边界；随后 PR #12 已合并、PR #10 已关闭未合并，用户现已授权 4B.1，当前状态以上表为准。Level B 未测的事实不变。

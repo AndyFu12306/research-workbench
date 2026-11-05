@@ -2,7 +2,7 @@
 
 建立在 Zotero 之上的个人 AI 研究工作台。Zotero 是唯一文献事实源，Workbench 保存研究对象及来源引用，不建立第二套文献库。
 
-当前交付 **Phase 4A.1：DeepSeek Responses Provider Hardening（Option A）**。从已合并 PR #8 的 main 基线 `aceca63` 建立独立 worktree / `codex/deepseek-responses-hardening`，由 [Issue #11](https://github.com/AndyFu12306/research-workbench/issues/11) 跟踪。保留 Responses + JSON Schema + strict=True + Workbench 本地严格校验，不合并或关闭 [Chat PR #10](https://github.com/AndyFu12306/research-workbench/pull/10)。两种协议已有用户单次真实 Level A PASS；正式 hardening Provider 已由用户单次真实验收PASS（2026-11-05，1 passed in 8.40s），Level B 未测。完整证据与历史故障见 [DeepSeek 验证记录](docs/DEEPSEEK_VALIDATION.md)。不自动 merge，不进入 Phase 4B。
+当前交付 **Phase 4B.1：确定性分块与有界 Map 输入计划**，由 [Issue #13](https://github.com/AndyFu12306/research-workbench/issues/13) 跟踪，基于已合并 PR #12 的 main `b3d36a0`；仅离线、纯内存规划，不执行模型、不接入真实 Zotero。接口、预算和示例见 [架构文档](docs/ARCHITECTURE.md#phase-4b1-确定性分块与-map-输入计划)。Phase 4A 路径保持不变，不自动 merge 或实现 4B.2–4B.5。DeepSeek 正式 Level A 已有用户单次真实 PASS，真实 Zotero Level B 仍 NOT TESTED；历史证据保留在 [验证记录](docs/DEEPSEEK_VALIDATION.md)。
 
 ## 环境与安装
 
