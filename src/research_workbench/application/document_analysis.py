@@ -155,24 +155,47 @@ class DocumentAnalysisService:
         except PersistenceError:
             raise DocumentAnalysisError("persistence_failed") from None
 
-    def execute_registered(self, run, prepared) -> DocumentExecutionOutcome:
+    def execute_registered(
+        self,
+        run,
+        prepared,
+        *,
+        _repository=None,
+        _before_stage=None,
+        _before_call=None,
+        _response=None,
+        _managed=False,
+    ) -> DocumentExecutionOutcome:
         """Execute precisely the registered plan; no reads, retries or plan rebuilding."""
         requests, plan = prepared.requests, prepared.plan
         question_input, document = requests[0].question, plan.documents[0]
+        repository = self._runs if _repository is None else _repository
         metadata = None
         children = []
         stage = "map"
         try:
             for ordinal, request in enumerate(requests, 1):
                 metadata = None
+                if _before_stage is not None:
+                    _before_stage()
                 estimate = self._estimate(request)
-                self._runs.start_stage(run.id, ordinal, request, estimate)
+                if _before_stage is not None:
+                    _before_stage()
+                repository.start_stage(run.id, ordinal, request, estimate)
+                if _before_stage is not None:
+                    _before_stage()
+                if _before_call is not None:
+                    _before_call()
                 metadata = self._provider.generate_stage(request)
+                if _response is not None:
+                    _response(metadata)
                 validated = validate_stage_output(request, metadata.output_json)
-                self._runs.complete_stage(run.id, ordinal, validated, metadata)
+                repository.complete_stage(run.id, ordinal, validated, metadata)
                 children.append(validated)
             stage = "document_reduce"
             metadata = None
+            if _before_stage is not None:
+                _before_stage()
             request = StageRequest(
                 stage,
                 CONTRACT_VERSIONS[stage],
@@ -184,15 +207,27 @@ class DocumentAnalysisService:
             )
             # start_stage also checks the persisted manifest, every Map and ordered edge.
             estimate = self._estimate(request)
-            self._runs.start_stage(run.id, len(requests) + 1, request, estimate)
+            if _before_stage is not None:
+                _before_stage()
+            repository.start_stage(run.id, len(requests) + 1, request, estimate)
+            if _before_stage is not None:
+                _before_stage()
+            if _before_call is not None:
+                _before_call()
             metadata = self._provider.generate_stage(request)
+            if _response is not None:
+                _response(metadata)
             validated = validate_stage_output(request, metadata.output_json)
-            completed = self._runs.complete_stage(run.id, len(requests) + 1, validated, metadata)
+            completed = repository.complete_stage(run.id, len(requests) + 1, validated, metadata)
             return DocumentExecutionOutcome(completed, len(requests) + 1, validated)
         except KeyboardInterrupt:
+            if _managed:
+                raise
             self._fail(run.id, "interrupted", metadata=metadata, interrupted=True)
             raise KeyboardInterrupt() from None
         except Exception as exc:
+            if _managed:
+                raise
             if isinstance(exc, PersistenceError):
                 code = "persistence_failed"
             elif isinstance(exc, StageBudgetError):

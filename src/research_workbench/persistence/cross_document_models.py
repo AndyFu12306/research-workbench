@@ -17,7 +17,9 @@ from .models import Base, UTCDateTime
 
 
 def _hash(column, prefix, nullable=False):
-    predicate = f"length({column})=64 AND {column} NOT GLOB '*[^0-9a-f]*'"
+    predicate = (
+        f"typeof({column})='text' AND length({column})=64 AND {column} NOT GLOB '*[^0-9a-f]*'"
+    )
     return CheckConstraint(
         (f"{column} IS NULL OR " if nullable else "") + predicate, name=f"ck_{prefix}_{column}"
     )
@@ -43,12 +45,12 @@ runs = Table(
     Column("status", String(16), nullable=False),
     Column("provider", String(64), nullable=False),
     Column("model", String(256), nullable=False),
-    Column("question_sha256", String(64), nullable=False),
+    Column("question_sha256", Text, nullable=False),
     Column("question_format_version", String(64), nullable=False),
-    Column("plan_sha256", String(64), nullable=False),
+    Column("plan_sha256", Text, nullable=False),
     Column("document_count", Integer, nullable=False),
     Column("config_json", Text, nullable=False),
-    Column("owner_sha256", String(64), nullable=False),
+    Column("owner_sha256", Text, nullable=False),
     Column("write_revision", Integer, nullable=False),
     Column("created_at", UTCDateTime(), nullable=False, server_default=func.current_timestamp()),
     Column("completed_at", UTCDateTime()),
@@ -89,9 +91,9 @@ members = Table(
         nullable=False,
     ),
     Column("final_stage_ordinal", Integer, nullable=False),
-    Column("identity_sha256", String(64), nullable=False),
-    Column("source_fingerprint", String(64), nullable=False),
-    Column("content_sha256", String(64), nullable=False),
+    Column("identity_sha256", Text, nullable=False),
+    Column("source_fingerprint", Text, nullable=False),
+    Column("content_sha256", Text, nullable=False),
     Column("input_chars", Integer, nullable=False),
     Column("read_at", UTCDateTime(), nullable=False),
     UniqueConstraint("run_id", "source_id", name="uq_cross_member_source"),
@@ -141,7 +143,7 @@ cross_stages = Table(
     Column("status", String(16), nullable=False),
     Column("prompt_version", String(64), nullable=False),
     Column("contract_version", String(64), nullable=False),
-    Column("request_sha256", String(64)),
+    Column("request_sha256", Text),
     Column("estimated_input_tokens", Integer),
     Column("estimated_context_tokens", Integer),
     Column("estimator_version", String(64)),
@@ -201,8 +203,8 @@ cross_inputs = Table(
     Column("input_ordinal", Integer, primary_key=True, nullable=False),
     Column("document_execution_id", Integer, nullable=False),
     Column("final_stage_ordinal", Integer, nullable=False),
-    Column("child_request_sha256", String(64)),
-    Column("child_result_sha256", String(64)),
+    Column("child_request_sha256", Text),
+    Column("child_result_sha256", Text),
     ForeignKeyConstraint(
         ["run_id", "parent_ordinal"],
         ["cross_document_stage_runs.run_id", "cross_document_stage_runs.ordinal"],

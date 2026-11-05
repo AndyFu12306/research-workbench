@@ -119,6 +119,39 @@ def history_result(result, child_ordinals=()):
     )
 
 
+def document_config(plan, stage_budget, execution_budget, pricing, estimates):
+    price_dict = (
+        None
+        if pricing is None
+        else {
+            **asdict(pricing),
+            "input_per_million": str(pricing.input_per_million),
+            "output_per_million": str(pricing.output_per_million),
+        }
+    )
+    config = {
+        "pipeline_version": "document-pipeline-v1",
+        "request_fingerprint_version": "stage-input-sha256-v1",
+        "input_kind": "fulltext",
+        "chunking_version": plan.calls[0].input.chunk.algorithm_version,
+        "chunking": asdict(plan.chunking),
+        "planner_estimator_version": plan.estimator_version,
+        "planner_envelope_version": plan.calls[0].input.envelope_version,
+        "planning_budget": asdict(plan.budget),
+        "planner_estimated_tokens": plan.total_estimated_tokens,
+        "preflight_map_estimates": [asdict(estimate) for estimate in estimates],
+        "stage_budget": asdict(stage_budget),
+        "execution_budget": {
+            **asdict(execution_budget),
+            "max_estimated_cost": str(execution_budget.max_estimated_cost)
+            if execution_budget.max_estimated_cost is not None
+            else None,
+        },
+        "pricing": price_dict,
+    }
+    return config
+
+
 class DocumentAnalysisRepository:
     def __init__(self, database: Database):
         self._database = database
@@ -244,35 +277,7 @@ class DocumentAnalysisRepository:
             <= execution_budget.max_estimated_tokens,
             "execution_budget_exceeded",
         )
-        price_dict = (
-            None
-            if pricing is None
-            else {
-                **asdict(pricing),
-                "input_per_million": str(pricing.input_per_million),
-                "output_per_million": str(pricing.output_per_million),
-            }
-        )
-        config = {
-            "pipeline_version": "document-pipeline-v1",
-            "request_fingerprint_version": "stage-input-sha256-v1",
-            "input_kind": "fulltext",
-            "chunking_version": expected[0].algorithm_version,
-            "chunking": asdict(plan.chunking),
-            "planner_estimator_version": plan.estimator_version,
-            "planner_envelope_version": plan.calls[0].input.envelope_version,
-            "planning_budget": asdict(plan.budget),
-            "planner_estimated_tokens": plan.total_estimated_tokens,
-            "preflight_map_estimates": [asdict(estimate) for estimate in estimates],
-            "stage_budget": asdict(stage_budget),
-            "execution_budget": {
-                **asdict(execution_budget),
-                "max_estimated_cost": str(execution_budget.max_estimated_cost)
-                if execution_budget.max_estimated_cost is not None
-                else None,
-            },
-            "pricing": price_dict,
-        }
+        config = document_config(plan, stage_budget, execution_budget, pricing, estimates)
         question = session.get(QuestionRow, _identifier(question_id))
         source = session.get(SourceRow, _identifier(source_id))
         _require(

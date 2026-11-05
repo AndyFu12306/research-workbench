@@ -1,16 +1,20 @@
 """Short parent-owned transactions; no external reads, model calls or recovery."""
 
 import json
+import re
 import secrets
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
-from decimal import Inexact, Rounded, localcontext
+from decimal import Decimal, Inexact, Rounded, localcontext
 
 from sqlalchemy import insert, select, update
+from sqlalchemy.exc import OperationalError
 
 from research_workbench.analysis.chunking import fingerprint
+from research_workbench.analysis.contracts import ProviderResult
 from research_workbench.analysis.cross_document_pipeline import (
+    ERRORS,
     PIPELINE_VERSION,
     QUESTION_VERSION,
     CrossConflict,
@@ -20,6 +24,7 @@ from research_workbench.analysis.cross_document_pipeline import (
     allocate_budget,
     check_allowance,
     exact_cost,
+    exact_sum,
     identity_hash,
     require,
     validate_topology,
@@ -30,7 +35,14 @@ from research_workbench.analysis.stage_validation import render_stage_input, val
 
 from .cross_document_models import cross_inputs, cross_stages, members, runs
 from .document_models import executions, stages
-from .document_repository import DocumentAnalysisRepository, _json, _metadata, history_result
+from .document_repository import (
+    DocumentAnalysisRepository,
+    _json,
+    _metadata,
+    _pricing,
+    document_config,
+    history_result,
+)
 from .models import utc_now
 from .repositories import _identifier, _pagination
 
@@ -54,11 +66,21 @@ class CrossRun:
     error_code: str | None
 
 
+@dataclass(frozen=True, slots=True)
+class CrossCosts:
+    allocated_cost: Decimal | None
+    known_usage_cost: Decimal | None
+    usage_cost: Decimal | None
+    unknown_calls: int
+    not_started_calls: int
+
+
 def plan_config(prepared):
     """Allowlisted plan identity. Never asdict a source, request or recursive result."""
     s = prepared.selection
     return {
         "pipeline_version": PIPELINE_VERSION,
+        "child_result_fingerprint_version": "document-history-chain-sha256-v1",
         "question_format_version": QUESTION_VERSION,
         "question_sha256": fingerprint(s.question),
         "source_ids": list(s.source_ids),
@@ -108,10 +130,44 @@ def plan_config(prepared):
                     for c in p.plan.calls
                 ],
                 "map_estimates": [asdict(e) for e in p.estimates],
+                "execution_config": document_config(
+                    p.plan,
+                    prepared.stage_budget,
+                    ExecutionBudget(
+                        len(prepared.allocation.documents[i]),
+                        sum(a.context_tokens for a in prepared.allocation.documents[i]),
+                        prepared.allocation.documents[i][-1].context_tokens,
+                    ),
+                    prepared.pricing,
+                    p.estimates,
+                ),
             }
             for i, (doc, p) in enumerate(zip(s.documents, prepared.documents, strict=True))
         ],
     }
+
+
+def _safe_metadata(metadata, pricing):
+    if type(metadata) is not ProviderResult:
+        return {}
+    input_tokens, output_tokens = (
+        v if type(v) is int and v >= 0 else None
+        for v in (metadata.input_tokens, metadata.output_tokens)
+    )
+    response_id = metadata.response_id
+    if not (
+        type(response_id) is str
+        and len(response_id) <= 256
+        and re.fullmatch(r"[A-Za-z0-9_.:/-]+", response_id)
+    ):
+        response_id = None
+    cost = exact_cost(pricing, input_tokens, output_tokens)
+    return dict(
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        response_id=response_id,
+        usage_cost=str(cost) if cost is not None else None,
+    )
 
 
 class CrossDocumentRepository:
@@ -168,15 +224,20 @@ class CrossDocumentRepository:
         if type(handle) is not _CrossExecutionHandle:
             raise CrossConflict()
         # First statement is a conditional write: serializes SQLite writers before any reads.
-        changed = session.execute(
-            update(runs)
-            .where(
-                runs.c.id == handle.run_id,
-                runs.c.owner_sha256 == fingerprint(handle.owner),
-                runs.c.status == "running",
+        try:
+            changed = session.execute(
+                update(runs)
+                .where(
+                    runs.c.id == handle.run_id,
+                    runs.c.owner_sha256 == fingerprint(handle.owner),
+                    runs.c.status == "running",
+                )
+                .values(write_revision=runs.c.write_revision + 1)
             )
-            .values(write_revision=runs.c.write_revision + 1)
-        )
+        except OperationalError as exc:
+            if getattr(exc.orig, "sqlite_errorcode", 0) & 255 in (5, 6):
+                raise CrossConflict() from None
+            raise
         if changed.rowcount != 1:
             raise CrossConflict()
         return self._row(session, handle.run_id)
@@ -337,6 +398,17 @@ class CrossDocumentRepository:
                 and child.input_chars == row.input_chars
             )
             cfg = json.loads(child.config_json)
+            require(cfg == json.loads(config)["documents"][i - 1]["execution_config"])
+            child_stages = self._documents._stages(session, child.id)
+            require(len(child_stages) == child.chunk_count + 1)
+            for ordinal, stage_row in enumerate(child_stages, 1):
+                kind = "map" if ordinal <= child.chunk_count else "document_reduce"
+                require(
+                    stage_row.ordinal == ordinal
+                    and stage_row.stage == kind
+                    and stage_row.contract_version == CONTRACT_VERSIONS[kind]
+                    and stage_row.prompt_version == PROMPT_VERSIONS[kind]
+                )
             require(
                 cfg["stage_budget"] == asdict(prepared.stage_budget)
                 and cfg["preflight_map_estimates"] == [asdict(e) for e in p.estimates]
@@ -414,7 +486,9 @@ class CrossDocumentRepository:
                     and stored.prompt_version == PROMPT_VERSIONS[m.request.stage]
                 )
             request_hash = fingerprint(render_stage_input(result.request))
-            result_hash = fingerprint(history_result(result, range(1, child.chunk_count + 1)))
+            from .cross_document_history import document_chain_hash
+
+            result_hash = document_chain_hash(session, child.id)
             if fixed:
                 require(
                     edge.child_request_sha256 == request_hash
@@ -503,8 +577,18 @@ class CrossDocumentRepository:
                 raise CrossConflict()
             return CrossRun(**self._row(session, run.id))
 
-    def abort(self, handle, code, *, interrupted=False, metadata=None, response_received=False):
+    def abort(
+        self,
+        handle,
+        code,
+        *,
+        interrupted=False,
+        metadata=None,
+        response_received=False,
+        active_document_id=None,
+    ):
         """One TF, only nonterminal rows. Conflict losers must never call this method."""
+        require(type(code) is str and code in ERRORS)
         terminal = "interrupted" if interrupted else "failed"
         with self._transaction() as session:
             run = self._lock(session, handle)
@@ -515,8 +599,12 @@ class CrossDocumentRepository:
                     continue
                 child_stages = self._documents._stages(session, child.id)
                 active = any(r.status == "running" for r in child_stages)
-                child_code = code if active else "parent_aborted"
-                values = _metadata(metadata, None) if active and metadata is not None else {}
+                child_code = code if active or child.id == active_document_id else "parent_aborted"
+                values = (
+                    _safe_metadata(metadata, _pricing(json.loads(child.config_json)))
+                    if active and metadata is not None
+                    else {}
+                )
                 session.execute(
                     update(stages)
                     .where(stages.c.execution_id == child.id, stages.c.status == "running")
@@ -541,7 +629,7 @@ class CrossDocumentRepository:
                     update(executions)
                     .where(executions.c.id == child.id, executions.c.status == "running")
                     .values(
-                        status=terminal if active else "failed",
+                        status=terminal if active or child.id == active_document_id else "failed",
                         error_code=child_code,
                         completed_at=now,
                     )
@@ -549,7 +637,7 @@ class CrossDocumentRepository:
             stage = self._stage(session, run.id)
             if stage.status in ("planned", "running"):
                 values = (
-                    _metadata(metadata, None)
+                    _safe_metadata(metadata, _pricing(json.loads(run.config_json)))
                     if stage.status == "running" and metadata is not None
                     else {}
                 )
@@ -612,3 +700,36 @@ class CrossDocumentRepository:
 
         with self._database._session() as session:
             return read_cross_history(session, _identifier(run_id))
+
+    def get_costs(self, run_id):
+        with self._database._session() as session:
+            run = self._row(session, run_id)
+            config = json.loads(run.config_json)
+            rows = [
+                r
+                for m in self._members(session, run_id)
+                for r in self._documents._stages(session, m.document_execution_id)
+            ]
+            rows.append(self._stage(session, run_id))
+            known = exact_sum(Decimal(r.usage_cost) for r in rows if r.usage_cost is not None)
+            if config["pricing"] is None:
+                known = None
+            total = (
+                known
+                if all(
+                    r.call_outcome == "response_received" and r.usage_cost is not None for r in rows
+                )
+                else None
+            )
+            allocated = (
+                exact_sum(Decimal(a["cost"]) for g in config["allowances"] for a in g)
+                if config["pricing"]
+                else None
+            )
+            return CrossCosts(
+                allocated,
+                known,
+                total,
+                sum(r.call_outcome == "unknown" for r in rows),
+                sum(r.call_outcome == "not_started" for r in rows),
+            )
