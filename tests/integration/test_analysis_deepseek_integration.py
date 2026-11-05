@@ -11,7 +11,9 @@ from analysis_fakes import FakeZoteroClient
 from deepseek_validation_support import consented_zotero_item, require_deepseek_config
 from sqlalchemy import inspect
 
+from research_workbench.analysis.contracts import PROMPT_VERSION, SCHEMA_VERSION
 from research_workbench.analysis.corpus import ResearchCorpusBuilder
+from research_workbench.analysis.errors import AnalysisStateError
 from research_workbench.application.analysis import AnalysisService
 from research_workbench.application.source_links import QuestionSourceService
 from research_workbench.integrations.ai.deepseek import DeepSeekAnalysisProvider
@@ -41,8 +43,10 @@ class ObservedProvider:
         self.inner = provider
         self.request = None
         self.result = None
+        self.calls = 0
 
     def generate(self, request):
+        self.calls += 1
         self.request = request
         self.result = self.inner.generate(request)
         return self.result
@@ -50,6 +54,7 @@ class ObservedProvider:
 
 def _verify(db, run, observed, abstract, source_id, level):
     repo = AnalysisRepository(db)
+    _check(observed.calls == 1, "Expected exactly one provider invocation")
     _check(
         run.status == "completed" and repo.get(run.id) == run, "Analysis history did not complete"
     )
@@ -57,6 +62,16 @@ def _verify(db, run, observed, abstract, source_id, level):
         run.provider == "deepseek" and run.model == os.environ["DEEPSEEK_MODEL"].strip(),
         "Provider identity/model was not persisted correctly",
     )
+    _check(
+        run.prompt_version == PROMPT_VERSION and run.schema_version == SCHEMA_VERSION,
+        "Prompt/schema version mismatch",
+    )
+    before = repo.get(run.id)
+    with pytest.raises(AnalysisStateError):
+        repo.fail_run(run.id, "analysis_failed")
+    with pytest.raises(AnalysisStateError):
+        repo.complete_run(run.id, run.result_json)
+    _check(repo.get(run.id) == before, "Terminal history changed")
     result = json.loads(run.result_json)
     points = [result["summary"]] + [
         p
@@ -122,6 +137,13 @@ def _verify(db, run, observed, abstract, source_id, level):
                 "input_tokens": run.input_tokens,
                 "output_tokens": run.output_tokens,
                 "response_id_present": run.provider_response_id is not None,
+                "prompt_version": run.prompt_version,
+                "schema_version": run.schema_version,
+                "api": "Responses",
+                "max_output_tokens": 4096,
+                "max_retries": 0,
+                "provider_calls": observed.calls,
+                "immutable_history_verified": True,
                 "manifest_verified": True,
                 "security_check": "PASS",
             }
