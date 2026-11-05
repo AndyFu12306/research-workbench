@@ -1,8 +1,10 @@
 """DeepSeek identity and Responses differences stay inside this adapter."""
 
+import json
 import logging
 import math
 import os
+import re
 
 import openai
 
@@ -17,7 +19,18 @@ from research_workbench.analysis.schema import OUTPUT_SCHEMA
 
 def _request_failure(status: int | None, code: object, param: object) -> AnalysisProviderError:
     # Use typed status and known machine codes, never provider prose or raw payloads.
-    if status == 401 or status == 403:
+    if (status is not None and 500 <= status <= 599) or (
+        status is None
+        and code
+        in (
+            "server_error",
+            "service_unavailable",
+            "service_unavailable_error",
+            "insufficient_system_resource",
+        )
+    ):
+        kind = "unavailable"
+    elif status == 401 or status == 403:
         kind = "authentication"
     elif status == 402 or code in ("insufficient_quota", "insufficient_balance", "quota_exceeded"):
         kind = "quota"
@@ -25,15 +38,13 @@ def _request_failure(status: int | None, code: object, param: object) -> Analysi
         kind = "rate_limit"
     elif code in ("model_not_found", "model_not_available", "invalid_model") or param == "model":
         kind = "model_unavailable"
-    elif status == 404:
-        kind = "responses_incompatible"
     elif code in (
         "unsupported_response_format",
         "invalid_json_schema",
         "unsupported_json_schema",
     ) or param in ("text.format", "text.format.schema", "response_format"):
         kind = "structured_output"
-    elif status in (400, 422):
+    elif status in (400, 404, 422):
         kind = "invalid_request"
     else:
         return AnalysisProviderError()
@@ -47,6 +58,10 @@ def _token_count(usage, name: str) -> int | None:
     return value
 
 
+def _invalid_constant(_value):
+    raise ValueError("Non-standard JSON constant")
+
+
 def _normalize(response) -> ProviderResult:
     status = getattr(response, "status", None)
     if status == "incomplete":
@@ -54,21 +69,64 @@ def _normalize(response) -> ProviderResult:
     if status == "failed":
         error = getattr(response, "error", None)
         raise _request_failure(None, getattr(error, "code", None), None)
-    if status != "completed":
+    if (
+        status != "completed"
+        or getattr(response, "object", None) != "response"
+        or getattr(response, "error", None) is not None
+    ):
         raise AnalysisProviderFailure("provider_sdk_incompatible")
-    for item in response.output:
-        if getattr(item, "type", None) != "message":
-            continue  # Do not retain reasoning text or treat it as the final analysis.
-        for part in getattr(item, "content", ()):
-            if getattr(part, "type", None) == "refusal":
-                raise AnalysisProviderFailure("provider_refusal")
-    text = response.output_text
-    if not isinstance(text, str) or not text.strip():
+    output = getattr(response, "output", None)
+    if not isinstance(output, list):
+        raise AnalysisProviderFailure("provider_sdk_incompatible")
+    messages = []
+    for item in output:
+        kind = getattr(item, "type", None)
+        if kind == "reasoning":
+            continue  # Ignore reasoning metadata, never use it as final analysis.
+        if kind != "message" or getattr(item, "role", None) != "assistant":
+            raise AnalysisProviderFailure("provider_sdk_incompatible")
+        if getattr(item, "status", None) == "incomplete":
+            raise AnalysisProviderFailure("provider_incomplete")
+        if getattr(item, "status", None) != "completed":
+            raise AnalysisProviderFailure("provider_sdk_incompatible")
+        messages.append(item)
+    if not messages:
+        raise AnalysisProviderFailure("provider_empty_json")
+    if len(messages) != 1:
+        raise AnalysisProviderFailure("provider_sdk_incompatible")
+    content = getattr(messages[0], "content", None)
+    if not isinstance(content, list):
+        raise AnalysisProviderFailure("provider_sdk_incompatible")
+    if any(getattr(part, "type", None) == "refusal" for part in content):
+        raise AnalysisProviderFailure("provider_refusal")
+    if not content:
+        raise AnalysisProviderFailure("provider_empty_json")
+    if len(content) != 1 or getattr(content[0], "type", None) != "output_text":
+        raise AnalysisProviderFailure("provider_sdk_incompatible")
+    text = getattr(content[0], "text", None)
+    if not isinstance(text, str):
+        raise AnalysisProviderFailure("provider_sdk_incompatible")
+    if not text.strip():
+        raise AnalysisProviderFailure("provider_empty_json")
+    if len(text) > 200_000:
+        raise AnalysisProviderFailure("provider_invalid_json")
+    try:
+        json.loads(text, parse_constant=_invalid_constant)
+    except (ValueError, TypeError, RecursionError):
+        raise AnalysisProviderFailure("provider_invalid_json") from None
+    # Do not reserialize: service must see the original duplicate keys and citation labels.
+    response_id = getattr(response, "id", None)
+    if response_id is not None and (
+        not isinstance(response_id, str)
+        or not re.fullmatch(r"[A-Za-z0-9_.:/-]{1,256}", response_id)
+    ):
         raise AnalysisProviderFailure("provider_sdk_incompatible")
     usage = getattr(response, "usage", None)
+    if usage is not None and not isinstance(usage, openai.types.responses.ResponseUsage):
+        raise AnalysisProviderFailure("provider_sdk_incompatible")
     return ProviderResult(
         text,
-        getattr(response, "id", None),
+        response_id,
         _token_count(usage, "input_tokens"),
         _token_count(usage, "output_tokens"),
     )
@@ -133,8 +191,8 @@ class DeepSeekAnalysisProvider:
             raise AnalysisProviderFailure("provider_sdk_incompatible") from None
         try:
             return _normalize(response)
-        except AnalysisProviderError:
-            raise
+        except AnalysisProviderError as exc:
+            raise exc from None
         except Exception:
             raise AnalysisProviderFailure("provider_sdk_incompatible") from None
 

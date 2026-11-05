@@ -1,6 +1,6 @@
 # 路线与阶段门槛
 
-当前：**Phase 4A.1 — DeepSeek Provider + Real Provider Validation 代码已实现，进入独立 PR / CI / review**。[Issue #7](https://github.com/AndyFu12306/research-workbench/issues/7)，分支 feat/deepseek-provider。PR #6 已合并，基线 main = origin/main = aeb28b7，开始时工作区干净。日期：2026-11-03（Asia/Shanghai）。不自动merge、不进入Phase4B。
+当前：**Phase 4A.1 — DeepSeek Responses hardening（Option A）**。[Issue #11](https://github.com/AndyFu12306/research-workbench/issues/11)，分支 `codex/deepseek-responses-hardening`；基于已合并PR #8的main=aceca63，不基于PR #10。日期2026-11-05（Asia/Shanghai）。用户已确定Responses + strict schema + 本地严格校验；Chat PR #10保留未合并。Responses原型和Chat均有单次真实Level A PASS，正式hardening Provider也已由用户单次真实验收PASS（1 passed in 8.40s），真实Zotero Level B未测。不自动merge、不进入4B。
 
 | Phase | 内容 | 状态 |
 | --- | --- | --- |
@@ -10,7 +10,7 @@
 | 2 | Project + Question + Minimal Database | PR #2 已合并，main 包含 6bb505ab |
 | 3 | Question ↔ Zotero Source Association | PR #4 已合并 |
 | 4A | Structured AI Analysis MVP | PR #6 已合并；真实 OpenAI 仍 NOT TESTED |
-| 4A.1 | DeepSeek provider + real validation | 代码已实现；Level A/B 均 NOT TESTED |
+| 4A.1 | DeepSeek provider + hardening | PR #8已合并；原型/Chat/正式hardening各单次A PASS；真实Zotero B待测 |
 | 4B | 大 corpus / chunking / map-reduce / hierarchical synthesis | 延后，未授权 |
 | 后续 | Basic UI | 未开始，需另行授权 |
 | 后续 | Inbox / Claim + Evidence / Knowledge Graph / Memory / Automation | 延后 |
@@ -67,7 +67,7 @@ v0.1.0 = Project + Question + Zotero Source + AI Analysis；v0.2.0 = Inbox；v0.
 - Phase 4B 才考虑规模化 chunking/map-reduce/hierarchical synthesis；其余 UI、RAG、graph、Inbox、Claim/Evidence、后台自动化均未实现。
 - 最终 PR head 的 Windows/Ubuntu CI 和 technical self-review 以 PR 报告为准；不自动合并。
 
-## Phase 4A.1 代码与验收门槛
+## Phase 4A.1 原始PR #8验收记录（历史）
 
 - 独立DeepSeekAnalysisProvider，既有SDK 2.54.0，0新依赖/0migration。OpenAI及schema/contract保持；service只有统一安全错误码持久化改动，无provider-specific逻辑。
 - 250个离线测试通过，8个integration默认排除；DeepSeek真实测试关闭opt-in时2 skipped。Ruff及双平台CI为交付检查，最终head结果见PR。
@@ -75,3 +75,10 @@ v0.1.0 = Project + Question + Zotero Source + AI Analysis；v0.2.0 = Inbox；v0.
 - B只有同次A成功后才执行，独立外发开关和item key必需，不自动搜索、不读全文/批注、不写Zotero。通过后仅记录安全的日期/SDK/model/status/usage/id presence与验证结果，不记录文本或credential。
 - 已查官方Responses/json_schema文档，strict参数完整schema实际兼容性仍需用户实测。未知400/404不能仅凭generic response断言根因；无prose猜测/无限retry/普通文本回退。
 - 仅A+B都真实PASS才标 DeepSeek real workflow FULLY VALIDATED；不据此自动授权4B。OpenAI真实状态单独记录，不被DeepSeek覆盖。
+
+## Responses hardening 交付门槛（2026-11-05）
+
+- Option A方向已确定；仅Responses adapter、安全错误目录、回归测试/验收入口与文档。OpenAI、共享prompt/schema、corpus、Zotero、数据库/migrations、依赖不改。
+- 315离线测试通过，8真实测试默认排除；Ruff和锁检查通过。包含503/404、完整响应结构、JSON/重复key/引用、failed分类持久化、usage/id和immutable history。最终双平台CI和self-review见独立PR。
+- Responses原型A单次真实PASS（10.494s，1049/1397 input/output tokens）与Chat A单次PASS均为用户证据，不代表正式hardening版本或长期可靠性验收。历史故障保留，见DEEPSEEK_VALIDATION.md。
+- 正式版本已由用户在独立worktree运行synthetic A单次PASS（2026-11-05，1049/925 tokens、immutable/manifest/security通过）；真实Zotero B仍需独立外发同意及明确item key，未在本轮执行。保留analysis-v1 / analysis-schema-v1、4096预算、零retry/fallback。PR #10未关闭/合并，4B未授权。

@@ -167,3 +167,18 @@ deepseek_integration默认与现有两个real markers一起排除。RUN_DEEPSEEK
 ## ADR-037：外发私人Zotero内容需单独授权
 
 B额外要求RUN_DEEPSEEK_ZOTERO_E2E=1和用户明确选择的ZOTERO_TEST_ITEM_KEY；旧item配置不自动代表同意。无key/授权则skip，不随机搜索。只发送当前title/authors和abstract，禁止全文/annotations读取，只写临时Workbench DB。测试检查generated analysis、manifest/hash、usage/id与内容不落库；报告只含allowlisted运行元数据。A/B都实际PASS才能标DeepSeek FULLY VALIDATED，OpenAI验收仍独立。
+
+## ADR-042：正式保留Responses，独立hardening PR
+
+2026-11-05用户决定最终采用Option A：Responses + JSON Schema + strict=True + Workbench严格本地校验。PR #8已在main；PR #10的Chat实现保持独立未合并，不先merge再反向修改。两方案各有用户单次真实Level A PASS，Responses还完成minimal/strict-minimal/full-schema原型诊断。这足以支持当前协议选择，不证明长期可靠性或历史503根因。独立Issue #11/主分支worktree实现；不是再次选型或Phase4B。ADR-038至041位于未合并PR #10，本分支保留编号空间，不复制其Chat决策。
+
+## ADR-043：Responses失败关闭与安全分类
+
+共享OUTPUT_SCHEMA/INSTRUCTIONS及analysis-v1 / analysis-schema-v1保持；不引入Chat序列化指令、prompt后缀或service/repository版本转发。adapter只接受reasoning元数据加单条completed assistant/单个output_text；未知/工具输出、多消息/片段、异常角色/状态均拒绝。拒答、incomplete、异常结构与空白/非法JSON区分。预解析不重写原文；重复keys和citation仍由共享应用与repository校验。5xx及已知failed服务不可用code安全分类，generic404不推断永久不兼容；status=failed继续落fixed-code失败历史。usage/id可选缺失但类型异常拒绝。保留旧错误目录值以兼容旧history，无migration。
+
+## ADR-044：原型证据不代替正式版本验收
+
+用户真实Responses原型Level A：completed，10.494s（provider10.353s），1049/1397 tokens，4096预算，calls1/retries0，manifest/fingerprint/provenance/metadata/immutable/security通过。Chat单次A PASS仍保留。新正式hardening版本必须由用户另行显式运行单个synthetic A，普通测试/CI不使用真实凭据；真实Zotero B仍未测，必须另行同意及显式item key。历史503/timeout根因未严格证明，不宣称已永久恢复或FULLY VALIDATED。SDK逐I/O timeout不是墙钟deadline；预算4096不增加，不repair/extract/fallback/retry。
+
+
+验收更新（2026-11-05，非架构变更）：用户通过hardening worktree的正式Provider完成独立Level A，**1 passed in 8.40s**，deepseek-flash / Responses / completed；1049/925 tokens，response-id存在，analysis-v1 / analysis-schema-v1，4096预算、calls1/retries0，immutable/manifest/security通过。正式Level A现为**单次真实PASS**；上述ADR中“须另行验收”为决策时门槛，现已满足。原型与Chat证据仍独立保留，历史503/timeout根因仍未严格证明。Level B仍NOT TESTED，workflow仍NOT FULLY VALIDATED；本次仅文档记录，不授权merge或4B。
