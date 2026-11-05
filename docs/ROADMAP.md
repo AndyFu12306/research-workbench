@@ -1,5 +1,7 @@
 # 路线与阶段门槛
 
+> **当前授权（2026-11-06）**：Phase 4B.4 已完成（PR #20 / Issue #19，merge b716ad7）。当前仅在独立 Phase 4B.5a 分支/worktree按 [Issue #21](https://github.com/AndyFu12306/research-workbench/issues/21) 实施离线评估、测试和本地提交；禁止push/PR/merge及真实服务。下面的旧阶段授权/CI状态保留历史上下文。设计与复核边界见 [4B.5a设计](PHASE4B5A_DESIGN.md) 和 [基准规范](QUALITY_BENCHMARK.md)。
+
 当前：**Phase 4B.4 — 有界跨文献综合与作用域历史**。Issue #19 v2 + v2.1已获用户正式Branch + Implementation授权；基线main 41b136113aaaa56a9801590f938fcc745a0e546d（PR #18 / Issue #17已完成）。分支codex/phase4b4-cross-document-synthesis，独立worktree C:/Projects/research-workbench-phase4b4。本轮只实现、离线验证和本地提交；不创建PR、不合并、不关闭Issue、不进入4B.5，全部旧分支/worktree保留。真实API及旧Level B仍NOT TESTED。
 
 | Phase | 内容 | 状态 |

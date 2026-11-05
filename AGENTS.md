@@ -1,5 +1,7 @@
 # 长期工作规则
 
+> **当前授权（2026-11-06）**：Phase 4B.4 已完成（PR #20 / Issue #19，merge b716ad7）。当前仅在独立 Phase 4B.5a 分支/worktree按 [Issue #21](https://github.com/AndyFu12306/research-workbench/issues/21) 实施离线评估、测试和本地提交；禁止push/PR/merge及真实服务。下面的旧阶段授权/CI状态保留历史上下文。设计与复核边界见 [4B.5a设计](docs/PHASE4B5A_DESIGN.md) 和 [基准规范](docs/QUALITY_BENCHMARK.md)。
+
 - 工作前读取 README.md、docs/ROADMAP.md；涉及设计时读取 PRODUCT.md、ARCHITECTURE.md、DECISIONS.md。及时更新对应文档。
 - Zotero 是唯一文献事实源。Workbench 只保存研究数据和来源引用，不复制完整文献库，不重新实现 Zotero / zotero-mcp 已有能力。
 - 当前授权 Phase 4B.4（Issue #19）v2 + v2.1：独立分支 codex/phase4b4-cross-document-synthesis / worktree C:/Projects/research-workbench-phase4b4，允许实现、离线验证及本地 Conventional Commits。不得创建 PR、merge、关闭 Issue 或进入 4B.5；保留全部旧分支/worktree，不修改 main、不 force push。

@@ -373,3 +373,11 @@ Cross复用单篇执行时，私有hook只报告“即将调用/已返回”和�
 
 
 独立审核P1-08/P1-09修订：单篇start_stage/complete_stage/fail_run保留原显式参数及关键字调用，父成员检查仍在同session helper之前。跨文献层不再凭provider_sdk_incompatible推断receipt：该码同时覆盖SDK调用内未知异常和归一化拒绝，未有显式返回证据时保守interrupted/unknown；已有Provider返回hook或可靠拒答/incomplete/非法JSON码的行为不变。未改变4B.2/adapter契约、存储格式或schema。
+
+
+## Phase 4B.5a：测试树内的离线评估层
+
+Issue #21 v1+v1.1由用户另行授权实施；生产三层执行、Stage Schema/Prompt、历史及迁移均不改变。
+contracts/loading/validation定义严格合成DTO和引用完整性；scripted/binding从实际Fake调用、validator及临时库观察建立评分绑定；scoring/loss/reporting只聚合显式标注并输出白名单。
+双轴分别判断直接上游与原始来源；集合充分的跨块事实可合法综合；Map错误的下游忠实传递不变成来源支持。
+详见[设计](PHASE4B5A_DESIGN.md)及[标注/分母规范](QUALITY_BENCHMARK.md)。实际标注为Codex草稿、独立人工复核待办，真实模型质量NOT TESTED。

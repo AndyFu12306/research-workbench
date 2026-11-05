@@ -264,3 +264,11 @@ cross-document-history-v1为白名单投影，保存精确成员/执行/阶段�
 
 
 ADR-059独立审核补充（P1-09）：provider_sdk_incompatible不是可靠的响应凭据，同一码可能由responses.create内部未知异常或归一化错误产生。保持adapter协议不变，在新跨文献路径无显式返回证据时保守unknown；不检查异常原文/上下文猜测服务端结果。已有返回hook证据优先，拒答/incomplete等独立码不变，未知usage/费用保持None。P1-08仅恢复单篇repository显式签名兼容性，不改变父所有权或事务策略。
+
+
+## ADR-060：4B.5a独立评估、双轴支持和实际观察绑定
+
+Issue #21整合v1与v1.1，2026-11-06用户授权专用worktree实现、离线测试及本地提交，不授权push/PR/merge。
+评估仅位于tests树，零新增依赖/迁移，不修改生产契约。复用生产chunker、预算、validator及历史读取，不复制事实校验器。
+直接上游与原始来源支持分开；人工审定集合充分性与传播边，程序只做确定性聚合。所有来源/问题/候选/实际观察/Finding映射/规则版本绑定后才附评分；新run不得静默复用旧PASS。
+实际标注为Codex草稿，独立人工复核待办；mechanism_fixture只验证流程，不伪造人类审核。95%/90%目标待校准，Fake及离线通过不证明模型科研质量。

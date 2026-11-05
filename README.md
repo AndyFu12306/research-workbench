@@ -1,5 +1,7 @@
 # Personal Research Workbench
 
+> **当前授权（2026-11-06）**：Phase 4B.4 已完成（PR #20 / Issue #19，merge b716ad7）。当前仅在独立 Phase 4B.5a 分支/worktree按 [Issue #21](https://github.com/AndyFu12306/research-workbench/issues/21) 实施离线评估、测试和本地提交；禁止push/PR/merge及真实服务。下面的旧阶段授权/CI状态保留历史上下文。设计与复核边界见 [4B.5a设计](docs/PHASE4B5A_DESIGN.md) 和 [基准规范](docs/QUALITY_BENCHMARK.md)。
+
 建立在 Zotero 之上的个人 AI 研究工作台。Zotero 是唯一文献事实源，Workbench 保存研究对象及来源引用，不建立第二套文献库。
 
 > 以下旧阶段段落保留各自实现/验收时的范围；当前开发状态以本页开头和末尾 Phase 4B.3 说明为准。
