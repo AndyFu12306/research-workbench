@@ -164,4 +164,14 @@ AnalysisService → AnalysisProvider Protocol
 
 官方[Responses guide](https://api-docs.deepseek.com/guides/responses_api/)及[API](https://api-docs.deepseek.com/api/create-response/)为参数依据；strict字段的实际保证和当前模型接受完整schema仍待付费实测。离线transport测试不证明真实服务器行为。
 
-真实测试由用户在同一PowerShell运行，见README。Level A只发合成摘要，B另需RUN_DEEPSEEK_ZOTERO_E2E=1和明确consented item key；同次A fixture通过后才能读取/发送B摘要。B不搜索、不读PDF/annotations；只写临时Workbench DB。代码已提供guarded B，实际执行严格等A先通过。报告只打印白名单运行元数据，不打印key、raw source/prompt/response。默认pytest排除deepseek_integration、openai_integration、integration；CI不接真实服务。当前A/B均NOT TESTED。
+真实测试由用户在同一PowerShell运行，见README。Level A只发合成摘要，B另需RUN_DEEPSEEK_ZOTERO_E2E=1和明确consented item key；同次A fixture通过后才能读取/发送B摘要。B不搜索、不读PDF/annotations；只写临时Workbench DB。代码已提供guarded B，实际执行严格等A先通过。报告只打印白名单运行元数据，不打印key、raw source/prompt/response。默认pytest排除deepseek_integration、openai_integration、integration；CI不接真实服务。此为PR #8时的历史状态；最新原型/正式版本验收分层见DEEPSEEK_VALIDATION.md。
+
+## Phase 4A.1 Responses hardening（2026-11-05）
+
+正式选择Option A：DeepSeek Responses + 共享OUTPUT_SCHEMA + strict=True + Workbench本地严格校验。main基线aceca63；独立修复分支不合并Chat PR #10。AnalysisProvider、AnalysisService、ResearchCorpusBuilder和repository架构不变，prompt/schema仍analysis-v1 / analysis-schema-v1，无依赖/迁移变更。
+
+adapter验证completed响应结构，仅允许reasoning元数据（忽略、不存储）与一条completed assistant消息、一个output_text。工具输出/未知类型/异常role/status/多消息片段拒绝，不拼接/提取/修复。incomplete和refusal明确失败；status=failed保留已知机器code分类。5xx→provider_unavailable，generic404→provider_invalid_request；不根据错误prose推断根因。空白→provider_empty_json，非法/超长JSON→provider_invalid_json。合法JSON原文交给共享应用校验，重复key及非法citation不会被预解析重写掩盖。
+
+Responses input_tokens/output_tokens/id归一化到既有DTO，可选缺失None；不接受异常类型。provider只返回候选，不替代服务和repository校验；failed历史与manifest仍保留、终态不覆盖。新增安全错误只扩展既有allowlist，不改变schema。
+
+SDK I/O timeout和max_retries=0保持原行为；没有生产墙钟deadline、自动重试、协议fallback或预算增加。4096输出不完整即失败。原型的子进程deadline仅是ignored本地诊断工具能力，不声称正式provider具备同样控制。用户提供的原型/Chat各一次真实PASS不能替代最终正式版本验收、语义审阅或真实Zotero B授权。
