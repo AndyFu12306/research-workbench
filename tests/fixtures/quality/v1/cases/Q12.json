@@ -1,7 +1,7 @@
 {
   "version": "research-quality-benchmark-v1",
   "case_id": "Q12",
-  "revision": 1,
+  "revision": 2,
   "language": "en",
   "requirements_version": "quality-requirements-v1",
   "question": {
@@ -35,14 +35,14 @@
     {
       "fact_id": "F1",
       "proposition": "Study A measured accuracy only, with no energy measure.",
-      "subject": "synthetic-study-A",
-      "method": "A",
-      "comparison": "as explicitly stated",
-      "result": "Study A measured accuracy only, with no energy measure.",
-      "value_unit": "as explicitly stated",
-      "polarity": "as explicitly stated",
-      "conditions": "preserve population and setting",
-      "uncertainty": "do not infer unreported outcomes",
+      "subject": "synthetic A",
+      "method": "",
+      "comparison": "",
+      "result": "measured endpoint",
+      "value_unit": "accuracy only",
+      "polarity": "reported",
+      "conditions": "no energy measure",
+      "uncertainty": "No common utility scale supports an overall rank.",
       "evidence": [
         {
           "source": "A",
@@ -62,14 +62,14 @@
     {
       "fact_id": "F2",
       "proposition": "Study B measured energy only, with no accuracy measure.",
-      "subject": "synthetic-study-B",
-      "method": "A",
-      "comparison": "as explicitly stated",
-      "result": "Study B measured energy only, with no accuracy measure.",
-      "value_unit": "as explicitly stated",
-      "polarity": "as explicitly stated",
-      "conditions": "preserve population and setting",
-      "uncertainty": "do not infer unreported outcomes",
+      "subject": "synthetic B",
+      "method": "",
+      "comparison": "",
+      "result": "measured endpoint",
+      "value_unit": "energy only",
+      "polarity": "reported",
+      "conditions": "no accuracy measure",
+      "uncertainty": "No common utility scale supports an overall rank.",
       "evidence": [
         {
           "source": "B",

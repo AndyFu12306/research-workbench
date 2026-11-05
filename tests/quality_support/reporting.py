@@ -62,7 +62,15 @@ def report(case, candidate, run, bound):
     review = review_status(case, assessment)
     metrics = semantic_metrics(case, assessment) if run.terminal == "completed" else {}
     events = error_events(assessment.claims)
-    unresolved = any(m["status"] == "provisional" for m in metrics.values())
+    unresolved = (
+        any(m["status"] == "provisional" for m in metrics.values())
+        or any(
+            r.availability in ("indeterminate", "unscored")
+            or r.outcome in ("indeterminate", "unscored")
+            for r in assessment.retentions
+        )
+        or any(e["kind"] == "unresolved" for e in events)
+    )
     # Even a fully reviewed set may contain negative cases: reviewed is not quality pass.
     status = (
         "provisional" if review["status"] != "reviewed" or unresolved else "reviewed_measurement"
@@ -91,6 +99,12 @@ def report(case, candidate, run, bound):
         "by_stage": stage_metrics,
         "loss": loss_summary(case, assessment.retentions) if run.terminal == "completed" else {},
         "events": events,
+        "ordinary_issue_observations": sum(c.severity == "ordinary" for c in assessment.claims),
+        "citation_judgments": [
+            {"claim": c.claim_id, "source": j.source, "stance": j.stance}
+            for c in assessment.claims
+            for j in c.citations
+        ],
         "independent_error_origins": len({root for e in events for root in e["roots"]}),
         "runtime": runtime_metrics(candidate, run),
         "targets": {

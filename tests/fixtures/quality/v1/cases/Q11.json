@@ -1,7 +1,7 @@
 {
   "version": "research-quality-benchmark-v1",
   "case_id": "Q11",
-  "revision": 1,
+  "revision": 2,
   "language": "zh",
   "requirements_version": "quality-requirements-v1",
   "question": {
@@ -35,14 +35,14 @@
     {
       "fact_id": "F1",
       "proposition": "方法A在成人样本中改善结果。",
-      "subject": "synthetic-study-A",
-      "method": "A",
-      "comparison": "as explicitly stated",
-      "result": "方法A在成人样本中改善结果。",
-      "value_unit": "as explicitly stated",
-      "polarity": "as explicitly stated",
-      "conditions": "preserve population and setting",
-      "uncertainty": "do not infer unreported outcomes",
+      "subject": "synthetic A",
+      "method": "method A",
+      "comparison": "",
+      "result": "population-specific performance",
+      "value_unit": "",
+      "polarity": "improved",
+      "conditions": "adults",
+      "uncertainty": "Conditions differ; not a same-population contradiction.",
       "evidence": [
         {
           "source": "A",
@@ -62,14 +62,14 @@
     {
       "fact_id": "F2",
       "proposition": "方法A在儿童样本中未改善结果。",
-      "subject": "synthetic-study-B",
-      "method": "A",
-      "comparison": "as explicitly stated",
-      "result": "方法A在儿童样本中未改善结果。",
-      "value_unit": "as explicitly stated",
-      "polarity": "as explicitly stated",
-      "conditions": "preserve population and setting",
-      "uncertainty": "do not infer unreported outcomes",
+      "subject": "synthetic B",
+      "method": "method A",
+      "comparison": "",
+      "result": "population-specific performance",
+      "value_unit": "",
+      "polarity": "not improved",
+      "conditions": "children",
+      "uncertainty": "Conditions differ; not a same-population contradiction.",
       "evidence": [
         {
           "source": "B",

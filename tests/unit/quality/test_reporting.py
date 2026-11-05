@@ -71,6 +71,23 @@ def test_missing_fact_or_atomic_confirmation_cannot_be_excluded():
             validate_assessment(case, candidate, changed)
 
 
+def test_retention_cannot_borrow_unrelated_source_inputs():
+    case = load_case("Q01")
+    candidate = load_candidate(case, "correct")
+    assessment = load_assessment(case, candidate)
+    changed = replace(
+        assessment,
+        retentions=tuple(
+            replace(r, input_refs=("B/map/1/f1",))
+            if r.fact_id == "F1" and r.layer == "document_reduce"
+            else r
+            for r in assessment.retentions
+        ),
+    )
+    with pytest.raises(QualityError):
+        validate_assessment(case, candidate, changed)
+
+
 def test_mixed_sources_are_not_majority_votes():
     case = load_case("Q10")
     correct = load_assessment(case, load_candidate(case, "correct"))

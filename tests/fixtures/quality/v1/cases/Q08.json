@@ -1,7 +1,7 @@
 {
   "version": "research-quality-benchmark-v1",
   "case_id": "Q08",
-  "revision": 1,
+  "revision": 2,
   "language": "en",
   "requirements_version": "quality-requirements-v1",
   "question": {
@@ -35,14 +35,14 @@
     {
       "fact_id": "F1",
       "proposition": "Method A improved performance under low load.",
-      "subject": "synthetic-study-A",
-      "method": "A",
-      "comparison": "as explicitly stated",
-      "result": "Method A improved performance under low load.",
-      "value_unit": "as explicitly stated",
-      "polarity": "as explicitly stated",
-      "conditions": "preserve population and setting",
-      "uncertainty": "do not infer unreported outcomes",
+      "subject": "synthetic A",
+      "method": "method A",
+      "comparison": "",
+      "result": "performance direction",
+      "value_unit": "",
+      "polarity": "improved",
+      "conditions": "low load",
+      "uncertainty": "Do not generalize across loads.",
       "evidence": [
         {
           "source": "A",
@@ -62,14 +62,14 @@
     {
       "fact_id": "F2",
       "proposition": "Method A decreased performance under high load.",
-      "subject": "synthetic-study-B",
-      "method": "A",
-      "comparison": "as explicitly stated",
-      "result": "Method A decreased performance under high load.",
-      "value_unit": "as explicitly stated",
-      "polarity": "as explicitly stated",
-      "conditions": "preserve population and setting",
-      "uncertainty": "do not infer unreported outcomes",
+      "subject": "synthetic B",
+      "method": "method A",
+      "comparison": "",
+      "result": "performance direction",
+      "value_unit": "",
+      "polarity": "decreased",
+      "conditions": "high load",
+      "uncertainty": "Do not generalize across loads.",
       "evidence": [
         {
           "source": "B",

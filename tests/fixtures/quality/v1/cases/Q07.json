@@ -1,7 +1,7 @@
 {
   "version": "research-quality-benchmark-v1",
   "case_id": "Q07",
-  "revision": 1,
+  "revision": 2,
   "language": "zh",
   "requirements_version": "quality-requirements-v1",
   "question": {
@@ -35,14 +35,14 @@
     {
       "fact_id": "F1",
       "proposition": "研究甲只纳入健康成年人，排除了儿童。",
-      "subject": "synthetic-study-A",
-      "method": "A",
-      "comparison": "as explicitly stated",
-      "result": "研究甲只纳入健康成年人，排除了儿童。",
-      "value_unit": "as explicitly stated",
-      "polarity": "as explicitly stated",
-      "conditions": "preserve population and setting",
-      "uncertainty": "do not infer unreported outcomes",
+      "subject": "synthetic A",
+      "method": "method A",
+      "comparison": "",
+      "result": "population applicability",
+      "value_unit": "",
+      "polarity": "limited scope",
+      "conditions": "healthy adults only; children excluded",
+      "uncertainty": "Applicability to children is unknown.",
       "evidence": [
         {
           "source": "A",
@@ -62,14 +62,14 @@
     {
       "fact_id": "F2",
       "proposition": "研究乙仅研究健康成人，儿童适用性未知。",
-      "subject": "synthetic-study-B",
-      "method": "A",
-      "comparison": "as explicitly stated",
-      "result": "研究乙仅研究健康成人，儿童适用性未知。",
-      "value_unit": "as explicitly stated",
-      "polarity": "as explicitly stated",
-      "conditions": "preserve population and setting",
-      "uncertainty": "do not infer unreported outcomes",
+      "subject": "synthetic B",
+      "method": "method A",
+      "comparison": "",
+      "result": "population applicability",
+      "value_unit": "",
+      "polarity": "limited scope",
+      "conditions": "healthy adults only",
+      "uncertainty": "Applicability to children is unknown.",
       "evidence": [
         {
           "source": "B",

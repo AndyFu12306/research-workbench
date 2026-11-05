@@ -96,3 +96,15 @@ def test_actual_drafts_are_never_human_reviewed():
         ),
     )
     assert review_status(case, adjudicated, mechanism=True)["status"] == "simulation_complete"
+
+
+def test_changed_existing_claim_is_distortion_even_without_direct_contradiction():
+    _, _, a = draft("Q18", "wrong")
+    claims = tuple(
+        replace(c, upstream_support="unsupported", source_support="unsupported", link="changed")
+        if c.stage == "A/document"
+        else c
+        for c in a.claims
+    )
+    events = error_events(claims)
+    assert next(e for e in events if e["claim"] == "A/document/f1/c1")["kind"] == "first_distortion"

@@ -1,7 +1,7 @@
 {
   "version": "research-quality-benchmark-v1",
   "case_id": "Q05",
-  "revision": 1,
+  "revision": 2,
   "language": "zh",
   "requirements_version": "quality-requirements-v1",
   "question": {
@@ -35,14 +35,14 @@
     {
       "fact_id": "F1",
       "proposition": "研究甲准确率提高，但仅测试了一个数据集。",
-      "subject": "synthetic-study-A",
-      "method": "A",
-      "comparison": "as explicitly stated",
-      "result": "研究甲准确率提高，但仅测试了一个数据集。",
-      "value_unit": "as explicitly stated",
-      "polarity": "as explicitly stated",
-      "conditions": "preserve population and setting",
-      "uncertainty": "do not infer unreported outcomes",
+      "subject": "synthetic A",
+      "method": "method A",
+      "comparison": "",
+      "result": "accuracy gain / latency reduction",
+      "value_unit": "",
+      "polarity": "improved",
+      "conditions": "one dataset only",
+      "uncertainty": "Generalization and repeatability remain untested.",
       "evidence": [
         {
           "source": "A",
@@ -62,14 +62,14 @@
     {
       "fact_id": "F2",
       "proposition": "研究乙延迟降低，但未进行重复实验。",
-      "subject": "synthetic-study-B",
-      "method": "A",
-      "comparison": "as explicitly stated",
-      "result": "研究乙延迟降低，但未进行重复实验。",
-      "value_unit": "as explicitly stated",
-      "polarity": "as explicitly stated",
-      "conditions": "preserve population and setting",
-      "uncertainty": "do not infer unreported outcomes",
+      "subject": "synthetic B",
+      "method": "method A",
+      "comparison": "",
+      "result": "accuracy gain / latency reduction",
+      "value_unit": "",
+      "polarity": "reduced",
+      "conditions": "no repeated experiment",
+      "uncertainty": "Generalization and repeatability remain untested.",
       "evidence": [
         {
           "source": "B",

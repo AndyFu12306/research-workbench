@@ -1,7 +1,7 @@
 {
   "version": "research-quality-benchmark-v1",
   "case_id": "Q16",
-  "revision": 1,
+  "revision": 2,
   "language": "en",
   "requirements_version": "quality-requirements-v1",
   "question": {
@@ -35,14 +35,14 @@
     {
       "fact_id": "F2",
       "proposition": "Method A improved toy-task accuracy by 2 points.",
-      "subject": "synthetic-study-B",
-      "method": "A",
-      "comparison": "as explicitly stated",
-      "result": "Method A improved toy-task accuracy by 2 points.",
-      "value_unit": "as explicitly stated",
-      "polarity": "as explicitly stated",
-      "conditions": "preserve population and setting",
-      "uncertainty": "do not infer unreported outcomes",
+      "subject": "synthetic B",
+      "method": "method A",
+      "comparison": "",
+      "result": "toy-task accuracy",
+      "value_unit": "2 points",
+      "polarity": "improved",
+      "conditions": "toy tasks",
+      "uncertainty": "No broader applicability established.",
       "evidence": [
         {
           "source": "B",

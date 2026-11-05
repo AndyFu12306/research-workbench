@@ -192,6 +192,10 @@ def validate_assessment(case, candidate, assessment):
     for r in assessment.retentions:
         require(bool(r.reason.strip()))
         refs = set(r.input_refs)
+        fact = next(f for f in case.facts if f.fact_id == r.fact_id)
+        required_sources = {s.source for s in fact.evidence}
+        referenced_sources = {ref.split("/")[0] for ref in refs}
+        require(referenced_sources <= required_sources)
         require(refs <= (chunk_refs | set(findings)))
         if r.layer == "map_collection":
             require(refs <= chunk_refs)
@@ -201,6 +205,7 @@ def validate_assessment(case, candidate, assessment):
             require(all(stages.get(ref, "").endswith("/document") for ref in refs))
         if r.availability in ("explicit_complete", "collectively_sufficient"):
             require(bool(refs))
+            require(referenced_sources == required_sources)
         if r.availability == "collectively_sufficient":
             require(len(refs) >= 2 and bool(r.counter_information.strip()))
     unique([r.relation_id for r in assessment.relations])

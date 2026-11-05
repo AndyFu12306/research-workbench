@@ -49,7 +49,7 @@ def test_old_scoring_rejected_after_each_change(change):
     case, candidate, run = observed()
     bound = attach(case, candidate, run, load_assessment(case, candidate))
     if change == "case":
-        case = replace(case, revision=2)
+        case = replace(case, revision=case.revision + 1)
     if change == "source":
         case = replace(case, sources=(replace(case.sources[0], text="different"), case.sources[1]))
     if change == "question":

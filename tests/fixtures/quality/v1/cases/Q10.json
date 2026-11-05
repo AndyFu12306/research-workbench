@@ -1,7 +1,7 @@
 {
   "version": "research-quality-benchmark-v1",
   "case_id": "Q10",
-  "revision": 1,
+  "revision": 2,
   "language": "en",
   "requirements_version": "quality-requirements-v1",
   "question": {
@@ -35,14 +35,14 @@
     {
       "fact_id": "F1",
       "proposition": "Under setting X, method A outperformed method B.",
-      "subject": "synthetic-study-A",
-      "method": "A",
-      "comparison": "as explicitly stated",
-      "result": "Under setting X, method A outperformed method B.",
-      "value_unit": "as explicitly stated",
-      "polarity": "as explicitly stated",
-      "conditions": "preserve population and setting",
-      "uncertainty": "do not infer unreported outcomes",
+      "subject": "synthetic A",
+      "method": "method A versus B",
+      "comparison": "versus the explicitly stated comparator",
+      "result": "relative performance",
+      "value_unit": "",
+      "polarity": "A better",
+      "conditions": "setting X",
+      "uncertainty": "Conflicting reports; neither adjudicated.",
       "evidence": [
         {
           "source": "A",
@@ -62,14 +62,14 @@
     {
       "fact_id": "F2",
       "proposition": "Under setting X, method A underperformed method B.",
-      "subject": "synthetic-study-B",
-      "method": "A",
-      "comparison": "as explicitly stated",
-      "result": "Under setting X, method A underperformed method B.",
-      "value_unit": "as explicitly stated",
-      "polarity": "as explicitly stated",
-      "conditions": "preserve population and setting",
-      "uncertainty": "do not infer unreported outcomes",
+      "subject": "synthetic B",
+      "method": "method A versus B",
+      "comparison": "versus the explicitly stated comparator",
+      "result": "relative performance",
+      "value_unit": "",
+      "polarity": "A worse",
+      "conditions": "setting X",
+      "uncertainty": "Conflicting reports; neither adjudicated.",
       "evidence": [
         {
           "source": "B",

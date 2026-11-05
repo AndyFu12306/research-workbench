@@ -1,7 +1,7 @@
 {
   "version": "research-quality-benchmark-v1",
   "case_id": "Q13",
-  "revision": 1,
+  "revision": 2,
   "language": "zh",
   "requirements_version": "quality-requirements-v1",
   "question": {
@@ -35,14 +35,14 @@
     {
       "fact_id": "F1",
       "proposition": "试验T：准确率由50%升至60%。                                               试验T：上述提升仅见于成年人；儿童未接受测试。",
-      "subject": "synthetic-study-A",
-      "method": "A",
-      "comparison": "as explicitly stated",
-      "result": "试验T：准确率由50%升至60%。                                               试验T：上述提升仅见于成年人；儿童未接受测试。",
-      "value_unit": "as explicitly stated",
-      "polarity": "as explicitly stated",
-      "conditions": "preserve population and setting",
-      "uncertainty": "do not infer unreported outcomes",
+      "subject": "synthetic trial T",
+      "method": "trial T",
+      "comparison": "",
+      "result": "conditional accuracy / separate latency observation",
+      "value_unit": "50% to 60%",
+      "polarity": "improved",
+      "conditions": "adults only; children untested",
+      "uncertainty": "No result for children and no cross-trial inference.",
       "evidence": [
         {
           "source": "A",
@@ -62,14 +62,14 @@
     {
       "fact_id": "F2",
       "proposition": "试验U：仅报告独立的延迟观察。",
-      "subject": "synthetic-study-B",
-      "method": "A",
-      "comparison": "as explicitly stated",
-      "result": "试验U：仅报告独立的延迟观察。",
-      "value_unit": "as explicitly stated",
-      "polarity": "as explicitly stated",
-      "conditions": "preserve population and setting",
-      "uncertainty": "do not infer unreported outcomes",
+      "subject": "synthetic B",
+      "method": "trial U",
+      "comparison": "",
+      "result": "conditional accuracy / separate latency observation",
+      "value_unit": "",
+      "polarity": "no quantitative result stated",
+      "conditions": "separate latency observation",
+      "uncertainty": "No result for children and no cross-trial inference.",
       "evidence": [
         {
           "source": "B",

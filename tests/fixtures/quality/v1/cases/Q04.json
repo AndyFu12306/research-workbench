@@ -1,7 +1,7 @@
 {
   "version": "research-quality-benchmark-v1",
   "case_id": "Q04",
-  "revision": 1,
+  "revision": 2,
   "language": "en",
   "requirements_version": "quality-requirements-v1",
   "question": {
@@ -35,14 +35,14 @@
     {
       "fact_id": "F1",
       "proposition": "Study A reported accuracy; mortality was not reported.",
-      "subject": "synthetic-study-A",
-      "method": "A",
-      "comparison": "as explicitly stated",
-      "result": "Study A reported accuracy; mortality was not reported.",
-      "value_unit": "as explicitly stated",
-      "polarity": "as explicitly stated",
-      "conditions": "preserve population and setting",
-      "uncertainty": "do not infer unreported outcomes",
+      "subject": "synthetic A",
+      "method": "",
+      "comparison": "",
+      "result": "mortality",
+      "value_unit": "",
+      "polarity": "not reported",
+      "conditions": "study A",
+      "uncertainty": "Event counts are unknown.",
       "evidence": [
         {
           "source": "A",
@@ -62,14 +62,14 @@
     {
       "fact_id": "F2",
       "proposition": "Study B reported latency; mortality was not reported.",
-      "subject": "synthetic-study-B",
-      "method": "A",
-      "comparison": "as explicitly stated",
-      "result": "Study B reported latency; mortality was not reported.",
-      "value_unit": "as explicitly stated",
-      "polarity": "as explicitly stated",
-      "conditions": "preserve population and setting",
-      "uncertainty": "do not infer unreported outcomes",
+      "subject": "synthetic B",
+      "method": "",
+      "comparison": "",
+      "result": "mortality",
+      "value_unit": "",
+      "polarity": "not reported",
+      "conditions": "study B",
+      "uncertainty": "Event counts are unknown.",
       "evidence": [
         {
           "source": "B",

@@ -1,7 +1,7 @@
 {
   "version": "research-quality-benchmark-v1",
   "case_id": "Q09",
-  "revision": 1,
+  "revision": 2,
   "language": "zh",
   "requirements_version": "quality-requirements-v1",
   "question": {
@@ -35,14 +35,14 @@
     {
       "fact_id": "F1",
       "proposition": "研究甲为十人样本的单次探索，无重复实验。",
-      "subject": "synthetic-study-A",
-      "method": "A",
-      "comparison": "as explicitly stated",
-      "result": "研究甲为十人样本的单次探索，无重复实验。",
-      "value_unit": "as explicitly stated",
-      "polarity": "as explicitly stated",
-      "conditions": "preserve population and setting",
-      "uncertainty": "do not infer unreported outcomes",
+      "subject": "synthetic A",
+      "method": "method A",
+      "comparison": "",
+      "result": "pilot sample and replication",
+      "value_unit": "10 persons",
+      "polarity": "exploratory",
+      "conditions": "single exploratory trial",
+      "uncertainty": "No repeated experiments; stability unknown.",
       "evidence": [
         {
           "source": "A",
@@ -62,14 +62,14 @@
     {
       "fact_id": "F2",
       "proposition": "研究乙为八人样本的单次探索，无重复实验。",
-      "subject": "synthetic-study-B",
-      "method": "A",
-      "comparison": "as explicitly stated",
-      "result": "研究乙为八人样本的单次探索，无重复实验。",
-      "value_unit": "as explicitly stated",
-      "polarity": "as explicitly stated",
-      "conditions": "preserve population and setting",
-      "uncertainty": "do not infer unreported outcomes",
+      "subject": "synthetic B",
+      "method": "method A",
+      "comparison": "",
+      "result": "pilot sample and replication",
+      "value_unit": "8 persons",
+      "polarity": "exploratory",
+      "conditions": "single exploratory trial",
+      "uncertainty": "No repeated experiments; stability unknown.",
       "evidence": [
         {
           "source": "B",

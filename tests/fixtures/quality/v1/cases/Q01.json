@@ -1,7 +1,7 @@
 {
   "version": "research-quality-benchmark-v1",
   "case_id": "Q01",
-  "revision": 1,
+  "revision": 2,
   "language": "zh",
   "requirements_version": "quality-requirements-v1",
   "question": {
@@ -35,14 +35,14 @@
     {
       "fact_id": "F1",
       "proposition": "同一测试集上，甲方法准确率72%。",
-      "subject": "synthetic-study-A",
-      "method": "A",
-      "comparison": "as explicitly stated",
-      "result": "同一测试集上，甲方法准确率72%。",
-      "value_unit": "as explicitly stated",
-      "polarity": "as explicitly stated",
-      "conditions": "preserve population and setting",
-      "uncertainty": "do not infer unreported outcomes",
+      "subject": "synthetic A",
+      "method": "甲方法",
+      "comparison": "versus the explicitly stated comparator",
+      "result": "accuracy",
+      "value_unit": "72%",
+      "polarity": "observed",
+      "conditions": "same test set",
+      "uncertainty": "Statistical significance was not reported.",
       "evidence": [
         {
           "source": "A",
@@ -62,14 +62,14 @@
     {
       "fact_id": "F2",
       "proposition": "同一测试集上，乙方法准确率68%。",
-      "subject": "synthetic-study-B",
-      "method": "A",
-      "comparison": "as explicitly stated",
-      "result": "同一测试集上，乙方法准确率68%。",
-      "value_unit": "as explicitly stated",
-      "polarity": "as explicitly stated",
-      "conditions": "preserve population and setting",
-      "uncertainty": "do not infer unreported outcomes",
+      "subject": "synthetic B",
+      "method": "乙方法",
+      "comparison": "versus the explicitly stated comparator",
+      "result": "accuracy",
+      "value_unit": "68%",
+      "polarity": "observed",
+      "conditions": "same test set",
+      "uncertainty": "Statistical significance was not reported.",
       "evidence": [
         {
           "source": "B",

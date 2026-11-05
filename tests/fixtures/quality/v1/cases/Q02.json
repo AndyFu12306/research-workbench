@@ -1,7 +1,7 @@
 {
   "version": "research-quality-benchmark-v1",
   "case_id": "Q02",
-  "revision": 1,
+  "revision": 2,
   "language": "en",
   "requirements_version": "quality-requirements-v1",
   "question": {
@@ -35,14 +35,14 @@
     {
       "fact_id": "F1",
       "proposition": "Under load X, method A latency was 250 ms.",
-      "subject": "synthetic-study-A",
-      "method": "A",
-      "comparison": "as explicitly stated",
-      "result": "Under load X, method A latency was 250 ms.",
-      "value_unit": "as explicitly stated",
-      "polarity": "as explicitly stated",
-      "conditions": "preserve population and setting",
-      "uncertainty": "do not infer unreported outcomes",
+      "subject": "synthetic A",
+      "method": "method A",
+      "comparison": "versus the explicitly stated comparator",
+      "result": "latency",
+      "value_unit": "250 ms",
+      "polarity": "observed",
+      "conditions": "load X",
+      "uncertainty": "No other loads were studied.",
       "evidence": [
         {
           "source": "A",
@@ -62,14 +62,14 @@
     {
       "fact_id": "F2",
       "proposition": "Under load X, method B latency was 0.5 s.",
-      "subject": "synthetic-study-B",
-      "method": "A",
-      "comparison": "as explicitly stated",
-      "result": "Under load X, method B latency was 0.5 s.",
-      "value_unit": "as explicitly stated",
-      "polarity": "as explicitly stated",
-      "conditions": "preserve population and setting",
-      "uncertainty": "do not infer unreported outcomes",
+      "subject": "synthetic B",
+      "method": "method B",
+      "comparison": "versus the explicitly stated comparator",
+      "result": "latency",
+      "value_unit": "0.5 s",
+      "polarity": "observed",
+      "conditions": "load X",
+      "uncertainty": "No other loads were studied.",
       "evidence": [
         {
           "source": "B",

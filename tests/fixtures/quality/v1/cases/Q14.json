@@ -1,7 +1,7 @@
 {
   "version": "research-quality-benchmark-v1",
   "case_id": "Q14",
-  "revision": 1,
+  "revision": 2,
   "language": "en",
   "requirements_version": "quality-requirements-v1",
   "question": {
@@ -35,14 +35,14 @@
     {
       "fact_id": "F1",
       "proposition": "Experiment E observed a 2 point gain; this is one experiment.",
-      "subject": "synthetic-study-A",
-      "method": "A",
-      "comparison": "as explicitly stated",
-      "result": "Experiment E observed a 2 point gain; this is one experiment.",
-      "value_unit": "as explicitly stated",
-      "polarity": "as explicitly stated",
-      "conditions": "preserve population and setting",
-      "uncertainty": "do not infer unreported outcomes",
+      "subject": "synthetic A",
+      "method": "experiment E",
+      "comparison": "",
+      "result": "experiment independence",
+      "value_unit": "2 points",
+      "polarity": "observed gain",
+      "conditions": "one experiment",
+      "uncertainty": "Duplicate accounts do not establish replication.",
       "evidence": [
         {
           "source": "A",
@@ -62,14 +62,14 @@
     {
       "fact_id": "F2",
       "proposition": "This report retells experiment E, not an independent replication.",
-      "subject": "synthetic-study-B",
-      "method": "A",
-      "comparison": "as explicitly stated",
-      "result": "This report retells experiment E, not an independent replication.",
-      "value_unit": "as explicitly stated",
-      "polarity": "as explicitly stated",
-      "conditions": "preserve population and setting",
-      "uncertainty": "do not infer unreported outcomes",
+      "subject": "synthetic B",
+      "method": "experiment E",
+      "comparison": "",
+      "result": "experiment independence",
+      "value_unit": "one retelling",
+      "polarity": "not an independent replication",
+      "conditions": "same experiment retold",
+      "uncertainty": "Duplicate accounts do not establish replication.",
       "evidence": [
         {
           "source": "B",

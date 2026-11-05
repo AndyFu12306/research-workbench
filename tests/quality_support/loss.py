@@ -22,8 +22,9 @@ def error_events(claims):
         elif c.upstream_support != "supported":
             kind = (
                 "first_distortion"
-                if c.link in ("root", "changed")
-                and c.upstream_support == "contradicted"
+                if (
+                    c.link == "changed" or c.link == "root" and c.upstream_support == "contradicted"
+                )
                 and c.source_support != "supported"
                 else "unsupported_new"
             )
@@ -43,6 +44,7 @@ def error_events(claims):
                     "kind": kind,
                     "roots": current_roots,
                     "inherited_roots": inherited,
+                    "severity": c.severity,
                 }
             )
         seen[c.claim_id] = c
