@@ -66,3 +66,10 @@ def links(database):
     from research_workbench.persistence import QuestionSourceRepository
 
     return QuestionSourceRepository(database)
+
+
+@pytest.fixture
+def cross_setup(database, projects, questions, links):
+    from cross_fakes import make_cross
+
+    return make_cross(database, projects, questions, links)

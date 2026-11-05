@@ -119,6 +119,39 @@ def history_result(result, child_ordinals=()):
     )
 
 
+def document_config(plan, stage_budget, execution_budget, pricing, estimates):
+    price_dict = (
+        None
+        if pricing is None
+        else {
+            **asdict(pricing),
+            "input_per_million": str(pricing.input_per_million),
+            "output_per_million": str(pricing.output_per_million),
+        }
+    )
+    config = {
+        "pipeline_version": "document-pipeline-v1",
+        "request_fingerprint_version": "stage-input-sha256-v1",
+        "input_kind": "fulltext",
+        "chunking_version": plan.calls[0].input.chunk.algorithm_version,
+        "chunking": asdict(plan.chunking),
+        "planner_estimator_version": plan.estimator_version,
+        "planner_envelope_version": plan.calls[0].input.envelope_version,
+        "planning_budget": asdict(plan.budget),
+        "planner_estimated_tokens": plan.total_estimated_tokens,
+        "preflight_map_estimates": [asdict(estimate) for estimate in estimates],
+        "stage_budget": asdict(stage_budget),
+        "execution_budget": {
+            **asdict(execution_budget),
+            "max_estimated_cost": str(execution_budget.max_estimated_cost)
+            if execution_budget.max_estimated_cost is not None
+            else None,
+        },
+        "pricing": price_dict,
+    }
+    return config
+
+
 class DocumentAnalysisRepository:
     def __init__(self, database: Database):
         self._database = database
@@ -209,8 +242,13 @@ class DocumentAnalysisRepository:
                 ).mappings()
             )
 
-    def create_run(
+    def create_run(self, *args, **kwargs):
+        with self._database._session() as session:
+            return self._create_run(session, *args, **kwargs)
+
+    def _create_run(
         self,
+        session,
         question_id: int,
         source_id: int,
         plan: MapPlan,
@@ -239,113 +277,80 @@ class DocumentAnalysisRepository:
             <= execution_budget.max_estimated_tokens,
             "execution_budget_exceeded",
         )
-        price_dict = (
-            None
-            if pricing is None
-            else {
-                **asdict(pricing),
-                "input_per_million": str(pricing.input_per_million),
-                "output_per_million": str(pricing.output_per_million),
-            }
+        config = document_config(plan, stage_budget, execution_budget, pricing, estimates)
+        question = session.get(QuestionRow, _identifier(question_id))
+        source = session.get(SourceRow, _identifier(source_id))
+        _require(
+            question is not None
+            and source is not None
+            and session.get(QuestionSourceRow, (question_id, source_id)) is not None
         )
-        config = {
-            "pipeline_version": "document-pipeline-v1",
-            "request_fingerprint_version": "stage-input-sha256-v1",
-            "input_kind": "fulltext",
-            "chunking_version": expected[0].algorithm_version,
-            "chunking": asdict(plan.chunking),
-            "planner_estimator_version": plan.estimator_version,
-            "planner_envelope_version": plan.calls[0].input.envelope_version,
-            "planning_budget": asdict(plan.budget),
-            "planner_estimated_tokens": plan.total_estimated_tokens,
-            "preflight_map_estimates": [asdict(estimate) for estimate in estimates],
-            "stage_budget": asdict(stage_budget),
-            "execution_budget": {
-                **asdict(execution_budget),
-                "max_estimated_cost": str(execution_budget.max_estimated_cost)
-                if execution_budget.max_estimated_cost is not None
-                else None,
-            },
-            "pricing": price_dict,
-        }
-        with self._database._session() as session:
-            question = session.get(QuestionRow, _identifier(question_id))
-            source = session.get(SourceRow, _identifier(source_id))
-            _require(
-                question is not None
-                and source is not None
-                and session.get(QuestionSourceRow, (question_id, source_id)) is not None
+        _require(doc.identity == SourceIdentity(source.provider, source.scope, source.external_key))
+        question_hash = fingerprint(render_document_question(question.title, question.description))
+        _require(question_hash == fingerprint(plan.calls[0].input.question))
+        result = session.execute(
+            insert(executions).values(
+                question_id=question_id,
+                source_id=source_id,
+                status="running",
+                provider=provider,
+                model=model,
+                source_fingerprint=doc.source_fingerprint,
+                content_sha256=doc.content_sha256,
+                input_chars=len(doc.text),
+                question_sha256=question_hash,
+                chunk_count=count,
+                config_json=_json(config),
+                created_at=utc_now(),
             )
-            _require(
-                doc.identity == SourceIdentity(source.provider, source.scope, source.external_key)
+        )
+        execution_id = result.inserted_primary_key[0]
+        for chunk in expected:
+            session.execute(
+                insert(chunks).values(
+                    execution_id=execution_id,
+                    ordinal=chunk.ordinal,
+                    chunk_id=chunk.chunk_id,
+                    start=chunk.start,
+                    end=chunk.end,
+                    content_sha256=chunk.content_sha256,
+                    source_fingerprint=chunk.source_fingerprint,
+                )
             )
-            question_hash = fingerprint(
-                render_document_question(question.title, question.description)
-            )
-            _require(question_hash == fingerprint(plan.calls[0].input.question))
-            result = session.execute(
-                insert(executions).values(
-                    question_id=question_id,
-                    source_id=source_id,
-                    status="running",
-                    provider=provider,
-                    model=model,
-                    source_fingerprint=doc.source_fingerprint,
-                    content_sha256=doc.content_sha256,
-                    input_chars=len(doc.text),
-                    question_sha256=question_hash,
-                    chunk_count=count,
-                    config_json=_json(config),
+        for ordinal in range(1, count + 2):
+            stage = "map" if ordinal <= count else "document_reduce"
+            session.execute(
+                insert(stages).values(
+                    execution_id=execution_id,
+                    ordinal=ordinal,
+                    stage=stage,
+                    status="planned",
+                    prompt_version=PROMPT_VERSIONS[stage],
+                    contract_version=CONTRACT_VERSIONS[stage],
+                    call_outcome="not_started",
                     created_at=utc_now(),
                 )
             )
-            execution_id = result.inserted_primary_key[0]
-            for chunk in expected:
+            if stage == "map":
                 session.execute(
-                    insert(chunks).values(
+                    insert(inputs).values(
                         execution_id=execution_id,
-                        ordinal=chunk.ordinal,
-                        chunk_id=chunk.chunk_id,
-                        start=chunk.start,
-                        end=chunk.end,
-                        content_sha256=chunk.content_sha256,
-                        source_fingerprint=chunk.source_fingerprint,
+                        parent_ordinal=ordinal,
+                        ordinal=1,
+                        chunk_ordinal=ordinal,
                     )
                 )
-            for ordinal in range(1, count + 2):
-                stage = "map" if ordinal <= count else "document_reduce"
-                session.execute(
-                    insert(stages).values(
-                        execution_id=execution_id,
-                        ordinal=ordinal,
-                        stage=stage,
-                        status="planned",
-                        prompt_version=PROMPT_VERSIONS[stage],
-                        contract_version=CONTRACT_VERSIONS[stage],
-                        call_outcome="not_started",
-                        created_at=utc_now(),
-                    )
-                )
-                if stage == "map":
+            else:
+                for child in range(1, count + 1):
                     session.execute(
                         insert(inputs).values(
                             execution_id=execution_id,
                             parent_ordinal=ordinal,
-                            ordinal=1,
-                            chunk_ordinal=ordinal,
+                            ordinal=child,
+                            child_ordinal=child,
                         )
                     )
-                else:
-                    for child in range(1, count + 1):
-                        session.execute(
-                            insert(inputs).values(
-                                execution_id=execution_id,
-                                parent_ordinal=ordinal,
-                                ordinal=child,
-                                child_ordinal=child,
-                            )
-                        )
-            return DocumentRun(**self._run(session, execution_id))
+        return DocumentRun(**self._run(session, execution_id))
 
     def _binding(self, session, run, ordinal, request):
         """Match runtime request to persisted source/plan and exact completed children."""
@@ -425,79 +430,88 @@ class DocumentAnalysisRepository:
     def start_stage(
         self, execution_id: int, ordinal: int, request: StageRequest, estimate: RequestEstimate
     ) -> None:
+        with self._database._session() as session:
+            self._assert_standalone(session, execution_id)
+            return self._start_stage(session, execution_id, ordinal, request, estimate)
+
+    def _start_stage(
+        self,
+        session,
+        execution_id: int,
+        ordinal: int,
+        request: StageRequest,
+        estimate: RequestEstimate,
+    ) -> None:
         # Rendering replays provenance validation before entering the transaction.
         request_hash = fingerprint(render_stage_input(request))
-        with self._database._session() as session:
-            run = self._run(session, execution_id, running=True)
-            _require(type(ordinal) is int and 1 <= ordinal <= run.chunk_count + 1)
-            config, rows, row = self._binding(session, run, ordinal, request)
-            _require(row.status == "planned", "immutable_run")
-            _require(all(r.status == "completed" for r in rows[: ordinal - 1]))
-            _require(all(r.status == "planned" for r in rows[ordinal:]))
-            _require(
-                type(estimate) is RequestEstimate
-                and type(estimate.input_tokens) is int
-                and type(estimate.context_tokens) is int
-                and estimate.input_tokens > 0
-                and estimate.context_tokens
-                == estimate.input_tokens
-                + request.budget.output_tokens
-                + request.budget.safety_margin_tokens
-            )
-            _name(estimate.estimator_version, 64)
-            b = config["execution_budget"]
-            code = (
-                "reduce_budget_exceeded"
-                if request.stage == "document_reduce"
-                else "execution_budget_exceeded"
-            )
-            _require(
-                estimate.input_tokens <= request.budget.max_input_tokens
-                and estimate.context_tokens <= request.budget.context_tokens,
-                code,
-            )
-            spent = sum(r.estimated_context_tokens or 0 for r in rows if r.status != "planned")
-            reserve = b["reduce_reserved_tokens"] if request.stage == "map" else 0
-            _require(spent + estimate.context_tokens + reserve <= b["max_estimated_tokens"], code)
-            if request.stage == "document_reduce":
-                _require(estimate.context_tokens <= b["reduce_reserved_tokens"], code)
-            price = _pricing(config)
-            cost = (
-                price.cost(estimate.input_tokens, request.budget.output_tokens) if price else None
-            )
-            if b["max_estimated_cost"] is not None:
-                from decimal import Decimal
+        run = self._run(session, execution_id, running=True)
+        _require(type(ordinal) is int and 1 <= ordinal <= run.chunk_count + 1)
+        config, rows, row = self._binding(session, run, ordinal, request)
+        _require(row.status == "planned", "immutable_run")
+        _require(all(r.status == "completed" for r in rows[: ordinal - 1]))
+        _require(all(r.status == "planned" for r in rows[ordinal:]))
+        _require(
+            type(estimate) is RequestEstimate
+            and type(estimate.input_tokens) is int
+            and type(estimate.context_tokens) is int
+            and estimate.input_tokens > 0
+            and estimate.context_tokens
+            == estimate.input_tokens
+            + request.budget.output_tokens
+            + request.budget.safety_margin_tokens
+        )
+        _name(estimate.estimator_version, 64)
+        b = config["execution_budget"]
+        code = (
+            "reduce_budget_exceeded"
+            if request.stage == "document_reduce"
+            else "execution_budget_exceeded"
+        )
+        _require(
+            estimate.input_tokens <= request.budget.max_input_tokens
+            and estimate.context_tokens <= request.budget.context_tokens,
+            code,
+        )
+        spent = sum(r.estimated_context_tokens or 0 for r in rows if r.status != "planned")
+        reserve = b["reduce_reserved_tokens"] if request.stage == "map" else 0
+        _require(spent + estimate.context_tokens + reserve <= b["max_estimated_tokens"], code)
+        if request.stage == "document_reduce":
+            _require(estimate.context_tokens <= b["reduce_reserved_tokens"], code)
+        price = _pricing(config)
+        cost = price.cost(estimate.input_tokens, request.budget.output_tokens) if price else None
+        if b["max_estimated_cost"] is not None:
+            from decimal import Decimal
 
-                _require(price is not None, code)
-                previous = sum(
-                    (Decimal(r.estimated_cost) for r in rows if r.estimated_cost is not None),
-                    Decimal(0),
-                )
-                reserved_cost = (
-                    price.cost(request.budget.max_input_tokens, request.budget.output_tokens)
-                    if reserve
-                    else Decimal(0)
-                )
-                _require(previous + cost + reserved_cost <= Decimal(b["max_estimated_cost"]), code)
-            changed = session.execute(
-                update(stages)
-                .where(
-                    stages.c.execution_id == execution_id,
-                    stages.c.ordinal == ordinal,
-                    stages.c.status == "planned",
-                )
-                .values(
-                    status="running",
-                    started_at=utc_now(),
-                    request_sha256=request_hash,
-                    estimated_input_tokens=estimate.input_tokens,
-                    estimated_context_tokens=estimate.context_tokens,
-                    estimator_version=estimate.estimator_version,
-                    estimated_cost=str(cost) if cost is not None else None,
-                    call_outcome="unknown",
-                )
+            _require(price is not None, code)
+            previous = sum(
+                (Decimal(r.estimated_cost) for r in rows if r.estimated_cost is not None),
+                Decimal(0),
             )
-            _require(changed.rowcount == 1, "immutable_run")
+            reserved_cost = (
+                price.cost(request.budget.max_input_tokens, request.budget.output_tokens)
+                if reserve
+                else Decimal(0)
+            )
+            _require(previous + cost + reserved_cost <= Decimal(b["max_estimated_cost"]), code)
+        changed = session.execute(
+            update(stages)
+            .where(
+                stages.c.execution_id == execution_id,
+                stages.c.ordinal == ordinal,
+                stages.c.status == "planned",
+            )
+            .values(
+                status="running",
+                started_at=utc_now(),
+                request_sha256=request_hash,
+                estimated_input_tokens=estimate.input_tokens,
+                estimated_context_tokens=estimate.context_tokens,
+                estimator_version=estimate.estimator_version,
+                estimated_cost=str(cost) if cost is not None else None,
+                call_outcome="unknown",
+            )
+        )
+        _require(changed.rowcount == 1, "immutable_run")
 
     def complete_stage(
         self,
@@ -506,74 +520,119 @@ class DocumentAnalysisRepository:
         result: ValidatedStageResult,
         metadata: ProviderResult,
     ) -> DocumentRun:
+        with self._database._session() as session:
+            self._assert_standalone(session, execution_id)
+            return self._complete_stage(session, execution_id, ordinal, result, metadata)
+
+    def _complete_stage(
+        self,
+        session,
+        execution_id: int,
+        ordinal: int,
+        result: ValidatedStageResult,
+        metadata: ProviderResult,
+    ) -> DocumentRun:
         verified = validate_stage_output(result.request, result.output_json)
         _require(verified == result, "invalid_output")
-        with self._database._session() as session:
-            run = self._run(session, execution_id, running=True)
-            _require(type(ordinal) is int and 1 <= ordinal <= run.chunk_count + 1)
-            config, _, row = self._binding(session, run, ordinal, result.request)
-            _require(row.status == "running", "immutable_run")
-            _require(row.request_sha256 == fingerprint(render_stage_input(result.request)))
-            normalized = history_result(
-                result, range(1, run.chunk_count + 1) if row.stage == "document_reduce" else ()
+        run = self._run(session, execution_id, running=True)
+        _require(type(ordinal) is int and 1 <= ordinal <= run.chunk_count + 1)
+        config, _, row = self._binding(session, run, ordinal, result.request)
+        _require(row.status == "running", "immutable_run")
+        _require(row.request_sha256 == fingerprint(render_stage_input(result.request)))
+        normalized = history_result(
+            result, range(1, run.chunk_count + 1) if row.stage == "document_reduce" else ()
+        )
+        changed = session.execute(
+            update(stages)
+            .where(
+                stages.c.execution_id == execution_id,
+                stages.c.ordinal == ordinal,
+                stages.c.status == "running",
             )
+            .values(
+                status="completed",
+                result_json=normalized,
+                completed_at=utc_now(),
+                call_outcome="response_received",
+                **_metadata(metadata, _pricing(config)),
+            )
+        )
+        _require(changed.rowcount == 1, "immutable_run")
+        if row.stage == "document_reduce":
             changed = session.execute(
-                update(stages)
-                .where(
-                    stages.c.execution_id == execution_id,
-                    stages.c.ordinal == ordinal,
-                    stages.c.status == "running",
-                )
-                .values(
-                    status="completed",
-                    result_json=normalized,
-                    completed_at=utc_now(),
-                    call_outcome="response_received",
-                    **_metadata(metadata, _pricing(config)),
-                )
+                update(executions)
+                .where(executions.c.id == execution_id, executions.c.status == "running")
+                .values(status="completed", completed_at=utc_now())
             )
             _require(changed.rowcount == 1, "immutable_run")
-            if row.stage == "document_reduce":
-                changed = session.execute(
-                    update(executions)
-                    .where(executions.c.id == execution_id, executions.c.status == "running")
-                    .values(status="completed", completed_at=utc_now())
-                )
-                _require(changed.rowcount == 1, "immutable_run")
-            return DocumentRun(**self._run(session, execution_id))
+        return DocumentRun(**self._run(session, execution_id))
 
     def fail_run(
         self, execution_id, code, *, interrupted=False, metadata=None, response_received=False
     ):
+        with self._database._session() as session:
+            self._assert_standalone(session, execution_id)
+            return self._fail_run(
+                session,
+                execution_id,
+                code,
+                interrupted=interrupted,
+                metadata=metadata,
+                response_received=response_received,
+            )
+
+    def _fail_run(
+        self,
+        session,
+        execution_id,
+        code,
+        *,
+        interrupted=False,
+        metadata=None,
+        response_received=False,
+    ):
         _require(code in PIPELINE_ERRORS)
         terminal = "interrupted" if interrupted else "failed"
-        with self._database._session() as session:
-            run = self._run(session, execution_id, running=True)
-            values = _metadata(metadata, _pricing(json.loads(run.config_json)))
+        run = self._run(session, execution_id, running=True)
+        values = _metadata(metadata, _pricing(json.loads(run.config_json)))
+        session.execute(
+            update(stages)
+            .where(stages.c.execution_id == execution_id, stages.c.status == "running")
+            .values(
+                status=terminal,
+                error_code=code,
+                completed_at=utc_now(),
+                **values,
+                **(
+                    {"call_outcome": "response_received"}
+                    if metadata is not None or response_received
+                    else {}
+                ),
+            )
+        )
+        session.execute(
+            update(stages)
+            .where(stages.c.execution_id == execution_id, stages.c.status == "planned")
+            .values(status="not_started", error_code=code, completed_at=utc_now())
+        )
+        changed = session.execute(
+            update(executions)
+            .where(executions.c.id == execution_id, executions.c.status == "running")
+            .values(status=terminal, error_code=code, completed_at=utc_now())
+        )
+        _require(changed.rowcount == 1, "immutable_run")
+        return DocumentRun(**self._run(session, execution_id))
+
+    @staticmethod
+    def _assert_standalone(session, execution_id):
+        from research_workbench.analysis.cross_document_pipeline import CrossConflict
+
+        from .cross_document_models import members
+
+        if (
             session.execute(
-                update(stages)
-                .where(stages.c.execution_id == execution_id, stages.c.status == "running")
-                .values(
-                    status=terminal,
-                    error_code=code,
-                    completed_at=utc_now(),
-                    **values,
-                    **(
-                        {"call_outcome": "response_received"}
-                        if metadata is not None or response_received
-                        else {}
-                    ),
-                )
-            )
-            session.execute(
-                update(stages)
-                .where(stages.c.execution_id == execution_id, stages.c.status == "planned")
-                .values(status="not_started", error_code=code, completed_at=utc_now())
-            )
-            changed = session.execute(
-                update(executions)
-                .where(executions.c.id == execution_id, executions.c.status == "running")
-                .values(status=terminal, error_code=code, completed_at=utc_now())
-            )
-            _require(changed.rowcount == 1, "immutable_run")
-            return DocumentRun(**self._run(session, execution_id))
+                select(members.c.run_id).where(members.c.document_execution_id == execution_id)
+            ).first()
+            is not None
+        ):
+            raise CrossConflict()

@@ -8,7 +8,8 @@ from typing import Protocol
 
 from .chunking import require_int, require_text
 from .errors import FAILURE_MESSAGES
-from .stage_contracts import StageProvider, StageRequest
+from .planning import MapPlan
+from .stage_contracts import StageProvider, StageRequest, ValidatedStageResult
 
 PIPELINE_ERRORS = {
     **FAILURE_MESSAGES,
@@ -175,3 +176,17 @@ class StageInput:
     ordinal: int
     chunk_ordinal: int | None
     child_ordinal: int | None
+
+
+@dataclass(frozen=True, slots=True)
+class PreparedDocument:
+    plan: MapPlan = field(repr=False)
+    requests: tuple[StageRequest, ...] = field(repr=False)
+    estimates: tuple[RequestEstimate, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class DocumentExecutionOutcome:
+    run: DocumentRun
+    final_stage_ordinal: int
+    result: ValidatedStageResult = field(repr=False)
