@@ -299,3 +299,27 @@ def test_optional_metadata_and_ignored_reasoning(wire):
     assert (
         result.response_id is None and result.input_tokens is None and result.output_tokens is None
     )
+
+
+@pytest.mark.parametrize("nested", [False, True])
+@pytest.mark.parametrize("empty", [False, True])
+def test_incomplete_source_union_rejected_before_network_without_private_errors(
+    wire, caplog, nested, empty
+):
+    caplog.set_level(logging.DEBUG)
+    a = reduced((mapped(empty=empty),))
+    b = reduced((mapped(map_request("PRIVATE_IDENTITY_B"), empty=empty),))
+    complete = reduced((a, b), cross=True)
+    incomplete_request = replace(complete.request, children=(a,))
+    if nested:
+        # Root's direct document union is complete, but its child's union is not.
+        incomplete_child = replace(complete, request=incomplete_request)
+        request = reduce_request((incomplete_child,), cross=True)
+    else:
+        request = incomplete_request
+    with pytest.raises(StageError) as caught:
+        wire["instance"].generate_stage(request)
+    assert not wire["calls"]
+    assert caught.value.__suppress_context__
+    for secret in ("PRIVATE_STAGE", "PRIVATE_IDENTITY_B", "FAKE0001", "synthetic-stage-key"):
+        assert secret not in str(caught.value) + repr(caught.value) + caplog.text

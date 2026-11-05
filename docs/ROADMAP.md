@@ -26,7 +26,7 @@
 - **4B.3 / 4B.4**：单篇文献分层编排与历史，再扩展多文献分层综合。需要时另设计新 migration，不改 0001–0003；不把生成摘要伪装成原文。
 - **4B.5**：冲突和信息损失的质量评估，以及用户独立 opt-in 的真实验收。旧 Level B 摘要验收与 4B 全文/分层验收分别记录，均不能由离线测试代替。
 - 4B.1 验收：合成中英文、emoji、CRLF、空白/超长段、重叠和完整覆盖、确定性/hash/来源隔离、预算临界值、数量限制及隐私测试；完整离线回归、Ruff、锁检查、最终 PR head 双平台 CI 和自审。具体结果见 PR #14。
-- 4B.2 本地离线验收：**583 passed，8 integration deselected**，其中新增阶段验证/provider 测试143项；Ruff format/check 与 `uv lock --check` 通过。覆盖三阶段/空结果/结构和数量限制、局部引用、伪造子结果/旧 fingerprint/来源隔离/循环/图上限、重叠区间、最终请求预算临界值、两家真实 SDK MockTransport、日志/repr/异常隐私及 v1 全量回归。最终 PR head 的 Windows/Ubuntu CI 和审查结果保存在 PR；新阶段真实 API 均 NOT TESTED，真实 Zotero 未调用。
+- 4B.2 本地离线验收（PR #16 合并前完整性修复后）：**601 passed，8 integration deselected**，其中阶段验证/provider 测试161项；Ruff format/check 与 `uv lock --check` 通过。覆盖三阶段/空结果/结构和数量限制、局部引用、伪造子结果/旧 fingerprint/来源隔离/循环/图上限、重叠区间、最终请求预算临界值、两家真实 SDK MockTransport、日志/repr/异常隐私及 v1 全量回归。补充18项测试：原 ca1b2d6 最小复现确认父声明 A/B 而仅提供 A 子结果会被接受；现要求每层父来源身份/fingerprint 映射等于直接子结果来源并集，含空结果和嵌套节点，并验证 Provider 网络前拒绝。兄弟子树共享来源仍允许，模型重复加权局限见 ARCHITECTURE/ADR-048。最终 PR head 的 Windows/Ubuntu CI 和审查结果保存在 PR；新阶段真实 API 均 NOT TESTED，真实 Zotero 未调用。
 
 ## 已完成的前置阶段
 

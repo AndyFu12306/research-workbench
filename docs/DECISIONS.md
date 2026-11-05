@@ -209,6 +209,10 @@ Reduce 输入为已校验的子结果；不凭 DTO 类型直接信任，而是�
 
 结果保留直接 Finding 引用和通向 Chunk/SourceIdentity 的受信任闭包。相同 Chunk 去重，重叠区间按来源合并为 coverage，Reduce 请求也提供这些范围以识别共享内容；没有“独立证据数量”字段或加权投票。原文与生成内容始终分开。子结果原始规范 JSON、来源快照与引用图只在内存，供重验使用，不引入阶段历史或 DB schema。
 
+合并前补充审核（2026-11-05，PR #16）：在 ca1b2d6 上，最小合成回归确认“父声明 A/B、实际只有 A 的 document_reduce 子结果、输出仅引用 A”未被拒绝。原校验只保证子来源属于父集合，缺少反向完整性。修复要求父 `SourceIdentity → 当前 fingerprint` 映射等于直接子结果来源映射的并集；保留逐子来源/版本检查以拒绝冲突，并在每层重放时执行，不能让虚报完整的中间节点掩盖遗漏。合法空结果子节点也代表来源已处理；输入完整性与输出引用范围分开，不要求每条结论引用所有文献，不声称检查了全文 Chunk 全覆盖。
+
+兄弟跨文献子树可共享同一当前来源（如 A/B 与 B/C），保持原有 DAG 复用能力；不允许混用同一身份的不同 fingerprint。完全重复子输入/条目仍拒绝，相同 Chunk/重叠范围仅去重/合并，不计独立证据。模型可能因多个子综合重复表述同一来源而过度加权；结构校验和 prompt 不保证语义去重、统计独立性或权重归一化，需后续质量评估与人工审阅。本修复不修改阶段 schema/prompt、Phase 4A、持久化或依赖。
+
 ## ADR-049：独立 StageProvider 能力与严格单次 Responses 调用
 
 StageProvider Protocol 的 generate_stage 返回未被信任的 ProviderResult JSON 候选，必须显式 validate_stage_output 后才可供 Reduce 使用。新增 OpenAIStageProvider / DeepSeekStageProvider 通过小型 mixin 复用原有客户端配置和生命周期，继承的 generate 完全不改；原有生产类、AnalysisService、v1 prompt/schema、immutable AnalysisRun、迁移与依赖均不改。没有为 DRY 大范围重构。

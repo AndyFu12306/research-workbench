@@ -157,6 +157,7 @@ class _Traversal:
                 _require(len(docs) >= 2)
                 allowed = ("document_reduce", "cross_document_reduce")
             child_bindings, child_inputs = set(), []
+            covered_sources = {}
             for child in request.children:
                 _, binding = self.child(child, depth + 1)
                 _require(child.request.stage in allowed)
@@ -165,6 +166,7 @@ class _Traversal:
                 child_bindings.add(binding)
                 for doc in child.request.documents:
                     _require(current.get(doc.identity) == doc.source_fingerprint)
+                    covered_sources[doc.identity] = doc.source_fingerprint
                 entries = []
                 for finding in child.findings:
                     _require(finding.finding_id not in local)
@@ -190,6 +192,9 @@ class _Traversal:
                         "findings": entries,
                     }
                 )
+            # Include empty-result children: input coverage is not finding attribution.
+            # Replayed recursively, so a child cannot merely declare an unprocessed source.
+            _require(covered_sources == current)
             material = {"children": child_inputs}
         payload = {
             "stage": request.stage,

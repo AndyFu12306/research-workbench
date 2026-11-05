@@ -268,6 +268,8 @@ assert chunk.text == doc.text[chunk.start:chunk.end]
 
 Reduce 只把本次实际子条目的 Finding ID 列入引用白名单。接收的 ValidatedStageResult 仍会被递归重验：原始规范 JSON、应用 ID、字段/Chunk 闭包、当前来源身份/fingerprint、问题和阶段必须一致，防止直接构造或 replace DTO 绕过校验。不接受原始 Chunk 或隔代 Finding 引用；不允许不同来源混入文献内阶段、旧文本快照、重复子输入、伪造条目或循环。每次最多100个直接子结果、100来源、1000000原文字符，图最多16层、1000次子结果遍历；超限固定安全失败。
 
+父请求的 `SourceIdentity → 当前 source_fingerprint` 映射必须与直接子结果来源映射的并集完全相等，不能只检查子来源属于父集合。该检查在请求渲染/预算前执行，并递归用于每个 Reduce 节点；父节点声明 A/B 而只有 A 子节点、或嵌套子节点虚报来源时，Provider 网络前即拒绝。合法 no_relevant_findings 子结果仍计入已处理来源；不能按非空 Finding 的引用来计算输入完整性，也不强制每条输出 Finding 引用所有输入来源。此检查不证明全文所有 Chunk 已处理，Chunk 全覆盖编排仍不在本阶段。
+
 每条结果同时保存直接 citation 和应用展开的 ChunkReference 闭包：
 
 ```text
@@ -277,6 +279,8 @@ Reduce 只把本次实际子条目的 Finding ID 列入引用白名单。接收�
 ```
 
 相同 chunk_id 去重，`source_coverage()` 按来源合并重复/重叠区间。Reduce 输入提供条目的 coverage 和文献分组，帮助识别共用内容；不提供或计算独立证据数量，不按块数投票。结构和引用链合法性不证明语义支持、事实真实性或模型 kind 分类正确，必须人工审阅。
+
+允许跨文献兄弟子树共享同一来源，例如 A/B 与 B/C；共享来源必须使用同一当前 fingerprint。完全重复的子输入/条目仍按原规则拒绝，来源并集本身按身份去重。保留这种 DAG 复用不等于 B 获得两份独立证据：相同 Chunk 在闭包中只保留一次，coverage 合并区间。模型仍会看到多个子综合中的重复表述，可能过度加权；当前校验和 prompt 不能保证消除这种语义偏差，也不提供统计独立性或权重归一化保证。
 
 ### StageProvider 和预算
 

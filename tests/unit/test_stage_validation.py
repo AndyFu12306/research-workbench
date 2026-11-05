@@ -391,3 +391,114 @@ def test_reduce_input_exposes_merged_coverage_without_raw_chunk_citation_labels(
         [child.findings[0].chunks[0].start, child.findings[0].chunks[0].end]
     ]
     assert child.request.chunks[0].chunk_id not in rendered
+
+
+def test_cross_reduce_rejects_declared_source_without_direct_child():
+    a = reduced()
+    b = map_request("FAKE0002").documents[0]
+    request = reduce_request((a,), cross=True, documents=(*a.request.documents, b))
+    # Both snapshots are current, but only A was actually supplied as a child result.
+    with pytest.raises(StageError):
+        validate_stage_output(request, output((a.findings[0].finding_id,)))
+
+
+@pytest.mark.parametrize("empty_b", [False, True])
+def test_cross_reduce_source_coverage_includes_empty_children_not_just_citations(empty_b):
+    a = reduced()
+    b = reduced((mapped(map_request("FAKE0002"), empty=empty_b),))
+    request = reduce_request((a, b), cross=True)
+    payload = json.loads(render_stage_input(request))
+    assert len(payload["children"]) == 2
+    assert payload["children"][1]["status"] == ("no_relevant_findings" if empty_b else "findings")
+    # Source completeness concerns the INPUT. A finding need not cite every source.
+    result = validate_stage_output(request, output((a.findings[0].finding_id,)))
+    assert {chunk.identity for chunk in result.findings[0].chunks} == {
+        a.request.documents[0].identity
+    }
+
+
+def test_cross_reduce_all_empty_current_sources_are_complete():
+    a = reduced((mapped(empty=True),))
+    b = reduced((mapped(map_request("FAKE0002"), empty=True),))
+    request = reduce_request((a, b), cross=True)
+    assert validate_stage_output(request, output(empty=True)).findings == ()
+    missing = replace(request, children=(a,))
+    with pytest.raises(StageError):
+        validate_stage_output(missing, output(empty=True))
+
+
+@pytest.mark.parametrize("change", ["extra", "old_version", "different_identity"])
+def test_cross_reduce_rejects_mismatched_direct_source_sets(change):
+    a, b = reduced(), reduced((mapped(map_request("FAKE0002")),))
+    docs = (*a.request.documents, *b.request.documents)
+    if change == "extra":
+        children = (a, b, reduced((mapped(map_request("FAKE0003")),)))
+    elif change == "old_version":
+        old = mapped(map_request("FAKE0002", text="Synthetic old version."))
+        children = (a, reduced((old,)))
+    else:
+        # Same text/key, different scope; identity includes the whole tuple.
+        original = b.request.documents[0]
+        foreign = SourceDocument(
+            SourceIdentity("synthetic", "different-scope", original.identity.external_key),
+            original.text,
+        )
+        req = map_request("FAKE0002")
+        req = replace(req, documents=(foreign,), chunks=(chunk_document(foreign, req.chunking)[0],))
+        children = (a, reduced((mapped(req),)))
+    request = reduce_request(children, cross=True, documents=docs)
+    for validate in (
+        lambda: render_stage_input(request),
+        lambda: validate_stage_output(request, output((a.findings[0].finding_id,))),
+    ):
+        with pytest.raises(StageError):
+            validate()
+
+
+def test_nested_cross_reduce_source_union_is_checked_at_each_level():
+    a, b, c = (reduced((mapped(map_request(key)),)) for key in ("FAKE0001", "FAKE0002", "FAKE0003"))
+    ab = reduced((a, b), cross=True)
+    abc = reduced((ab, c), cross=True)
+    assert {ref.identity for ref in abc.findings[0].chunks} == {
+        doc.identity for doc in abc.request.documents
+    }
+    # Root declares A/B/C but its only direct child covers A/B.
+    missing_root = replace(abc.request, children=(ab,))
+    with pytest.raises(StageError):
+        render_stage_input(missing_root)
+    # Root union looks complete, but the nested child's own children omit B.
+    incomplete_ab = replace(ab, request=replace(ab.request, children=(a,)))
+    incomplete_nested = replace(abc.request, children=(incomplete_ab, c))
+    with pytest.raises(StageError):
+        render_stage_input(incomplete_nested)
+
+
+def test_nested_document_reduce_keeps_source_coverage_for_empty_results():
+    child = reduced((mapped(empty=True),))
+    parent = reduced((child,))
+    assert parent.status == "no_relevant_findings"
+    assert render_stage_input(parent.request)
+    # Even an empty nested node may not change its declared source identity/snapshot.
+    foreign = map_request("FAKE0002").documents[0]
+    invalid_child = replace(child, request=replace(child.request, documents=(foreign,)))
+    invalid_parent = replace(parent.request, children=(invalid_child,))
+    with pytest.raises(StageError):
+        render_stage_input(invalid_parent)
+
+
+def test_cross_reduce_overlapping_sibling_subtrees_allow_shared_sources_without_evidence_counts():
+    a, b, c = (reduced((mapped(map_request(key)),)) for key in ("FAKE0001", "FAKE0002", "FAKE0003"))
+    ab, bc = reduced((a, b), cross=True), reduced((b, c), cross=True)
+    parent = reduced((ab, bc), cross=True)
+    b_fp = b.request.documents[0].source_fingerprint
+    assert len(parent.findings[0].chunks) == 3  # B's same Chunk is in the closure once.
+    assert len(source_coverage(parent.findings[0])) == 3
+    payload = json.loads(render_stage_input(parent.request))
+    assert b_fp in payload["children"][0]["sources"]
+    assert b_fp in payload["children"][1]["sources"]
+    # Shared B with a conflicting snapshot fails before union/evidence dedup.
+    old_b = reduced((mapped(map_request("FAKE0002", text="Synthetic old version.")),))
+    old_bc = reduced((old_b, c), cross=True)
+    mismatch = replace(parent.request, children=(ab, old_bc))
+    with pytest.raises(StageError):
+        render_stage_input(mismatch)
