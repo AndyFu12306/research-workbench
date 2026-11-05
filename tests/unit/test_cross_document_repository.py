@@ -75,3 +75,13 @@ def test_owner_and_order_conflicts_cannot_claim_or_abort(cross_setup):
         )
     assert s.repo.get(h.run_id).status == "running"
     assert s.provider.calls == []
+
+
+def test_abort_rejects_arbitrary_error_text_before_mutation(cross_setup):
+    from research_workbench.analysis.cross_document_pipeline import CrossDocumentError
+
+    s = cross_setup
+    h = s.repo.register(s.prepared)
+    with pytest.raises(CrossDocumentError):
+        s.repo.abort(h, "PRIVATE_ARBITRARY_ERROR")
+    assert s.repo.get(h.run_id).status == "running"

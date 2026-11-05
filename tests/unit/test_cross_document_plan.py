@@ -79,3 +79,36 @@ def test_exact_price_is_independent_of_callers_decimal_context():
         assert exact_cost(PRICE, 8000, 4096) == Decimal("0.048768")
     assert exact_cost(PRICE, None, 40) is None
     assert exact_cost(None, 20, 40) is None
+
+
+def test_source_character_limit_and_duplicate_identity_are_strict():
+    from research_workbench.analysis.chunking import SourceDocument, SourceIdentity
+    from research_workbench.analysis.cross_document_pipeline import FrozenSelection
+    from research_workbench.persistence.models import utc_now
+
+    docs = (
+        SourceDocument(SourceIdentity("zotero", "personal", "FAKE0001"), "a" * 999999),
+        SourceDocument(SourceIdentity("zotero", "personal", "FAKE0002"), "b"),
+    )
+    selection = FrozenSelection(
+        1, (1, 2), "Question", docs, (utc_now(), utc_now()), "fake", "synthetic"
+    )
+    assert sum(len(d.text) for d in selection.documents) == 1_000_000
+    with pytest.raises(CrossDocumentError):
+        replace(selection, documents=(docs[0], SourceDocument(docs[1].identity, "bb")))
+    with pytest.raises(CrossDocumentError):
+        replace(selection, documents=(docs[0], SourceDocument(docs[0].identity, "b")))
+
+
+def test_inexact_decimal_calculation_is_rejected_instead_of_rounded():
+    price = Pricing("USD", "synthetic", Decimal("1." + "1" * 200), Decimal("8"))
+    with pytest.raises(CrossDocumentError):
+        exact_cost(price, 100, 40)
+
+
+def test_exact_global_token_and_decimal_cost_boundary_passes():
+    groups = (estimates(8000, 10000), estimates(6000, 7000, 8000), estimates(12000))
+    plan = allocate_budget(
+        groups, StageBudget(), CrossBudget(10, 198200, Decimal("0.621680")), PRICE
+    )
+    assert plan.context_tokens == 198200 and plan.cost == Decimal("0.621680")

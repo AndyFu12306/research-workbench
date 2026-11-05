@@ -21,9 +21,11 @@ def service(s):
     "damage",
     [
         "reorder",
+        "coordinated_reorder",
         "omit",
         "duplicate",
         "nested_document",
+        "nested_cross",
         "map_child",
         "renamed_stage",
         "forged_result",
@@ -44,12 +46,21 @@ def test_repository_independently_rejects_illegal_runtime_topology(
         outcomes = list(outcomes)
         if damage == "reorder":
             children[0], children[1] = children[1], children[0]
+        if damage == "coordinated_reorder":
+            children[0], children[1] = children[1], children[0]
+            outcomes[0], outcomes[1] = outcomes[1], outcomes[0]
         if damage == "omit":
             children.pop()
         if damage == "duplicate":
             children[1] = children[0]
         if damage == "nested_document":
             r = replace(children[0].request, children=(children[0],))
+            children[0] = validate_stage_output(
+                r, '{"status":"no_relevant_findings","findings":[]}'
+            )
+            outcomes[0] = replace(outcomes[0], result=children[0])
+        if damage == "nested_cross":
+            r = replace(request, documents=request.documents[:2], children=tuple(children[:2]))
             children[0] = validate_stage_output(
                 r, '{"status":"no_relevant_findings","findings":[]}'
             )
@@ -68,7 +79,9 @@ def test_repository_independently_rejects_illegal_runtime_topology(
         if damage == "wrong_final_ordinal":
             outcomes[0] = replace(outcomes[0], final_stage_ordinal=2)
         if damage == "history_dto":
-            children[0] = s.repo.get_members(handle.run_id)[0]
+            from research_workbench.persistence.cross_document_history import CrossHistory
+
+            children[0] = CrossHistory(99, 1, "cross-document-history-v1", "findings", "{}", ())
         original(
             handle, prepared, replace(request, children=tuple(children)), tuple(outcomes), estimate
         )
@@ -199,3 +212,26 @@ def test_post_registration_question_detach_and_reader_edits_do_not_mix_snapshot(
         for r in s.provider.calls
     )
     assert s.repo.get_history(result.id).status == "findings"
+
+
+def test_same_source_and_finding_ids_cannot_borrow_prior_execution(cross_setup, monkeypatch):
+    from research_workbench.persistence.document_repository import DocumentAnalysisRepository
+
+    s = cross_setup
+    first = service(s).run_analysis(s.question.id, tuple(x.id for x in s.sources))
+    old = DocumentAnalysisRepository(s.db).get(
+        s.repo.get_members(first.id)[0].document_execution_id
+    )
+    s.provider.calls.clear()
+    svc = service(s)
+    original = svc._runs.start_cross
+
+    def borrow(handle, prepared, request, outcomes, estimate):
+        outcomes = (replace(outcomes[0], run=old), *outcomes[1:])
+        return original(handle, prepared, request, outcomes, estimate)
+
+    monkeypatch.setattr(svc._runs, "start_cross", borrow)
+    with pytest.raises(CrossDocumentError):
+        svc.run_analysis(s.question.id, tuple(x.id for x in s.sources))
+    assert len(s.provider.calls) == 9
+    assert s.repo.get_history(first.id).status == "findings"
