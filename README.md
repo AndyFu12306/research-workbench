@@ -2,7 +2,7 @@
 
 建立在 Zotero 之上的个人 AI 研究工作台。Zotero 是唯一文献事实源，Workbench 保存研究对象及来源引用，不建立第二套文献库。
 
-当前交付 **Phase 4B.1：确定性分块与有界 Map 输入计划**，由 [Issue #13](https://github.com/AndyFu12306/research-workbench/issues/13) 跟踪，基于已合并 PR #12 的 main `b3d36a0`；仅离线、纯内存规划，不执行模型、不接入真实 Zotero。接口、预算和示例见 [架构文档](docs/ARCHITECTURE.md#phase-4b1-确定性分块与-map-输入计划)。Phase 4A 路径保持不变，不自动 merge 或实现 4B.2–4B.5。DeepSeek 正式 Level A 已有用户单次真实 PASS，真实 Zotero Level B 仍 NOT TESTED；历史证据保留在 [验证记录](docs/DEEPSEEK_VALIDATION.md)。
+当前交付 **Phase 4B.2：版本化 Map/Reduce 契约、严格引用校验及 StageProvider**，由 [Issue #15](https://github.com/AndyFu12306/research-workbench/issues/15) 跟踪，基于已合并 PR #14 的 main `567cf26`，独立 worktree / `codex/phase4b-stage-contracts`。只用合成数据与 SDK MockTransport 验证，不调用真实 AI 或 Zotero；没有多阶段编排、阶段持久化或迁移。契约、引用链、预算与离线示例见 [架构文档](docs/ARCHITECTURE.md#phase-4b2-版本化阶段契约与单次-provider-能力)。Phase 4A 生产路径不变，PR 保持 Open，不进入 4B.3–4B.5。DeepSeek 旧 v1 正式 Level A 单次真实 PASS 不代表新阶段契约已实测；真实 Zotero Level B 仍 NOT TESTED，见 [验证记录](docs/DEEPSEEK_VALIDATION.md)。
 
 ## 环境与安装
 

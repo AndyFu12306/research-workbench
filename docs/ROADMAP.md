@@ -1,6 +1,6 @@
 # 路线与阶段门槛
 
-当前：**Phase 4B.1 — 确定性分块与有界 Map 输入计划**。[Issue #13](https://github.com/AndyFu12306/research-workbench/issues/13)，分支 `codex/phase4b-chunk-planning`，独立 worktree；基于已合并 PR #12 的 main `b3d36a0`。日期 2026-11-05（Asia/Shanghai）。总体方案为分块 Map → 文献内 Reduce → 跨文献 Reduce；本轮仅授权离线分块和 Map 输入规划，不执行模型、不读取真实 Zotero 或密钥。旧 Chat PR #10 已关闭未合并，旧 worktree 保留。真实 Zotero Level B 仍 NOT TESTED，不自动 merge。
+当前：**Phase 4B.2 — 版本化阶段契约、严格局部引用与 StageProvider**。[Issue #15](https://github.com/AndyFu12306/research-workbench/issues/15)，分支 `codex/phase4b-stage-contracts`，独立 `research-workbench-phase4b2` worktree；基于 PR #14 已合并的 main `567cf2667e5b55e88faf74fd72b198df2877bfa7`。日期 2026-11-05（Asia/Shanghai）。用户已审核并授权本阶段实现；只离线/MockTransport，不调用真实 AI 或 Zotero。不含编排、阶段历史/迁移、重试/恢复/缓存或 4B.3–4B.5。旧 Chat / Responses / 4B.1 worktree 保留，PR 保持 Open。真实 Zotero Level B 仍 NOT TESTED。
 
 | Phase | 内容 | 状态 |
 | --- | --- | --- |
@@ -11,8 +11,9 @@
 | 3 | Question ↔ Zotero Source Association | PR #4 已合并 |
 | 4A | Structured AI Analysis MVP | PR #6 已合并；真实 OpenAI 仍 NOT TESTED |
 | 4A.1 | DeepSeek provider + hardening | PR #8 / #12 已合并；正式 Level A 单次真实 PASS；真实 Zotero B 待测 |
-| 4B.1 | 确定性 chunking / 有界 Map 输入计划 | 本轮交付，离线验证；不执行 Map |
-| 4B.2–4B.5 | 阶段契约 / 单文献 / 跨文献 Reduce / 受控验收 | 架构方向已审核，实现需另行授权 |
+| 4B.1 | 确定性 chunking / 有界 Map 输入计划 | PR #14 已合并；Issue #13 Completed |
+| 4B.2 | 阶段契约 / 局部引用 / 单次 StageProvider | 本轮授权与交付；仅离线验证，PR 不自动合并 |
+| 4B.3–4B.5 | 单文献 / 跨文献编排、历史及受控验收 | 未开始，需另行授权 |
 | 后续 | Basic UI | 未开始，需另行授权 |
 | 后续 | Inbox / Claim + Evidence / Knowledge Graph / Memory / Automation | 延后 |
 
@@ -21,10 +22,11 @@
 ## Phase 4B 分期与验收
 
 - **4B.1**：精确 `[start, end)`、段落优先、超长段安全切分、有限重叠、来源隔离、版本和 hash；预算包括 Question、指令、格式包装、输出预留和安全余量，限制输入字符数、来源数、Chunk 数、Map 调用数及估算总量。超限拒绝；Map 一块一计划调用，不预测 Reduce 动态输入。
-- **4B.2**：后续设计严格 Map/Reduce 输出契约、局部引用和阶段 provider 能力；保留 v1 generate 行为。本轮 MapTemplate 只是调用者提供的规划材料，不是已实现的阶段 schema。
+- **4B.2**：独立的三阶段 prompt/schema 版本与 frozen DTO；允许合法空结果，独立 JSON/结构/局部引用校验，应用分配 Finding ID 并重新验证子结果。Map 绑定当前 Chunk，Reduce 仅引用当前子条目；闭包追溯 SourceIdentity / fingerprint / Chunk，合并覆盖范围而非统计证据数。OpenAI/DeepSeek 单次 Responses StageProvider、能力前检与最终请求预算；不改变 v1 generate 行为，4B.1 MapTemplate 仍只是规划材料。
 - **4B.3 / 4B.4**：单篇文献分层编排与历史，再扩展多文献分层综合。需要时另设计新 migration，不改 0001–0003；不把生成摘要伪装成原文。
 - **4B.5**：冲突和信息损失的质量评估，以及用户独立 opt-in 的真实验收。旧 Level B 摘要验收与 4B 全文/分层验收分别记录，均不能由离线测试代替。
-- 本轮验收：合成中英文、emoji、CRLF、空白/超长段、重叠和完整覆盖、确定性/hash/来源隔离、预算临界值、数量限制及隐私测试；完整离线回归、Ruff、锁检查、最终 PR head 双平台 CI 和自审。具体结果见 PR，不自动合并。
+- 4B.1 验收：合成中英文、emoji、CRLF、空白/超长段、重叠和完整覆盖、确定性/hash/来源隔离、预算临界值、数量限制及隐私测试；完整离线回归、Ruff、锁检查、最终 PR head 双平台 CI 和自审。具体结果见 PR #14。
+- 4B.2 本地离线验收（PR #16 合并前完整性修复后）：**601 passed，8 integration deselected**，其中阶段验证/provider 测试161项；Ruff format/check 与 `uv lock --check` 通过。覆盖三阶段/空结果/结构和数量限制、局部引用、伪造子结果/旧 fingerprint/来源隔离/循环/图上限、重叠区间、最终请求预算临界值、两家真实 SDK MockTransport、日志/repr/异常隐私及 v1 全量回归。补充18项测试：原 ca1b2d6 最小复现确认父声明 A/B 而仅提供 A 子结果会被接受；现要求每层父来源身份/fingerprint 映射等于直接子结果来源并集，含空结果和嵌套节点，并验证 Provider 网络前拒绝。兄弟子树共享来源仍允许，模型重复加权局限见 ARCHITECTURE/ADR-048。最终 PR head 的 Windows/Ubuntu CI 和审查结果保存在 PR；新阶段真实 API 均 NOT TESTED，真实 Zotero 未调用。
 
 ## 已完成的前置阶段
 
