@@ -3,6 +3,7 @@
 import json
 import time
 import tracemalloc
+from contextlib import contextmanager
 
 import pytest
 from sqlalchemy import event
@@ -22,6 +23,49 @@ def prepare_five(s, counts, width, *, chinese=False):
         unit = "中文😀" if chinese else chr(65 + i)
         s.reader.texts[source.external_key] = (str(i) + unit * (count * width))[: count * width]
     return tuple(x.id for x in sources)
+
+
+@contextmanager
+def measure_maximum(s, monkeypatch, profile):
+    """Additional observations for maximal findings and maximal closure cases."""
+    from research_workbench.analysis import planning, stage_validation
+    from research_workbench.persistence import document_repository
+
+    counters = {"sql": 0, "chunking": 0}
+    for module in (planning, stage_validation, document_repository):
+        original = module.chunk_document
+
+        def counted(*args, _original=original, **kwargs):
+            counters["chunking"] += 1
+            return _original(*args, **kwargs)
+
+        monkeypatch.setattr(module, "chunk_document", counted)
+
+    def sql(*args):
+        counters["sql"] += 1
+
+    event.listen(s.db._engine, "before_cursor_execute", sql)
+    tracemalloc.start()
+    start = time.perf_counter()
+    try:
+        yield
+    finally:
+        elapsed = time.perf_counter() - start
+        _, peak = tracemalloc.get_traced_memory()
+        tracemalloc.stop()
+        event.remove(s.db._engine, "before_cursor_execute", sql)
+        print(
+            "MAX_PERFORMANCE",
+            json.dumps(
+                {
+                    "profile": profile,
+                    "seconds": round(elapsed, 3),
+                    "peak_mib": round(peak / (1024 * 1024), 3),
+                    **counters,
+                    "alert_60s_or_512mib": elapsed > 60 or peak > 512 * 1024 * 1024,
+                }
+            ),
+        )
 
 
 @pytest.mark.parametrize(
@@ -107,7 +151,9 @@ def test_100_chunk_capacity_profile(cross_setup, monkeypatch, profile, counts, c
     )
 
 
-def test_maximum_document_findings_cross_capacity_rejects_without_truncation(cross_setup):
+def test_maximum_document_findings_cross_capacity_rejects_without_truncation(
+    cross_setup, monkeypatch
+):
     s = cross_setup
     selected = prepare_five(s, (1, 1, 1, 1, 1), 100)
     original = s.provider.generate_stage
@@ -125,7 +171,10 @@ def test_maximum_document_findings_cross_capacity_rejects_without_truncation(cro
 
     s.provider.generate_stage = generate
     svc = CrossDocumentAnalysisService(s.db, s.reader, s.provider, chunking=ChunkingConfig(100, 0))
-    with pytest.raises(CrossDocumentError) as e:
+    with (
+        measure_maximum(s, monkeypatch, "60-large-document-findings"),
+        pytest.raises(CrossDocumentError) as e,
+    ):
         svc.run_analysis(s.question.id, selected)
     assert e.value.code == "budget_exceeded"
     assert len(s.provider.calls) == 10 and all(
@@ -140,7 +189,7 @@ def test_maximum_document_findings_cross_capacity_rejects_without_truncation(cro
     )
 
 
-def test_maximum_citation_closure_history_can_exceed_provider_json_limit(cross_setup):
+def test_maximum_citation_closure_history_can_exceed_provider_json_limit(cross_setup, monkeypatch):
     s = cross_setup
     selected = prepare_five(s, (20, 20, 20, 20, 20), 100)
     original = s.provider.generate_stage
@@ -179,8 +228,9 @@ def test_maximum_citation_closure_history_can_exceed_provider_json_limit(cross_s
         stage_budget=StageBudget(context_tokens=210000, max_input_tokens=200000),
         cross_budget=CrossBudget(max_estimated_tokens=10_000_000),
     )
-    run = svc.run_analysis(s.question.id, selected)
-    history = s.repo.get_history(run.id)
+    with measure_maximum(s, monkeypatch, "12-findings-20-citations-100-chunks"):
+        run = svc.run_analysis(s.question.id, selected)
+        history = s.repo.get_history(run.id)
     data = json.loads(history.result_json)
     assert len(history.result_json) > 100000
     assert len(data["findings"]) == 12

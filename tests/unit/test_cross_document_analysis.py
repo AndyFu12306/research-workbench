@@ -60,6 +60,33 @@ def test_invalid_return_stops_immediately_and_preserves_known_usage(cross_setup,
     with pytest.raises(CrossDocumentError):
         s.repo.get_history(run.id)
     documents = DocumentAnalysisRepository(s.db)
+    if at == 10:
+        from sqlalchemy import select
+
+        from research_workbench.persistence.cross_document_models import cross_stages
+
+        with s.db._engine.connect() as c:
+            failed = (
+                c.execute(select(cross_stages).where(cross_stages.c.run_id == run.id))
+                .mappings()
+                .one()
+            )
+    else:
+        failures = [
+            stage
+            for b in s.repo.get_members(run.id)
+            for stage in documents.get_stages(b.document_execution_id)
+            if stage.status == "failed"
+        ]
+        assert len(failures) == 1
+        failed = failures[0]
+    assert failed.call_outcome == "response_received"
+    assert (failed.input_tokens, failed.output_tokens, failed.response_id) == (
+        100,
+        40,
+        f"fake-{at}",
+    )
+    assert failed.usage_cost is None  # No price configured; known usage is still retained.
     states = [documents.get(b.document_execution_id).status for b in s.repo.get_members(run.id)]
     if at == 4:
         assert states == ["completed", "failed", "failed"]
