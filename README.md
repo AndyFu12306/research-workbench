@@ -2,7 +2,7 @@
 
 建立在 Zotero 之上的个人 AI 研究工作台。Zotero 是唯一文献事实源，Workbench 保存研究对象及来源引用，不建立第二套文献库。
 
-当前修复 **DeepSeek Structured Output：Option B**。[PR #8](https://github.com/AndyFu12306/research-workbench/pull/8) 已合并（main 基线 aceca63）；本轮由 [Issue #9](https://github.com/AndyFu12306/research-workbench/issues/9) 跟踪，在 `fix/deepseek-structured-output` 开发。DeepSeek 改用官方 Chat JSON mode + Workbench 严格校验；OpenAI 保持 Responses。真实 Chat JSON 分析仍待用户验收，不自动 merge、不进入 Phase 4B。
+当前修复 **DeepSeek Structured Output：Option B**。[PR #8](https://github.com/AndyFu12306/research-workbench/pull/8) 已合并（main 基线 aceca63）；本轮由 [Issue #9](https://github.com/AndyFu12306/research-workbench/issues/9) 跟踪，在 `fix/deepseek-structured-output` 开发。DeepSeek 改用官方 Chat JSON mode + Workbench 严格校验；OpenAI 保持 Responses。2026-11-05 Level A已由用户真实验收PASS（单次）；Level B仍NOT TESTED，workflow未FULLY VALIDATED，不自动merge、不进入Phase 4B。
 
 ## 环境与安装
 
@@ -220,7 +220,7 @@ AnalysisProvider
                          Workbench 严格 schema / citation validation
 ```
 
-选择依据：用户人工验证Flash Chat plain、Responses plain均PASS，但Responses json_object及minimal json_schema重复503；Pro Responses plain超时。不能认定strict是唯一原因，也不能据此认定Chat JSON已PASS。完整事实及验收门槛见 [DeepSeek validation](docs/DEEPSEEK_VALIDATION.md)。
+选择依据：用户人工验证Flash Chat plain、Responses plain均PASS，但Responses json_object及minimal json_schema重复503；Pro Responses plain超时。这些历史事实不能认定strict是唯一原因；后续2026-11-05的完整Chat JSON synthetic测试已单次PASS，历史根因仍未确定。完整事实及验收门槛见 [DeepSeek validation](docs/DEEPSEEK_VALIDATION.md)。
 
 `integrations/ai/deepseek.py`复用已安装官方OpenAI SDK 2.54.0，固定DeepSeek endpoint，无新增依赖/migration。接口保持AnalysisProvider/ProviderResult，运行记录provider=deepseek；OpenAI adapter、analysis-schema-v1及Zotero边界不变。这是明确切换生产实现，不是遇错自动fallback。
 
@@ -281,4 +281,4 @@ $env:RUN_DEEPSEEK_INTEGRATION = '0'
 $env:RUN_DEEPSEEK_ZOTERO_E2E = '0'
 ```
 
-本轮修复验证：**268 offline passed，8 integration deselected**；关闭真实测试开关时2 skipped。Codex没有读取真实key或发出真实请求。**Chat JSON Level A: NOT TESTED；Level B: NOT TESTED；DeepSeek workflow: NOT FULLY VALIDATED**。旧Responses结构化路径的人工503为历史失败证据，不混同于新Chat实现结果。OpenAI真实验收状态仍独立。最终Windows/Ubuntu CI、technical self-review及公开历史安全检查见交付PR。
+本轮修复验证：**268 offline passed，8 integration deselected**；关闭真实测试开关时2 skipped。Codex没有读取真实key或发出真实请求。**Chat JSON Level A: PASS（单次真实验收），2026-11-05；Level B: NOT TESTED；DeepSeek workflow: NOT FULLY VALIDATED**。用户报告1 passed in 11.97s，deepseek-flash / SDK 2.54.0 / completed，input/output tokens=877/1036，response-id存在，manifest和security检查通过，测试timeout=120秒且Zotero E2E开关为0。此前timeout/503本次未复现，不等于已确定全部根因；完整配置与证据见[验证记录](docs/DEEPSEEK_VALIDATION.md)。OpenAI真实验收状态仍独立。最终Windows/Ubuntu CI、technical self-review及公开历史安全检查见交付PR。

@@ -1,6 +1,6 @@
 # 路线与阶段门槛
 
-当前：**Phase 4A.1 — DeepSeek Structured Output 修复（Option B）已实现，进入独立 PR / CI / review**。[Issue #9](https://github.com/AndyFu12306/research-workbench/issues/9)，分支 fix/deepseek-structured-output；main基线aceca63包含已合并PR#8。用户报告Responses结构化重复503，改用官方Chat JSON mode + 保持严格应用校验，真实新链路仍待用户验收。记录日期2026-11-03（Asia/Shanghai）。不自动merge，不进入4B。
+当前：**Phase 4A.1 — DeepSeek Structured Output 修复（Option B）已实现，进入独立 PR / CI / review**。[Issue #9](https://github.com/AndyFu12306/research-workbench/issues/9)，分支 fix/deepseek-structured-output；main基线aceca63包含已合并PR#8。用户报告Responses结构化重复503，改用官方Chat JSON mode + 保持严格应用校验，2026-11-05 Level A已由用户单次真实验收PASS，Level B仍NOT TESTED，workflow未FULLY VALIDATED。最新记录日期2026-11-05（Asia/Shanghai）。不自动merge，不进入4B。
 
 | Phase | 内容 | 状态 |
 | --- | --- | --- |
@@ -10,7 +10,7 @@
 | 2 | Project + Question + Minimal Database | PR #2 已合并，main 包含 6bb505ab |
 | 3 | Question ↔ Zotero Source Association | PR #4 已合并 |
 | 4A | Structured AI Analysis MVP | PR #6 已合并；真实 OpenAI 仍 NOT TESTED |
-| 4A.1 | DeepSeek provider + real validation | PR #8已合并；Responses结构化人工FAIL，Chat JSON修复待真实A/B |
+| 4A.1 | DeepSeek provider + real validation | PR #8已合并；Chat JSON Level A单次PASS（2026-11-05），Level B NOT TESTED |
 | 4B | 大 corpus / chunking / map-reduce / hierarchical synthesis | 延后，未授权 |
 | 后续 | Basic UI | 未开始，需另行授权 |
 | 后续 | Inbox / Claim + Evidence / Knowledge Graph / Memory / Automation | 延后 |
@@ -78,8 +78,9 @@ v0.1.0 = Project + Question + Zotero Source + AI Analysis；v0.2.0 = Inbox；v0.
 
 ## Option B 修复与验收
 
-- 用户真实证据：Flash Chat plain / Responses plain PASS；Responses json_object / minimal json_schema 503；Pro Responses plain io_timeout >30s。新Chat JSON模式尚未实测，不把plain或models可见当schema验收。
+- 用户真实证据：Flash Chat plain / Responses plain PASS；Responses json_object / minimal json_schema 503；Pro Responses plain io_timeout >30s。后续完整Chat JSON Level A于2026-11-05获单次真实PASS，不把此前plain或models可见当schema验收。
 - DeepSeek改Chat JSON mode，共享schema/instructions，保留应用严格校验、citation/S99拒绝、immutable history。OpenAI adapter不变，无依赖/迁移；安全503分类与组合prompt版本可追溯。
 - 268离线tests通过，8真实测试默认排除，显式关闭开关时2 skipped；无真实请求。CI及review最终证据见PR。
 - 用户先在同一PowerShell运行既有synthetic node；通过后才允许单独授权的Zotero摘要E2E。安全命令、metadata记录边界、已知timeout/JSON空白/输出预算风险见README和DEEPSEEK_VALIDATION.md。
-- Chat JSON A/B均NOT TESTED，因此DeepSeek仍NOT FULLY VALIDATED。旧Responses实现说明是历史，不再代表当前协议。4B仍未授权。
+- 2026-11-05用户本机运行synthetic node：**Level A PASS（单次真实验收）**，1 passed in 11.97s，deepseek-flash / SDK 2.54.0 / completed；input/output tokens=877/1036，response-id存在，manifest/security检查通过。timeout=120秒，Zotero E2E开关为0；完整配置见DEEPSEEK_VALIDATION.md。
+- Level B仍NOT TESTED，DeepSeek仍NOT FULLY VALIDATED。此前timeout/503在本次未复现，但路径/配置及时间不同，不能证明全部根因已解决。保留旧Responses失败历史；本次PASS不自动授权B或4B。

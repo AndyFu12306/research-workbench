@@ -183,3 +183,5 @@ Chat只负责生成JSON对象候选，adapter完整JSON解析，不接受围栏/
 ## ADR-041：代码与真实能力分开验收
 
 离线MockTransport和CI不能证明新Chat JSON生产兼容。Codex不使用真实key，仅提供既有synthetic integration命令给用户；完整真实A通过后才允许独立同意且指定item的B。隐私gate、临时DB、无全文/Zotero写操作不变。新实现未真实PASS前保持NOT FULLY VALIDATED，不能把旧Chat plain PASS冒充结构化分析PASS，不进入4B。
+
+验收更新（2026-11-05，非架构变更）：用户提供完整Chat JSON synthetic测试 **Level A PASS（单次真实验收）**，Level B仍 **NOT TESTED**，workflow仍 **NOT FULLY VALIDATED**。此前timeout/503在本次未复现，不能据单次成功判定所有故障根因已消除；上述决策时的“未验证”描述保留为历史。运行配置和安全结果见[DEEPSEEK_VALIDATION.md](DEEPSEEK_VALIDATION.md)。本轮仅记文档，未重跑API或更改业务代码，不授权Phase 4B。

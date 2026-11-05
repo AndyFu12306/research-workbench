@@ -168,4 +168,4 @@ DeepSeek-only序列化指令显式版本化，组合prompt_version为analysis-v1
 
 Chat adapter严格处理finish_reason和空JSON，HTTP5xx映射安全provider_unavailable。usage使用prompt_tokens/completion_tokens，response id保留原值或None。只处理message.content，不存reasoning_content或raw SDK响应；零自动付费重试。endpoint/key/model配置及日志保护沿用既有边界。
 
-选型证据和风险见DEEPSEEK_VALIDATION.md。普通CI完全离线；既有synthetic fixture与隐私门槛保留，观察wrapper传递组合prompt版本以验证真实history。新Chat模式A/B尚未实测，不能据mock或Chat plain成功标FULLY VALIDATED。
+选型证据和风险见DEEPSEEK_VALIDATION.md。普通CI完全离线；既有synthetic fixture与隐私门槛保留，观察wrapper传递组合prompt版本以验证真实history。2026-11-05用户本机完整Chat JSON synthetic测试的Level A为PASS（单次真实验收）；Level B仍NOT TESTED，不能标FULLY VALIDATED。此前timeout/503本次未复现，不代表全部根因已确定；详细证据见DEEPSEEK_VALIDATION.md。
