@@ -182,3 +182,15 @@ B额外要求RUN_DEEPSEEK_ZOTERO_E2E=1和用户明确选择的ZOTERO_TEST_ITEM_K
 
 
 验收更新（2026-11-05，非架构变更）：用户通过hardening worktree的正式Provider完成独立Level A，**1 passed in 8.40s**，deepseek-flash / Responses / completed；1049/925 tokens，response-id存在，analysis-v1 / analysis-schema-v1，4096预算、calls1/retries0，immutable/manifest/security通过。正式Level A现为**单次真实PASS**；上述ADR中“须另行验收”为决策时门槛，现已满足。原型与Chat证据仍独立保留，历史503/timeout根因仍未严格证明。Level B仍NOT TESTED，workflow仍NOT FULLY VALIDATED；本次仅文档记录，不授权merge或4B。
+
+## ADR-045：Phase 4B 按文献分层，首批仅交付离线分块与 Map 计划
+
+2026-11-05 用户批准按文献 Map → 文献内 Reduce → 跨文献 Reduce，优于把所有文献块混在同一棵综合树中，可保留文献边界并降低长论文因块多而被重复加权的风险。仅授权 4B.1，Issue #13，从 main b3d36a0 建立独立 worktree / codex/phase4b-chunk-planning；旧 Chat / Responses worktree 不变。后续阶段需另行授权，旧 ADR 的4B未授权语句保留为历史范围，不覆盖本次授权。
+
+优先段落边界，超长段按 Python 字符位置确定性切分；有限且精确的字符重叠保证推进，不采用模型分段或依赖 PDF 页标记。保留原始空格/换行，返回精确半开区间；不承诺页码或 grapheme 边界。来源身份、原文 hash、版本/参数/范围共同建立稳定 Chunk 身份；不建立全文缓存或通用 Claim/Evidence 系统。
+
+## ADR-046：预算针对完整规划输入，估算与真实 token 明确分开
+
+4B.1 使用标准库 UTF-8 字节估算，版本 utf8-bytes-v1；替代方案为模型 tokenizer，但当前增加厂商适配、版本和依赖维护成本，暂不引入。字节估算加完整 JSON 包装、Question/指令/格式材料和显式协议预留，另保留输出与安全余量；不等同精确计数或厂商 context 保证。
+
+每调用输入/context、总来源/字符/Chunk/Map调用和累计估算量都受限，超限固定安全失败，不自动缩块/截断/重试。仅计划一块一 Map 调用，不预估尚未生成的 Reduce 动态输入；未来真实阶段 adapter 必须按正式契约重新预算。规划 DTO 只在内存且敏感字段不进入 repr，无日志/数据库写入。Phase4A provider.generate/service/schema/history、依赖和 migrations 不变。真实 Zotero Level B 仍 NOT TESTED，不因进入4B而获得外发授权。
