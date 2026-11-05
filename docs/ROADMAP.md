@@ -1,6 +1,6 @@
 # 路线与阶段门槛
 
-当前：**Phase 4B.2 — 版本化阶段契约、严格局部引用与 StageProvider**。[Issue #15](https://github.com/AndyFu12306/research-workbench/issues/15)，分支 `codex/phase4b-stage-contracts`，独立 `research-workbench-phase4b2` worktree；基于 PR #14 已合并的 main `567cf2667e5b55e88faf74fd72b198df2877bfa7`。日期 2026-11-05（Asia/Shanghai）。用户已审核并授权本阶段实现；只离线/MockTransport，不调用真实 AI 或 Zotero。不含编排、阶段历史/迁移、重试/恢复/缓存或 4B.3–4B.5。旧 Chat / Responses / 4B.1 worktree 保留，PR 保持 Open。真实 Zotero Level B 仍 NOT TESTED。
+当前：**Phase 4B.3 — 单文献 Map/Reduce 编排与不可变阶段历史**。用户于 2026-11-05（Asia/Shanghai）审核架构后正式授权实现，[Issue #17](https://github.com/AndyFu12306/research-workbench/issues/17)；从最新 main `968acf5d1d38b2b62f3e368f5b5dfb4d415846b7` 建立独立 `research-workbench-phase4b3` / `codex/phase4b-document-pipeline`。PR #16 已合并、Issue #15 Completed；全部旧 worktree/分支保留。仅离线验证，PR 保持 Open、不自动 merge；不进入 4B.4。新 StageProvider 真实 API 与旧真实 Zotero Level B 均仍 NOT TESTED。
 
 | Phase | 内容 | 状态 |
 | --- | --- | --- |
@@ -12,8 +12,9 @@
 | 4A | Structured AI Analysis MVP | PR #6 已合并；真实 OpenAI 仍 NOT TESTED |
 | 4A.1 | DeepSeek provider + hardening | PR #8 / #12 已合并；正式 Level A 单次真实 PASS；真实 Zotero B 待测 |
 | 4B.1 | 确定性 chunking / 有界 Map 输入计划 | PR #14 已合并；Issue #13 Completed |
-| 4B.2 | 阶段契约 / 局部引用 / 单次 StageProvider | 本轮授权与交付；仅离线验证，PR 不自动合并 |
-| 4B.3–4B.5 | 单文献 / 跨文献编排、历史及受控验收 | 未开始，需另行授权 |
+| 4B.2 | 阶段契约 / 局部引用 / 单次 StageProvider | PR #16 已合并；Issue #15 Completed；真实 API 未测 |
+| 4B.3 | 单文献顺序 Map / 单次 Reduce / 阶段历史 | 当前授权开发与离线验收；Issue #17，PR 保持 Open |
+| 4B.4–4B.5 | 跨文献编排及受控质量/真实验收 | 未开始，需另行授权 |
 | 后续 | Basic UI | 未开始，需另行授权 |
 | 后续 | Inbox / Claim + Evidence / Knowledge Graph / Memory / Automation | 延后 |
 
@@ -95,3 +96,15 @@ v0.1.0 = Project + Question + Zotero Source + AI Analysis；v0.2.0 = Inbox；v0.
 - 正式版本已由用户在独立worktree运行synthetic A单次PASS（2026-11-05，1049/925 tokens、immutable/manifest/security通过）；真实Zotero B仍需独立外发同意及明确item key，未在本轮执行。保留analysis-v1 / analysis-schema-v1、4096预算、零retry/fallback。PR #10未关闭/合并，4B未授权。
 
 以上保留当时的阶段边界；随后 PR #12 已合并、PR #10 已关闭未合并，用户现已授权 4B.1，当前状态以上表为准。Level B 未测的事实不变。
+
+## Phase 4B.3 授权范围与验收
+
+2026-11-05 用户通过单次 Reduce 架构并授权 Issue #17，取代旧阶段“4B.3未授权”描述；历史4B.1/4B.2范围与验收不改。完整计划原子落盘，顺序 Map，持久化全覆盖门槛，单次 Document Reduce，不可变阶段历史。追加0004、保留0001–0003和Phase4A；全流程预算含Reduce预留，Decimal名义成本与未知费用明确区分。仅完整全文，无摘要fallback、自动缩块、树形Reduce、重试、恢复或缓存。
+
+验收覆盖合成长文献/单块、混合及全部空结果、Map失败/拒答/超时、Reduce动态超限、持久化遗漏/篡改、事务提交失败/回滚、中断/强退残留running、终态不可覆盖/显式重跑、历史重开、detach追溯、局部引用/跨执行隔离、预算/费用和隐私，以及0003旧库升级/重复升级/映射一致性和Phase4A全量回归。实际测试与最终head双平台CI证据在本轮PR记录；不将Fake/Mock或跳过标记转记真实PASS。新阶段真实API与旧Level B均仍未测。4B.4–4B.5及真实付费/全文外发均未授权。
+
+4B.3本机实际验收：**674 passed，8 integration deselected**（新增执行/迁移73项）；Ruff check/format、锁检查、临时Alembic upgrade/current/check/repeat、wheel迁移资源检查和新增diff安全/技术自审通过。最终head Windows/Ubuntu CI以PR记录为准。真实AI/Zotero均未调用。
+
+PR #18 合并前修复：补齐 Question.description。先新增回归并确认旧代码7项失败，再统一 title/description JSON 快照、规划/阶段请求和完整问题指纹，并在 create_run 事务中重验数据库当前字段；未修改迁移、阶段契约或 Phase 4A。补充8项离线测试，覆盖空描述、描述更新、计划期间/提交后变更、Planner/Provider预算及隐私。最终验证与新 head 双平台 CI 记录在现有 PR #18，保持 Open，不创建新分支/PR，不进入4B.4。
+
+本次修复本机验证：**682 passed，8 deselected**；迁移回归19项通过，Ruff check/format、锁检查及变更敏感信息扫描通过。真实服务未调用；最终 head 双平台 CI 结果以 PR #18 为准。

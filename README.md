@@ -2,7 +2,9 @@
 
 建立在 Zotero 之上的个人 AI 研究工作台。Zotero 是唯一文献事实源，Workbench 保存研究对象及来源引用，不建立第二套文献库。
 
-当前交付 **Phase 4B.2：版本化 Map/Reduce 契约、严格引用校验及 StageProvider**，由 [Issue #15](https://github.com/AndyFu12306/research-workbench/issues/15) 跟踪，基于已合并 PR #14 的 main `567cf26`，独立 worktree / `codex/phase4b-stage-contracts`。只用合成数据与 SDK MockTransport 验证，不调用真实 AI 或 Zotero；没有多阶段编排、阶段持久化或迁移。契约、引用链、预算与离线示例见 [架构文档](docs/ARCHITECTURE.md#phase-4b2-版本化阶段契约与单次-provider-能力)。Phase 4A 生产路径不变，PR 保持 Open，不进入 4B.3–4B.5。DeepSeek 旧 v1 正式 Level A 单次真实 PASS 不代表新阶段契约已实测；真实 Zotero Level B 仍 NOT TESTED，见 [验证记录](docs/DEEPSEEK_VALIDATION.md)。
+> 以下旧阶段段落保留各自实现/验收时的范围；当前开发状态以本页开头和末尾 Phase 4B.3 说明为准。
+
+当前开发 **Phase 4B.3：单文献 Map/Reduce 编排与不可变阶段历史**，[Issue #17](https://github.com/AndyFu12306/research-workbench/issues/17)，基线 `968acf5`（PR #16 已合并，Issue #15 Completed）。独立 worktree `research-workbench-phase4b3` / 分支 `codex/phase4b-document-pipeline`；PR 保持 Open，不自动 merge。仅合成数据、Fake Reader/Provider、临时 SQLite 与 MockTransport 离线验证。新 StageProvider 真实 API 仍 NOT TESTED；旧真实 Zotero Level B 仍 NOT TESTED。Phase 4A 行为保留，4B.4–4B.5 未授权。
 
 ## 环境与安装
 
@@ -282,3 +284,35 @@ $env:RUN_DEEPSEEK_ZOTERO_E2E = '0'
 本轮 hardening 离线验收：**315 passed，8 integration deselected**，Ruff及依赖锁检查通过。Codex未读取实际key、未发送真实provider请求。真实开关关闭时两条DeepSeek测试跳过；skip不是PASS。
 
 用户证据（2026-11-05）：Chat JSON Level A单次PASS；Responses原型的minimal、strict-minimal、完整schema及完整AnalysisService Level A单次PASS。正式hardening版本 **Level A: PASS（单次真实验收，1 passed in 8.40s）**；真实Zotero **Level B: NOT TESTED**；workflow仍 **NOT FULLY VALIDATED**。旧503/timeout保留为历史观察，根因未严格证明，不能凭单次成功认定长期稳定。OpenAI真实状态独立。本次正式验收通过uv run --directory明确选择hardening worktree，1049/925 input/output tokens、response-id存在、manifest/immutable/security通过；与原型证据分开记录。上述命令仅供后续显式复验参考，不自动授权Level B或4B。详见[验证记录](docs/DEEPSEEK_VALIDATION.md)。
+
+## Phase 4B.3：单文献执行与历史
+
+`application.document_analysis.DocumentAnalysisService` 独立于旧 `AnalysisService`。入口 `run_analysis(question_id, source_id)` 只处理明确指定、已关联该 Question 的来源；只接受只读接口 `get_fulltext()` 成功返回的完整全文，health 必须 healthy。无摘要 fallback、自动选文献或元数据复制。生产读取接口为现有 ZoteroClient；本轮验收全部注入 FakeReader。
+
+顺序为：一次全文快照 → 完整 MapPlan → 正式 Map 请求预检 → 原子保存全部计划 → 每块一次 Map/严格校验/原子提交 → 已持久化全部 Map 的集合、顺序、ordinal、hash、来源 fingerprint 与计划完全一致 → 全部 Map（含合法空结果）参与一次 document_reduce → 动态预算/严格校验 → Reduce 与执行完成原子提交。N 块最多 N+1 次调用，无重试、修补、续跑或多级 Reduce。任何一块失败或未落盘都不能完成；不把结果引用范围当作全文处理范围。
+
+Provider 作为同一个注入对象提供 `estimate_stage(request)` 和 `generate_stage(request)`；旧 StageProvider/AnalysisProvider 协议行为保留，新增 BudgetedStageProvider 仅描述这组组合能力。OpenAI/DeepSeek 新阶段 adapter 的估算调用同一个 `prepare_stage_call`，本身不联网。Protocol 表示接口约定，Fake 无需继承生产类，只需实现这些方法。
+
+`ExecutionBudget` 默认 max_calls=101、max_estimated_tokens=1,000,000、reduce_reserved_tokens=32,768；同时受 Planner 最多100块和 StageBudget 各项限制。开始前预检所有正式 Map 估算并额外保留 Reduce 名额与额度；每次调用前重新估算、检查累计 context 估算。Reduce 只使用其保留额度，超限明确 reduce_budget_exceeded，不删块/截断/增预算。Planner envelope 估算单独记版本，不与正式请求估算重复累计。估算是 UTF-8 字节操作界限，不是 tokenizer、真实 context 或账单保证；未来 Map 输出未知，允许所有 Map 成功后 Reduce 因实际输入过大失败。
+
+可选 `Pricing(currency, version, input_per_million, output_per_million)` 要求 Decimal 单价；执行配置保存价格快照。`max_estimated_cost` 需同时提供价格，开始前和每阶段检查估算费用（为 Reduce 按最大输入及输出预留）。StageRun 的 estimated_cost 是输入估算加输出预留的费用，usage_cost 是已知 input/output usage 对该价格的名义计算；二者都不是实际账单。缺任一 usage 或价格时 usage_cost=None，无价格时 estimated_cost=None。部分阶段 usage 已知不代表整个执行费用已知，超时/强杀不能当零费用。
+
+新增 migration 0004（down_revision=0003），四表为 document_analysis_runs、document_analysis_chunks、analysis_stage_runs、analysis_stage_inputs；0001–0003不变。仅临时测试库实际迁移，不自动升级用户数据库。新表使用 SQLAlchemy Core 并注册到既有 Base.metadata，Alembic 仍是 schema 唯一管理入口。旧 Phase 4A 表和分析 schema 不变。
+
+`DocumentAnalysisRepository` 提供 get/list_by_question/get_chunks/get_stages/get_inputs；返回 frozen dataclass，禁止覆盖终态。引用在 execution_id + stage ordinal 下解释；Finding ID 允许不同运行确定性重复，不能用全局 ID 查找替代作用域。只持久化经过重验并映射的生成分析、引用、Chunk manifest、版本、预算、usage 和固定安全错误码。request_sha256 是 stage-input-sha256-v1（渲染阶段输入的 hash），不声称是完整 HTTP 请求或可重放凭据。未存原文、Chunk文本、metadata、完整prompt、原始响应、reasoning或密钥。生成分析本身仍可能含敏感内容，引用链不证明语义支持。
+
+遇错即停，保留已完成阶段；其余 planned 标为 not_started。执行 running → completed/failed/interrupted，阶段另有 planned/running/not_started。call_outcome 分别为 not_started、unknown、response_received；running 在调用前落盘，因此 unknown 不证明服务端收到了请求。KeyboardInterrupt 尽力保存 interrupted 后重新抛出；强杀、SystemExit、断电或持续 DB 故障可留下 running，不自动猜测状态、不后台修复。重新运行创建新历史，detach 保留历史与 SourceRef；查询历史不会重新读取 Zotero，也不能把历史 DTO 直接传入新阶段。
+
+离线验收（测试隔离未 mock 网络/进程；无需 Zotero、key 或 .env）：
+
+```powershell
+uv run --frozen --extra dev pytest tests/unit/test_document_analysis.py tests/unit/persistence/test_document_migrations.py -q
+uv run --frozen --extra dev pytest
+uv run --frozen --extra dev ruff check src tests
+uv run --frozen --extra dev ruff format --check src tests
+uv lock --check
+```
+
+执行服务需注入已配置的 reader/provider；测试中的 FakeReader 与 FakeStageProvider 是完整合成参考，不要求用户补业务代码。新 StageProvider 真实 API、真实全文分层执行与旧 Level B 仍 NOT TESTED；本轮不访问真实 Zotero 或 AI。
+
+本轮本机离线验收（2026-11-05）：**674 passed，8 integration deselected**；新增文献执行/迁移测试73项。Ruff check及format（70文件）、uv lock --check、临时库Alembic upgrade/current/check/repeat和wheel内0001–0004资源检查通过。新增diff凭据/禁止产物扫描及技术自审通过；Phase4A、4B.2契约/引用校验、0001–0003和依赖文件均与基线相同。最终head双平台CI另以PR记录为准，不把本机通过视为远程CI通过。

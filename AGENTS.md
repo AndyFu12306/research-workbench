@@ -2,8 +2,8 @@
 
 - 工作前读取 README.md、docs/ROADMAP.md；涉及设计时读取 PRODUCT.md、ARCHITECTURE.md、DECISIONS.md。及时更新对应文档。
 - Zotero 是唯一文献事实源。Workbench 只保存研究数据和来源引用，不复制完整文献库，不重新实现 Zotero / zotero-mcp 已有能力。
-- PR #6 / #12 / #14 已合并；当前授权 Phase 4B.2：版本化 Map/Reduce 契约、严格局部引用校验及独立 StageProvider 单次调用能力；只做离线与 MockTransport 验证，不调用真实 AI、不读取真实 Zotero 或密钥。保留 OpenAI、DeepSeek Responses、现有 AnalysisProvider.generate / AnalysisService / v1 prompt / schema / immutable history；旧 Chat / Responses / 4B.1 worktree 保留。无编排、迁移或阶段持久化；4B.3–4B.5 未授权，PR 保持 Open。禁止 Web UI、RAG、Embeddings、Inbox、Claim/Evidence、知识图谱或自动化。
-- AI provider 仅为 compute service。源内容只在内存，持久化分析及来源 fingerprint；不自动加载 .env、不记录 payload/密钥，真实付费测试独立 opt-in。本阶段无 schema 变更，不改已合并 migrations。DeepSeek 真实测试由用户在本机运行，Zotero 摘要外发需独立 opt-in 和显式 item key；不自动选择文献。
+- PR #6 / #12 / #14 / #16 已合并；当前用户正式授权 Phase 4B.3（Issue #17）：单篇文献完整 Chunk 计划、顺序 Map、持久化完整性校验、单次 Document Reduce、不可变阶段历史及追加 migration 0004。仅合成/Fake/MockTransport 离线验证，不读取真实 Zotero、密钥或调用真实 AI。保留 Phase 4A AnalysisService / AnalysisProvider.generate、OpenAI、DeepSeek Responses、v1 prompt/schema/history，保留全部旧分支及 worktree。新分支 codex/phase4b-document-pipeline，PR 保持 Open、不自动 merge；4B.4–4B.5 未授权。禁止 Web UI、RAG、Embeddings、Inbox、Claim/Evidence、知识图谱或自动化。
+- AI provider 仅为 compute service。源内容只在内存，持久化分析及来源 fingerprint；不自动加载 .env、不记录 payload/密钥，真实付费测试独立 opt-in。本阶段仅追加 0004（down_revision=0003），不得修改已合并 0001–0003；只迁移临时测试库，不读取用户真实数据库。DeepSeek 真实测试由用户在本机运行，Zotero 摘要外发需独立 opt-in 和显式 item key；不自动选择文献。
 - 禁止本阶段写入 Zotero，包括 metadata、Tags、Collections、Notes、Annotations、PDF、删除和批量操作。不得授权本地写入，也不得用云端或直接数据库读取掩盖 Local API 失败。
 - 后续外部写操作必须先展示预览并获得明确批准；删除需强确认。本次授权建立仓库、上下文文档和验证分支，不代表授权 Zotero 写入。
 - 优先 Python 标准库和既有能力；新增依赖说明用途、替代方案及维护成本。初期 Python 后端、SQLite；不 fork zotero-mcp。

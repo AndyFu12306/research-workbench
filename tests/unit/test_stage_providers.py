@@ -104,6 +104,10 @@ def test_actual_sdk_request_for_each_stage(wire, stage, caplog):
         model="configured-stage-model",
         provider=wire["provider"],
     )
+    public_estimate = wire["instance"].estimate_stage(request)
+    assert wire["calls"] == []
+    assert public_estimate.input_tokens == estimate.input_tokens
+    assert public_estimate.context_tokens == estimate.context_tokens
     result = wire["instance"].generate_stage(request)
     assert wire["calls"] == [expected]
     assert expected["text"]["format"]["strict"] is True
