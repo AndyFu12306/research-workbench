@@ -346,3 +346,27 @@ Map结果保存前再次执行validate_stage_output并匹配request与计划。R
 合成FakeReader/FakeStageProvider/真实临时SQLite覆盖完整服务及故障，真实SDK MockTransport核对estimate_stage与最终参数相同。新StageProvider真实兼容性仍NOT TESTED，旧Zotero摘要Level B未测且独立；无真实API/Zotero读取，无新依赖，Phase4A旧行为保持。单次Reduce的context/输出上限与信息损失仍是明确限制，不进入4B.4。
 
 PR #18 合并前修复：单文献问题输入统一由 `render_document_question(title, description)` 生成固定字段顺序、UTF-8 Unicode、紧凑 JSON（空 description 也保留该字段）。Planner、所有 Map 和 Reduce 复用同一内存快照；`question_sha256` 对此完整字符串计算。create_run 在计划落盘事务中重新读取当前 title/description，以同一函数计算并核对指纹；计划期间任一字段变化均拒绝且不调用模型。计划提交后字段变化不混入当前执行。完整输入进入既有预算检查，不持久化第二份问题文本或 Prompt；Question 自身的 title/description 仍是研究领域数据。旧历史不改写，Phase 4A、迁移及阶段契约不变。
+
+
+## Phase 4B.4：固定三层、父执行事务和专用历史（Issue #19 v2 + v2.1）
+
+最新授权覆盖前述历史阶段的“4B.4未授权”描述；4A、4B.2通用嵌套能力、0001–0004不改。
+
+`application/cross_document_analysis.py` 只编排显式有序来源、单次读取/冻结、预检、顺序执行及安全异常收口。`analysis/cross_document_pipeline.py` 定义 frozen selection/prepared/outcome/binding、三层额外策略、预算与Decimal成本。frozen dataclass阻止属性被意外赋值；tuple保留调用者顺序，不能用集合或排序掩盖错配。原文和递归结果图排除repr且不递归asdict。
+
+单文献准备、登记、执行有限拆分，原公开入口不变。Cross使用私有事务适配器复用单篇执行循环。旧repository提取接受已有session的内部helper；Cross掌握commit边界，不嵌套独立commit。所有权随机凭据仅同次调用持有、DB仅存hash，无按ID接管/续跑接口。普通单篇mutation拒绝操作父执行成员。
+
+T0原子登记父/全部子计划/成员/Cross/输入边，重查同Question关联、完整问题hash、身份和计划。T1先条件更新父write_revision建立SQLite写入边界，验证所有权/状态/篇序/固定额度，再CAS claim阶段；成功commit才调用模型。T2重验并原子保存结果与usage，最终Document Reduce同时完成子执行。T3重验全部已提交Map/Chunk/边、最终Reduce、运行时结果和有序成员并固定子hash，才开始Cross。T4再次绑定并同事务保存Cross结果、阶段completed与父completed。TF只终止非终态，保留成功历史。claim/owner/finalize/锁竞争为独立conflict路径，败方不得触发TF。
+
+0005增加R/M/X/E四表。M关系键和复合PK显式INTEGER NOT NULL；精确四列命名UNIQUE供E的四列FK引用，M再指向旧最终Stage。全部新FK为立即RESTRICT/RESTRICT。FK保证存在及位置，阶段类型、completed、最后ordinal、Map/边完整和运行时一致性仍由事务验证，不能把建表成功或空foreign_key_check当成负面DML验证。
+
+Map额度为正式输入估算+输出上限+安全余量；每篇及Cross各有独立最大输入预留，不借用余额。总分配为全部固定额度之和，不把预留和动态使用重复消耗。Decimal局部context.prec=128、Inexact/Rounded traps，拒绝不精确算术；单价与金额以十进制字符串保存。旧单文献入口的预算语义保持。
+
+`cross_document_history.py`白名单序列化版本cross-document-history-v1：citation带成员ordinal/Document执行/最终Stage/Finding，chunk_ref带成员/Document执行/Chunk ordinal/ID。引用保序，闭包按成员和Chunk位置排序去重。E.child_request_sha256保存最终Reduce请求hash；E.child_result_sha256使用显式document-history-chain-sha256-v1，覆盖最终结果及支撑的全部Map、manifest、输入边、子配置和时间，避免只hash最终结果而遗漏中间Map篡改。此版本存入父config，所有材料均为已有研究历史，不含原文/完整prompt。T3固定、T4及历史读取重算；读取还逐段校验作用域、Finding/Chunk闭包、版本及来源身份，不从历史DTO创建ValidatedStageResult。
+
+历史不是抵抗协调原始SQL改写的防篡改审计，也无法无原文重放模型。查询不hydrate Zotero；detach和Question后续编辑保留本次冻结历史。全空输入仍全处理，空结果不虚构引用。未确认返回记录interrupted/unknown，已返回无效候选只保存合法usage/id及固定错误，不保存候选。KeyboardInterrupt尽力落盘后重抛；SystemExit/强杀/持续DB故障可残留running；T4确认异常只读复查，不重复模型调用。
+
+容量边界：5篇各12点可形成60个Cross输入点，默认单次输入估算可能不足；输出最多12点、每点20引用，无法保证穷尽。保留递归重验，约O(ΣN_i L_i)分块/重hash以及O(ΣN_i²)数据库行处理，无跨调用缓存。性能夹具使用perf_counter/tracemalloc及SQL/分块计数；60秒/512MiB是观测告警线。实际结果见PHASE4B4_VALIDATION.md，不能外推真实Zotero/API耗时或跨平台结果。
+
+
+Cross复用单篇执行时，私有hook只报告“即将调用/已返回”和复查Provider冻结标识；Provider对象本身保持同一个注入实例。单篇原公开入口不安装这些hook，旧错误语义保持。返回None等非法值仍算已收到返回；未知异常只有未确认返回才记unknown，不能通过metadata对象是否为None混淆两者。

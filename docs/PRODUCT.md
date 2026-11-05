@@ -60,3 +60,10 @@ AI Analysis 长期逐步结构化为 research_question、core_claims、methods�
 每次创建独立 AnalysisRun 历史，记录 provider/model、prompt/schema version、usage、结果或安全错误；AnalysisSourceInput 只记录本次来源、顺序、输入类型和内容 fingerprint。源 title/authors/abstract/PDF text 只在内存，不构建文献镜像。Zotero 是文献事实源，Workbench 保存研究工作流与分析，AI provider 只提供计算。
 
 支持 abstracts / fulltext_preferred，明确摘要 fallback，严格缺失和预算策略，无静默省略、无截断。完成和失败历史均不覆盖；无 UI、RAG、完整 Claim/Evidence、后台任务或自动反复分析。后续规模化 chunking / map-reduce / hierarchical synthesis 留给 Phase 4B，须另行授权。
+
+
+## Phase 4B.4 当前交付边界
+
+Issue #19（v2 + v2.1）将显式选择的2–5篇已关联文献按文献边界逐篇完整处理，再做单次跨文献比较。只允许完整全文，拒绝同身份或完全相同全文；近似重复、译本或来源独立性仍需人工判断。处理完整不等于输出引用覆盖全部输入，更不等于语义穷尽或事实正确。
+
+Workbench只保存生成分析、执行/引用链、版本与fingerprint；Zotero仍是唯一文献事实源。容量不足明确失败并保留成功历史，不暗中截断、选文献、改用摘要或自动多级压缩。阶段及父执行的成功只在完整事务提交后出现。此阶段没有可视产品界面；真实外发与4B.5质量验收均未授权。

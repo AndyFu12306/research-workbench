@@ -240,3 +240,24 @@ BudgetedStageProvider组合原StageProvider与纯估算能力，不改变原协�
 ## ADR-054：阶段成功原子落盘、终态不可覆盖、未知中断不猜测
 
 Map完成、生成结果与引用原子提交；最终Reduce与执行completed同事务。每阶段完成需再次重验并绑定完整manifest和阶段输入，Reduce额外核对全部已持久化Map及顺序/指纹/结果。遇错即停，已完成阶段保留、未开始阶段明确not_started，终态条件UPDATE拒绝覆盖，显式重跑创建新执行。先写running再调用可在强杀时留下unknown；KeyboardInterrupt尽力记录interrupted后重新抛出。持久化持续不可用/强退允许残留running，不能自动判成功、失败或费用为零。无自动恢复worker/重试/缓存；历史仅可追溯，因不存原文/完整prompt不声称完整重放。仅离线Fake/Mock+临时库验收，真实阶段API和旧Level B仍NOT TESTED。
+
+
+## ADR-055：4B.4有序显式选择与固定三层
+
+用户正式授权Issue #19 v2 + v2.1，从main 41b1361建立独立分支/worktree。仅2–5篇已关联zotero/personal来源，冻结title+description及逐篇读取的完整全文，拒绝重复身份及不同身份同全文hash。Cross直接子只能是每篇最终Document Reduce，其直接子恰为该篇全部Map；编排层额外策略不收紧4B.2通用validator。原单文献公开行为保留。
+
+## ADR-056：父所有权、短事务与0005精确成员FK
+
+追加0005四表，0001–0004不变。T0原子登记所有计划；父owner hash及write_revision条件UPDATE串行化mutation，Stage CAS恰影响一行；普通单篇mutation不能绕过父门槛。E四列立即FK精确匹配M命名四列UNIQUE，所有关系键含复合PK显式INTEGER NOT NULL，FK全部RESTRICT/RESTRICT。事务再核对阶段类型/终态/最后位置/完整引用链。冲突败方不清理获胜者，无重试或续跑。
+
+## ADR-057：逐调用固定额度与精确十进制
+
+Map用正式预检值固定输入/context/费用，每篇与Cross分别按最大输入独立预留；不借用、不双算、不自动扩大或截断。三篇验收案例总198200、Decimal费用0.621680。Decimal局部128位精度且捕获Inexact/Rounded；不通过float或向下舍入获取通过。价格快照显式，无新依赖；名义usage与预算都不是实际账单保证，缺usage或未确认返回不计零费。
+
+## ADR-058：专用Cross历史及支撑链摘要
+
+cross-document-history-v1为白名单投影，保存精确成员/执行/阶段引用与有界Chunk闭包，不复用旧单篇格式。child_result_sha256明确版本document-history-chain-sha256-v1，绑定最终结果及全部支撑Map/manifest/边/配置；只hash最终结果无法检测中间Map文本等损坏。T3固定、T4及读取重验，查询逐段严格校验链和闭包，不全局借Finding ID、不将历史DTO伪装成运行时结果。生成历史可能敏感；hash不是匿名化、无原文不能重放、不承诺抵抗全库协调SQL篡改。
+
+## ADR-059：未知返回与安全失败不制造完整综合
+
+超时/连接异常未确认返回用interrupted/unknown；已收到无效候选仍尽力保存合法usage/id，候选不落库。失败即停，保留成功子历史，剩余not_started。T4仅一次原子成功；确认不明只读复查完成状态，不重发请求。KeyboardInterrupt尽力TF后重抛，SystemExit/强杀/持续DB故障可残留running，无后台修复。仅离线合成/Fake/SDK MockTransport；真实API/Zotero、PR、merge、关闭Issue及4B.5均未授权。

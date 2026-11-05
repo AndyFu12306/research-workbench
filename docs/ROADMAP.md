@@ -1,6 +1,6 @@
 # 路线与阶段门槛
 
-当前：**Phase 4B.3 — 单文献 Map/Reduce 编排与不可变阶段历史**。用户于 2026-11-05（Asia/Shanghai）审核架构后正式授权实现，[Issue #17](https://github.com/AndyFu12306/research-workbench/issues/17)；从最新 main `968acf5d1d38b2b62f3e368f5b5dfb4d415846b7` 建立独立 `research-workbench-phase4b3` / `codex/phase4b-document-pipeline`。PR #16 已合并、Issue #15 Completed；全部旧 worktree/分支保留。仅离线验证，PR 保持 Open、不自动 merge；不进入 4B.4。新 StageProvider 真实 API 与旧真实 Zotero Level B 均仍 NOT TESTED。
+当前：**Phase 4B.4 — 有界跨文献综合与作用域历史**。Issue #19 v2 + v2.1已获用户正式Branch + Implementation授权；基线main 41b136113aaaa56a9801590f938fcc745a0e546d（PR #18 / Issue #17已完成）。分支codex/phase4b4-cross-document-synthesis，独立worktree C:/Projects/research-workbench-phase4b4。本轮只实现、离线验证和本地提交；不创建PR、不合并、不关闭Issue、不进入4B.5，全部旧分支/worktree保留。真实API及旧Level B仍NOT TESTED。
 
 | Phase | 内容 | 状态 |
 | --- | --- | --- |
@@ -13,8 +13,9 @@
 | 4A.1 | DeepSeek provider + hardening | PR #8 / #12 已合并；正式 Level A 单次真实 PASS；真实 Zotero B 待测 |
 | 4B.1 | 确定性 chunking / 有界 Map 输入计划 | PR #14 已合并；Issue #13 Completed |
 | 4B.2 | 阶段契约 / 局部引用 / 单次 StageProvider | PR #16 已合并；Issue #15 Completed；真实 API 未测 |
-| 4B.3 | 单文献顺序 Map / 单次 Reduce / 阶段历史 | 当前授权开发与离线验收；Issue #17，PR 保持 Open |
-| 4B.4–4B.5 | 跨文献编排及受控质量/真实验收 | 未开始，需另行授权 |
+| 4B.3 | 单文献顺序 Map / 单次 Reduce / 阶段历史 | PR #18 已合并；Issue #17 Completed |
+| 4B.4 | 有界跨文献编排和作用域历史 | 当前授权实施；Issue #19；不创建PR |
+| 4B.5 | 受控质量和真实验收 | 未授权 |
 | 后续 | Basic UI | 未开始，需另行授权 |
 | 后续 | Inbox / Claim + Evidence / Knowledge Graph / Memory / Automation | 延后 |
 
@@ -117,4 +118,10 @@ PR #18 合并前修复：补齐 Question.description。先新增回归并确认�
 不创建PR、不合并、不关闭Issue、不进入4B.5；真实能力仍NOT TESTED。
 Step 1：准备/登记/执行有限拆分，run_analysis公开行为不变。新增失败回归后，针对性68项通过。
 Step 2：固定逐调用预算、Decimal精确计算和首版三层拓扑策略；预算合成案例12项通过。
-其余阶段待本分支实际验证，不以前置阶段结果代替。
+其余阶段现已实现并按最终验收记录验证，不以前置阶段结果代替。
+
+
+4B.4实现阶段：准备/执行有限拆分、固定计划/预算、0005父执行持久化、顺序编排、专用历史已实现。最终完整离线与容量/迁移/打包/隐私/兼容性门槛以[本轮验收记录](PHASE4B4_VALIDATION.md)为准；Windows/Ubuntu最终head CI需后续获准推送/PR后验证，不把本机通过转记远程通过。
+
+
+4B.4最终本机完整离线：918 passed / 8 deselected，新增236项；Ruff（89文件）、锁、临时Alembic CLI/metadata/repeat和wheel五份迁移资源通过。所有旧迁移、4A/4B.2契约、adapter及依赖无diff。完整数据与性能限制见PHASE4B4_VALIDATION.md。仅本地提交，未推送/创建PR，最终远程双平台CI仍待后续授权；不关闭Issue #19、不进入4B.5。

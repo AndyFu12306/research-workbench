@@ -4,7 +4,7 @@
 
 > 以下旧阶段段落保留各自实现/验收时的范围；当前开发状态以本页开头和末尾 Phase 4B.3 说明为准。
 
-当前开发 **Phase 4B.3：单文献 Map/Reduce 编排与不可变阶段历史**，[Issue #17](https://github.com/AndyFu12306/research-workbench/issues/17)，基线 `968acf5`（PR #16 已合并，Issue #15 Completed）。独立 worktree `research-workbench-phase4b3` / 分支 `codex/phase4b-document-pipeline`；PR 保持 Open，不自动 merge。仅合成数据、Fake Reader/Provider、临时 SQLite 与 MockTransport 离线验证。新 StageProvider 真实 API 仍 NOT TESTED；旧真实 Zotero Level B 仍 NOT TESTED。Phase 4A 行为保留，4B.4–4B.5 未授权。
+当前开发 **Phase 4B.4：有界跨文献综合与作用域历史**，[Issue #19](https://github.com/AndyFu12306/research-workbench/issues/19)，设计 v2 + v2.1，基线 `41b136113aaaa56a9801590f938fcc745a0e546d`（PR #18 已合并）。独立分支 `codex/phase4b4-cross-document-synthesis` / worktree `C:/Projects/research-workbench-phase4b4`；本轮只允许实现、离线验证和本地提交，不创建 PR、不合并、不关闭 Issue、不进入 4B.5。全部旧分支/worktree 保留。真实 StageProvider API、Zotero Level B 仍 NOT TESTED。
 
 ## 环境与安装
 
@@ -316,3 +316,29 @@ uv lock --check
 执行服务需注入已配置的 reader/provider；测试中的 FakeReader 与 FakeStageProvider 是完整合成参考，不要求用户补业务代码。新 StageProvider 真实 API、真实全文分层执行与旧 Level B 仍 NOT TESTED；本轮不访问真实 Zotero 或 AI。
 
 本轮本机离线验收（2026-11-05）：**674 passed，8 integration deselected**；新增文献执行/迁移测试73项。Ruff check及format（70文件）、uv lock --check、临时库Alembic upgrade/current/check/repeat和wheel内0001–0004资源检查通过。新增diff凭据/禁止产物扫描及技术自审通过；Phase4A、4B.2契约/引用校验、0001–0003和依赖文件均与基线相同。最终head双平台CI另以PR记录为准，不把本机通过视为远程CI通过。
+
+
+## Phase 4B.4：显式跨文献执行
+
+`CrossDocumentAnalysisService.run_analysis(question_id, source_ids)` 接受 **2–5 个已关联来源 ID 的有序 tuple**，冻结完整问题（title + description）和每篇全文；顺序执行每篇 Map → Document Reduce，最后只做一次 Cross Reduce。各篇全文只读取一次；不是 Zotero 跨篇原子快照。重复身份、不同身份同全文 hash 均拒绝，失败即停，不返回部分综合。
+
+单文献 `DocumentAnalysisService.run_analysis(question_id, source_id)` 的公开返回行为保持。内部 `prepare_document` 只准备冻结计划，`register_document` 登记计划，`execute_registered` 执行已登记计划；Cross 复用后者并通过父执行事务保护所有子 mutation。
+
+- 首版最多100个 Chunk、1,000,000个原文字符、106次结构调用；整体默认1,000,000操作估算。每个 Map 固定自己的正式估算额度；每篇 Document 和 Cross 分别预留完整 Reduce 输入/输出/安全余量，互不借用。
+- Decimal 费用使用显式128位精度并拒绝不精确运算；费用上限必须同时给出价格/币种/版本。`get_costs()` 区分已知部分、整次未知费用、unknown 与 not_started 调用。预算与名义 usage 费用均不是实际账单保证。
+- `CrossDocumentRepository.get_history(id)` 只读 Workbench 历史，返回 frozen `CrossHistory`，`result_json` 为 `cross-document-history-v1`；不会重新读取 Zotero，不可传回新 Reduce 充当运行时结果。读取严格遍历 Document Reduce → Map → Chunk，并核对完整子历史摘要及作用域。
+- 完成/失败/中断历史不覆盖；显式重跑创建全新父子执行。未确认返回的超时/连接错误为 interrupted/unknown。强杀或持续 DB 故障可留下 running，不自动恢复。
+- 仅追加 Alembic 0005；不自动升级用户数据库，不改0001–0004。没有新增依赖、UI、RAG、缓存、重试、并行调度或 Zotero 写入。
+
+可直接运行已完成的合成示例测试，无需 Zotero、密钥或 `.env`：
+
+```powershell
+uv run --frozen --extra dev pytest tests/unit/test_cross_document_analysis.py -q
+uv run --frozen --extra dev pytest tests/unit/test_cross_document_capacity.py -q -s
+uv run --frozen --extra dev pytest
+uv run --frozen --extra dev ruff check src tests
+uv run --frozen --extra dev ruff format --check src tests
+uv lock --check
+```
+
+容量测试会显式提高**合成整体预算**以测100块路径；默认单次 Reduce 仍可安全拒绝。完整门槛、实际性能和未测试项见 [4B.4 验收记录](docs/PHASE4B4_VALIDATION.md)。引用链只能证明结构追溯，不能证明语义支持或穷尽综述；输出生成分析仍可能复述敏感内容。
