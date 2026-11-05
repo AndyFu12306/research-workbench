@@ -238,3 +238,82 @@ assert chunk.text == doc.text[chunk.start:chunk.end]
 本阶段 `PlanningInputError` 表示非法/空输入，`PlanningLimitError` 表示超限；失败不返回部分计划、不生成运行历史，无重试和付费调用。整体 Chunk 数与 Map 调用数各自有上限；目前一块一调用，数量相等。Reduce 输入依赖未来真实 Map 输出，**本计划不包含 Reduce 预算、调用数或结果预测**。
 
 4B.2 建议以 MapPlan / MapInput 的来源 fingerprint、chunk_id、位置、算法/envelope/estimator 版本及预算为输入基础，另行加入严格、版本化的阶段输出契约和引用校验；允许无相关发现。正式请求渲染须重新检查预算。不得把本计划视为原文外发授权，也不改变 Level B 仍 NOT TESTED 的记录。
+
+## Phase 4B.2 版本化阶段契约与单次 Provider 能力
+
+2026-11-05 用户审核并授权 Issue #15；基于 PR #14 已合并的 main 567cf26。新增文件独立于 Phase 4A；旧 OpenAI/DeepSeek adapter、AnalysisProvider.generate、AnalysisService、analysis-v1 / analysis-schema-v1、AnalysisRun 和 migrations 原样保留。本轮没有真实 AI/Zotero 调用、编排或阶段持久化。
+
+```text
+调用者提供当前 SourceDocument / TextChunk 或已验证的子结果
+    → StageRequest（stage + contract_version + question + input + budget）
+    → StageProvider.generate_stage（单次调用；无运行历史）
+        → 能力前检 → 重验输入/引用图 → 最终 payload 预算 → Responses
+        → 严格响应形状检查 → ProviderResult（仍为不可信 JSON 候选）
+    → validate_stage_output → ValidatedStageResult
+        → 应用分配 Finding ID / 直接子引用 / Chunk 来源闭包
+```
+
+### 契约和输出
+
+- `analysis/stage_contracts.py` 定义三个阶段的独立版本：`map-schema-v1`、`document-reduce-schema-v1`、`cross-document-reduce-schema-v1`，prompt 分别对应 `*-prompt-v1`。目前共享有限分析点形状，阶段的输入和合法引用不同，版本互不替代。
+- 严格输出为 `{"status":"findings|no_relevant_findings","findings":[...]}`；最多12点，每点只含 text（1–2000字符，禁止纯空白）、kind（source_summary/ai_inference）、category（approach/finding/agreement/disagreement/limitation/research_gap）及 citations（1–20个不同的当前标签，每标签最多64字符）。JSON 最多100000字符。
+- 所有 schema 对象均 additionalProperties=False；独立应用层另拒绝重复 JSON key、NaN/Infinity、额外文字/围栏、非法类型、未知/重复引用及 surrogate。status=findings 必须非空，no_relevant_findings 必须为空；此关联由应用校验实现。失败/拒答/incomplete 绝不转换为空发现。
+- Map 为一个当前 Chunk；文献内 Reduce 只接受同一来源的 Map/文献内 Reduce；跨文献 Reduce 只接受文献内/跨文献 Reduce，当前来源快照至少两个。生成内容不伪装为原文，无摘录或页码字段，无通用 Claim/Evidence 模型。
+
+### 当前请求的引用闭包
+
+`analysis/stage_validation.py` 独立于 SDK。调用者显式提供当前来源快照；其身份不连接 Zotero，也不证明真实外部来源存在。Map 根据当前 SourceDocument 和分块参数重新计算并匹配完整 TextChunk，模型只看到 Chunk 标签和原文，不获取外部 item key。
+
+模型不能指定 Finding ID。应用按本次输入绑定（包含问题、阶段、版本、当前来源 fingerprint 和实际输入）、已规范化完整输出及条目序号生成 SHA-256 ID。输出中出现 identity、finding_id、位置/hash 等额外字段一律拒绝。
+
+Reduce 只把本次实际子条目的 Finding ID 列入引用白名单。接收的 ValidatedStageResult 仍会被递归重验：原始规范 JSON、应用 ID、字段/Chunk 闭包、当前来源身份/fingerprint、问题和阶段必须一致，防止直接构造或 replace DTO 绕过校验。不接受原始 Chunk 或隔代 Finding 引用；不允许不同来源混入文献内阶段、旧文本快照、重复子输入、伪造条目或循环。每次最多100个直接子结果、100来源、1000000原文字符，图最多16层、1000次子结果遍历；超限固定安全失败。
+
+每条结果同时保存直接 citation 和应用展开的 ChunkReference 闭包：
+
+```text
+跨文献 Finding → 文献内 Finding → Map Finding → ChunkReference
+                                               → SourceIdentity / source_fingerprint
+                                               → chunk_id / [start,end) / content_sha256
+```
+
+相同 chunk_id 去重，`source_coverage()` 按来源合并重复/重叠区间。Reduce 输入提供条目的 coverage 和文献分组，帮助识别共用内容；不提供或计算独立证据数量，不按块数投票。结构和引用链合法性不证明语义支持、事实真实性或模型 kind 分类正确，必须人工审阅。
+
+### StageProvider 和预算
+
+`integrations/ai/stages.py` 提供单次 `OpenAIStageProvider` / `DeepSeekStageProvider`。独立 StageProvider Protocol 包含 provider/model、不可变 capabilities 集合和 generate_stage；新类复用既有客户端配置/关闭方式，通过小型 mixin 添加能力，不修改旧 generate 方法。能力声明是实现支持范围，不是模型实测证明。没有网络探测式能力发现。
+
+两者使用 Responses strict JSON Schema；新阶段调用统一使用已有严格响应结构与安全错误检查，只允许 completed assistant 单消息/单 output_text，reasoning 元数据忽略；未知/工具/多片段输出、拒答、失败、空白或非法 JSON 均失败。JSON 候选原文不重写，重复 key 留给独立应用校验。OpenAI 发送 store=False/truncation=disabled，DeepSeek 不发送这两项；零重试、零 repair/extract、零协议/文本 fallback。usage/id 可缺失，错误类型拒绝；无 raw response/reasoning 保存。
+
+`prepare_stage_call()` 从实际请求生成最终 SDK 参数并计算：
+
+```text
+input_estimate = UTF8_bytes(compact_JSON(final_responses_create_payload)) + protocol_reserve
+context_estimate = input_estimate + output_tokens + safety_margin
+```
+
+payload 包括模型、版本化指令、输入、完整 schema/format 包装及实际 adapter 参数。Reduce 输入使用实际重验后的条目、kind、category、来源分组和 coverage，没有原文全文。HTTP headers/framing 用协议预留表示。此估算版本为 stage-request-utf8-bytes-v1，不是 tokenizer、费用或任意模型 context 保证；没有复用 MapInput.render。默认32768 context、24000 input、4096 output、1024 safety、256 protocol，输出只允许1–4096。任一上限超出即请求前失败；不截断、自动缩块或返回部分结果。不预估未来 Reduce 调用总量。
+
+### 合成离线示例与验证
+
+以下仅展示 DTO 和本地校验，不创建 SDK client，不调用服务：
+
+```python
+import json
+from research_workbench.analysis.chunking import SourceDocument, SourceIdentity, chunk_document
+from research_workbench.analysis.stage_contracts import CONTRACT_VERSIONS, StageRequest
+from research_workbench.analysis.stage_validation import validate_stage_output
+
+doc = SourceDocument(SourceIdentity("synthetic", "example", "FAKE0001"), "合成方法及限制。")
+chunk = chunk_document(doc)[0]
+request = StageRequest("map", CONTRACT_VERSIONS["map"], "方法有什么限制？", (doc,), chunks=(chunk,))
+candidate = json.dumps({"status": "findings", "findings": [{
+    "text": "合成内容说明了一项方法，限制仍需进一步核实。",
+    "kind": "source_summary", "category": "finding", "citations": [chunk.chunk_id],
+}]})
+result = validate_stage_output(request, candidate)
+assert result.findings[0].chunks[0].identity == doc.identity
+```
+
+后续调用者若使用 generate_stage，仍须显式把其 output_json 交给 validate_stage_output，不能直接传给 Reduce。本文不授予外发真实文献内容的权限。本轮只提供离线/MockTransport 测试；新阶段真实 OpenAI/DeepSeek 能力均 NOT TESTED，旧 DeepSeek v1 Level A 不转用，真实 Zotero Level B 仍 NOT TESTED。
+
+所有 DTO 与来源/子结果图只在内存；repr 排除源文本、问题、分析文本、子结果和原始输出，异常固定消息且抑制敏感上下文。字段访问、render 和 asdict 仍能暴露内容，禁止写日志/数据库。没有新依赖、迁移、阶段缓存或恢复机制。

@@ -194,3 +194,29 @@ B额外要求RUN_DEEPSEEK_ZOTERO_E2E=1和用户明确选择的ZOTERO_TEST_ITEM_K
 4B.1 使用标准库 UTF-8 字节估算，版本 utf8-bytes-v1；替代方案为模型 tokenizer，但当前增加厂商适配、版本和依赖维护成本，暂不引入。字节估算加完整 JSON 包装、Question/指令/格式材料和显式协议预留，另保留输出与安全余量；不等同精确计数或厂商 context 保证。
 
 每调用输入/context、总来源/字符/Chunk/Map调用和累计估算量都受限，超限固定安全失败，不自动缩块/截断/重试。仅计划一块一 Map 调用，不预估尚未生成的 Reduce 动态输入；未来真实阶段 adapter 必须按正式契约重新预算。规划 DTO 只在内存且敏感字段不进入 repr，无日志/数据库写入。Phase4A provider.generate/service/schema/history、依赖和 migrations 不变。真实 Zotero Level B 仍 NOT TESTED，不因进入4B而获得外发授权。
+
+## ADR-047：4B.2 使用独立阶段契约，保留 v1 生产行为
+
+2026-11-05 用户审核架构并授权 Issue #15。PR #14 已合并；从 main 567cf26 建立独立 worktree / codex/phase4b-stage-contracts，保留全部旧 worktree。标准库 frozen dataclass 定义 StageRequest / StageBudget / StageFinding / ValidatedStageResult；map、document_reduce、cross_document_reduce 分别版本化 prompt 与 schema。共享有限的分析点形状，不建立通用 Claim/Evidence 模型。
+
+输出只有 status/findings，分析点含 text/kind/category/citations；source_summary 与 ai_inference 明确区分。严格 JSON Schema 禁止额外字段并限制类型/数量/长度；独立应用校验另检查空结果状态一致性、重复 key/citation、非标准 JSON 及局部引用。状态关联与引用语义在应用层实现，避免依赖 provider 不一致的条件 schema 支持。no_relevant_findings 是合法、明确的分析结果，不能由异常转换得到。结构与来源链不证明语义真实性，模型的 kind 分类仍需人工审阅。
+
+## ADR-048：引用仅限直接输入，ID 与证据闭包由应用生成
+
+Map 只接收一个当前 Chunk，通过当前 SourceDocument 和 ChunkingConfig 重算分块，核对身份、源 hash、chunk_id、位置和片段 hash。模型只引用受信任标签，不能返回或覆盖身份、指纹、位置或 Finding ID。应用按输入绑定、规范输出及 ordinal 计算 SHA-256 Finding ID；它是稳定的运行时身份，不是持久化主键或匿名化保证。
+
+Reduce 输入为已校验的子结果；不凭 DTO 类型直接信任，而是递归重放其 JSON 校验、ID 与 Chunk 闭包，核对当前来源快照、问题、允许的阶段及本次实际子条目。文献内阶段只接受 Map/文献内 Reduce，跨文献阶段只接受文献内/跨文献 Reduce。不允许引用祖孙捷径、其他请求、旧快照、重复子输入、重复 citation、伪造条目或循环。最多16层、1000次子结果遍历，超限失败；这不是多阶段执行编排。
+
+结果保留直接 Finding 引用和通向 Chunk/SourceIdentity 的受信任闭包。相同 Chunk 去重，重叠区间按来源合并为 coverage，Reduce 请求也提供这些范围以识别共享内容；没有“独立证据数量”字段或加权投票。原文与生成内容始终分开。子结果原始规范 JSON、来源快照与引用图只在内存，供重验使用，不引入阶段历史或 DB schema。
+
+## ADR-049：独立 StageProvider 能力与严格单次 Responses 调用
+
+StageProvider Protocol 的 generate_stage 返回未被信任的 ProviderResult JSON 候选，必须显式 validate_stage_output 后才可供 Reduce 使用。新增 OpenAIStageProvider / DeepSeekStageProvider 通过小型 mixin 复用原有客户端配置和生命周期，继承的 generate 完全不改；原有生产类、AnalysisService、v1 prompt/schema、immutable AnalysisRun、迁移与依赖均不改。没有为 DRY 大范围重构。
+
+两家新阶段 adapter 均复用已存在的严格 Responses shape/metadata 检查和安全错误分类（目前位于 DeepSeek 模块，但逻辑不依赖厂商身份）。OpenAI 阶段调用保留 store=False/truncation=disabled，DeepSeek 不发送不支持的参数。各阶段/契约能力在网络前检查；不支持即失败，无 v1/Chat/普通文本 fallback，0网络重试、0输出修补。MockTransport 证明锁定 SDK 请求/响应契约，不证明真实模型已接受新 schema；旧 v1 Level A PASS 不能转记为阶段能力实测。
+
+## ADR-050：预算计算针对最终 SDK 请求参数，保持估算边界
+
+StageRequest 显式携带预算；从实际指令、实际 Map 原文或已重验的 Reduce 条目及 coverage、完整 JSON Schema、模型和参数形成最终 responses.create payload。对该 payload 的紧凑 JSON UTF-8 bytes 估算，再加入协议预留、输出预留和安全余量，分别检查输入/context。版本 stage-request-utf8-bytes-v1，不复用 4B.1 MapInput 估算，不声称精确 tokenizer 或真实 context 保证。HTTP headers/framing 由显式协议预留表示。
+
+默认 context32768/input24000/output4096/safety1024/protocol256；阶段输出只允许显式调小至1–4096，不自动增大。真实输出超限/incomplete 仍失败。数量/文本上限与预算同时生效；Reduce 使用实际子结果，不预测未来动态输出或总 Reduce 成本。后续编排与全流程预算留给4B.3/4B.4，真实调用需另行 opt-in。repr/异常不含原文或生成内容；render/字段/asdict 仍含敏感数据，禁止写日志或 DB。
