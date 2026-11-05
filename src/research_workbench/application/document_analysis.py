@@ -12,8 +12,10 @@ from research_workbench.analysis.document_pipeline import (
     PIPELINE_ERRORS,
     BudgetedStageProvider,
     DocumentAnalysisError,
+    DocumentExecutionOutcome,
     DocumentRun,
     ExecutionBudget,
+    PreparedDocument,
     Pricing,
     RequestEstimate,
     render_document_question,
@@ -93,6 +95,12 @@ class DocumentAnalysisService:
             )
         except Exception:
             raise DocumentAnalysisError("source_unavailable") from None
+        prepared = self.prepare_document(question_input, document)
+        run = self.register_document(question_id, source_id, prepared)
+        return self.execute_registered(run, prepared).run
+
+    def prepare_document(self, question_input, document) -> PreparedDocument:
+        """Build and preflight a frozen plan without reading or writing external state."""
         plan = self._planner.build(
             question_input,
             (document,),
@@ -129,20 +137,28 @@ class DocumentAnalysisService:
             )
             if total_cost > self._budget.max_estimated_cost:
                 raise DocumentAnalysisError("execution_budget_exceeded")
+        return PreparedDocument(plan, requests, estimates)
+
+    def register_document(self, question_id, source_id, prepared) -> DocumentRun:
         try:
-            run = self._runs.create_run(
+            return self._runs.create_run(
                 question_id,
                 source_id,
-                plan,
+                prepared.plan,
                 provider=self._provider.provider,
                 model=self._provider.model,
                 stage_budget=self._stage_budget,
                 execution_budget=self._budget,
                 pricing=self._pricing,
-                estimates=estimates,
+                estimates=prepared.estimates,
             )
         except PersistenceError:
             raise DocumentAnalysisError("persistence_failed") from None
+
+    def execute_registered(self, run, prepared) -> DocumentExecutionOutcome:
+        """Execute precisely the registered plan; no reads, retries or plan rebuilding."""
+        requests, plan = prepared.requests, prepared.plan
+        question_input, document = requests[0].question, plan.documents[0]
         metadata = None
         children = []
         stage = "map"
@@ -171,7 +187,8 @@ class DocumentAnalysisService:
             self._runs.start_stage(run.id, len(requests) + 1, request, estimate)
             metadata = self._provider.generate_stage(request)
             validated = validate_stage_output(request, metadata.output_json)
-            return self._runs.complete_stage(run.id, len(requests) + 1, validated, metadata)
+            completed = self._runs.complete_stage(run.id, len(requests) + 1, validated, metadata)
+            return DocumentExecutionOutcome(completed, len(requests) + 1, validated)
         except KeyboardInterrupt:
             self._fail(run.id, "interrupted", metadata=metadata, interrupted=True)
             raise KeyboardInterrupt() from None
