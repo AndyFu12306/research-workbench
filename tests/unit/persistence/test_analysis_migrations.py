@@ -34,7 +34,7 @@ def test_existing_research_and_sources_survive_analysis_upgrade(tmp_path, monkey
         with db._engine.connect() as connection:
             assert (
                 connection.execute(text("SELECT version_num FROM alembic_version")).scalar_one()
-                == "0003"
+                == "0004"
             )
             assert compare_metadata(MigrationContext.configure(connection), Base.metadata) == []
         inspector = inspect(db._engine)

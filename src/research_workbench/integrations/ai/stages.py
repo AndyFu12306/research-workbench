@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import openai
 
 from research_workbench.analysis.contracts import ProviderResult
+from research_workbench.analysis.document_pipeline import RequestEstimate
 from research_workbench.analysis.errors import AnalysisProviderError, AnalysisProviderFailure
 from research_workbench.analysis.stage_contracts import (
     CONTRACT_VERSIONS,
@@ -86,6 +87,13 @@ def prepare_stage_call(
 
 class _StageCalls:
     capabilities = frozenset(CONTRACT_VERSIONS.items())
+
+    def estimate_stage(self, request: StageRequest) -> RequestEstimate:
+        """Same final arguments as generate_stage, without network or credentials access."""
+        _, estimate = prepare_stage_call(request, model=self.model, provider=self.provider)
+        return RequestEstimate(
+            estimate.input_tokens, estimate.context_tokens, estimate.estimator_version
+        )
 
     def generate_stage(self, request: StageRequest) -> ProviderResult:
         if (

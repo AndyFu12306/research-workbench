@@ -321,3 +321,26 @@ assert result.findings[0].chunks[0].identity == doc.identity
 后续调用者若使用 generate_stage，仍须显式把其 output_json 交给 validate_stage_output，不能直接传给 Reduce。本文不授予外发真实文献内容的权限。本轮只提供离线/MockTransport 测试；新阶段真实 OpenAI/DeepSeek 能力均 NOT TESTED，旧 DeepSeek v1 Level A 不转用，真实 Zotero Level B 仍 NOT TESTED。
 
 所有 DTO 与来源/子结果图只在内存；repr 排除源文本、问题、分析文本、子结果和原始输出，异常固定消息且抑制敏感上下文。字段访问、render 和 asdict 仍能暴露内容，禁止写日志/数据库。没有新依赖、迁移、阶段缓存或恢复机制。
+
+## Phase 4B.3 单篇完整执行与阶段历史
+
+Issue #17，基线968acf5（PR#16已合并）。同步 DocumentAnalysisService 使用依赖注入的 FulltextReader 与 BudgetedStageProvider；只选择现有关联的一个 SourceRef，健康读取一次完整全文快照，不自动选来源或回退摘要。读取由 ZoteroClient 保持上游全文完整性检查；repository 无 Zotero/SDK 调用。
+
+数据流：显式 Question/Source → 全文快照 → MapBudgetPlanner → 正式请求估算 → create_run 原子写完整计划 → 顺序 start_stage/generate_stage/validate_stage_output/complete_stage → 持久化完整性门槛 → 单次 document_reduce → 原子完成阶段与执行。只读历史和运行时 StageRequest/ValidatedStageResult 分开；禁止asdict递归快照落盘。
+
+四张新表（0004，down_revision=0003）：
+
+- document_analysis_runs：Question/SourceRef的RESTRICT外键、状态、provider/model、原文hash/字符数/source fingerprint、问题hash、块数、版本化允许列表配置和UTC时间/安全错误码。
+- document_analysis_chunks：(execution_id,ordinal)主键、execution/chunk ID唯一、半开范围、片段hash、来源fingerprint。无原文列。
+- analysis_stage_runs：(execution_id,ordinal)主键、阶段与prompt/schema版本、状态、阶段输入hash、正式请求估算及版本、名义费用、usage/id、经过校验映射的生成结果及引用、调用结果状态、UTC时间/错误码。N个Map后固定第N+1个Reduce。
+- analysis_stage_inputs：执行内父阶段+输入ordinal主键；Map→manifest Chunk，Reduce→全部Map阶段。组合外键禁止跨执行借用子阶段，child ordinal必须小于parent，唯一约束拒绝重复子输入。
+
+Map结果保存前再次执行validate_stage_output并匹配request与计划。Reduce start与complete均核对完整manifest重算值、全部Map completed、顺序/ordinal/唯一性、当前SourceIdentity及fingerprint、子阶段输入hash及已保存生成结果、全部有序StageInput。合法空结果同样占一个已完成输入；结论无需引用全部Chunk。阶段生成结果显式保留应用Finding ID、kind/category、直接citation（Reduce为阶段ordinal+Finding ID）和Chunk ID闭包，依本次执行内manifest解析到来源/范围/hash，不按重叠块数投票。
+
+同一Provider对象拥有最终参数估算与生成，正式adapter两者均调用prepare_stage_call。开始前检查N+1调用额度、所有正式Map估算+Reduce预留；逐次重新估算并以已尝试阶段估算累计检查，Planner估算不重复累计。Reduce用实际Map条目/coverage渲染后检查单次/累计/专用预留；超限失败保留Map，无自动删减或树形压缩。默认最多100块，估算总量1M、Reduce预留32768。可配置Decimal价格/估算成本阈值，保存价格快照；usage_cost只是按已知usage和快照单价计算的名义费用，None表示未知，无硬账单保证。
+
+短事务边界：完整计划/所有待执行阶段及输入一次提交；start_stage条件planned→running后才调用；complete_stage条件running→completed并原子写生成结果/引用；Reduce与执行completed同事务；fail_run只终止未完成阶段，保留成功阶段。通过条件UPDATE阻止重复finalize，没有更新终态/删除历史API，也不承诺管理员直接SQL防篡改。按Question有限分页查询历史，不外部hydrate；detach不影响历史FK。
+
+调用前running/unknown只代表准备调用，不证明服务端接收。返回候选后即使校验/落盘失败也尽力保留安全usage/id和response_received；无可靠元数据不猜测费用。KeyboardInterrupt尽力保存interrupted并重新抛出；SystemExit/强杀/断电/持续DB失败可能留下running。无后台检测、自动重试、缓存复用或恢复；重新运行是新历史。request_sha256明确为渲染阶段输入hash，不含HTTP headers/完整prompt；无原文无法完整重放历史模型请求。hash不是匿名化。
+
+合成FakeReader/FakeStageProvider/真实临时SQLite覆盖完整服务及故障，真实SDK MockTransport核对estimate_stage与最终参数相同。新StageProvider真实兼容性仍NOT TESTED，旧Zotero摘要Level B未测且独立；无真实API/Zotero读取，无新依赖，Phase4A旧行为保持。单次Reduce的context/输出上限与信息损失仍是明确限制，不进入4B.4。

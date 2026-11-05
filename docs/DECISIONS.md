@@ -224,3 +224,19 @@ StageProvider Protocol 的 generate_stage 返回未被信任的 ProviderResult J
 StageRequest 显式携带预算；从实际指令、实际 Map 原文或已重验的 Reduce 条目及 coverage、完整 JSON Schema、模型和参数形成最终 responses.create payload。对该 payload 的紧凑 JSON UTF-8 bytes 估算，再加入协议预留、输出预留和安全余量，分别检查输入/context。版本 stage-request-utf8-bytes-v1，不复用 4B.1 MapInput 估算，不声称精确 tokenizer 或真实 context 保证。HTTP headers/framing 由显式协议预留表示。
 
 默认 context32768/input24000/output4096/safety1024/protocol256；阶段输出只允许显式调小至1–4096，不自动增大。真实输出超限/incomplete 仍失败。数量/文本上限与预算同时生效；Reduce 使用实际子结果，不预测未来动态输出或总 Reduce 成本。后续编排与全流程预算留给4B.3/4B.4，真实调用需另行 opt-in。repr/异常不含原文或生成内容；render/字段/asdict 仍含敏感数据，禁止写日志或 DB。
+
+## ADR-051：4B.3采用完整单文献计划和单次Reduce
+
+2026-11-05用户审核后授权Issue#17，从968acf5建立独立worktree/branch，保留全部旧工作。显式Question+已关联Source，只读一次符合ZoteroClient上游完整性检查的全文快照。复用4B.1规划、4B.2单次StageProvider与严格校验，新增独立DocumentAnalysisService，Phase4A不改。全部N个Map按序成功且已落盘后才允许一次Document Reduce，最多N+1调用；合法空结果计入完成。单次Reduce过大时明确失败并保留Map，不自动删块/截断/递归压缩/降级。跨文献与后续质量/真实验收仍需授权。
+
+## ADR-052：0004独立保存执行/Chunk/阶段/输入关系
+
+只追加0004（down_revision=0003），新增document_analysis_runs、document_analysis_chunks、analysis_stage_runs、analysis_stage_inputs；0001–0003、旧AnalysisRun/schema不改。复用SQLAlchemy Core与既有Base.metadata/Alembic，无新增依赖；schema不用create_all。完整计划先原子保存，引用按execution+stage作用域解释。运行时ValidatedStageResult含原文与递归图，禁止直接序列化；只保存严格重验的生成字段/直接引用/Chunk闭包和无内容manifest。允许不同历史有相同确定性Finding ID，不能全局查ID越过作用域。
+
+## ADR-053：同一adapter预算，动态Reduce与显式费用未知
+
+BudgetedStageProvider组合原StageProvider与纯估算能力，不改变原协议/单次方法；同一注入对象用相同最终参数prepare_stage_call估算及调用。Planner只规划且独立记版本，不与正式估算相加。预检N+1名额和全部Map+明确Reduce预留，逐次检查单次context/累计估算与可选成本阈值；未来Map输出未知，允许Reduce动态预算失败。Decimal价格由调用者显式提供并保存版本/币种/单价，不内置现价。估算费用与按已知usage计算的名义费用分开；缺价格或任一usage则费用未知，不把超时/失败算零，不承诺实际账单绝对上限。
+
+## ADR-054：阶段成功原子落盘、终态不可覆盖、未知中断不猜测
+
+Map完成、生成结果与引用原子提交；最终Reduce与执行completed同事务。每阶段完成需再次重验并绑定完整manifest和阶段输入，Reduce额外核对全部已持久化Map及顺序/指纹/结果。遇错即停，已完成阶段保留、未开始阶段明确not_started，终态条件UPDATE拒绝覆盖，显式重跑创建新执行。先写running再调用可在强杀时留下unknown；KeyboardInterrupt尽力记录interrupted后重新抛出。持久化持续不可用/强退允许残留running，不能自动判成功、失败或费用为零。无自动恢复worker/重试/缓存；历史仅可追溯，因不存原文/完整prompt不声称完整重放。仅离线Fake/Mock+临时库验收，真实阶段API和旧Level B仍NOT TESTED。
