@@ -1,0 +1,41 @@
+{
+  "version": "research-quality-benchmark-v1",
+  "case_id": "Q15",
+  "revision": 1,
+  "language": "zh",
+  "requirements_version": "quality-requirements-v1",
+  "question": {
+    "version": "quality-question-v1",
+    "title": "方法A的研究结果、条件和限制是什么？",
+    "description": "Q15/Q16: evaluate method A only. Synthetic evaluation; no external knowledge."
+  },
+  "sources": [
+    {
+      "alias": "A",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0001"
+      ],
+      "text": "合成文章甲只介绍海水盐度。",
+      "sha256": "0c39aeeab779e5e9d0a35c657e60b3cec78ff1bedbe146647d8482281031bb00"
+    },
+    {
+      "alias": "B",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0002"
+      ],
+      "text": "合成文章乙只介绍矿石硬度。",
+      "sha256": "0b7d3b92add0d404e36cc11a292202200a5d11932787910f4cbddd482fc289f6"
+    }
+  ],
+  "facts": [],
+  "relations": [],
+  "max_chars": 8000,
+  "overlap_chars": 0,
+  "forbidden": [
+    "方法A使准确率提高90%。"
+  ]
+}

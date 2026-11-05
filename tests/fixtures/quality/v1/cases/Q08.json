@@ -1,0 +1,107 @@
+{
+  "version": "research-quality-benchmark-v1",
+  "case_id": "Q08",
+  "revision": 1,
+  "language": "en",
+  "requirements_version": "quality-requirements-v1",
+  "question": {
+    "version": "quality-question-v1",
+    "title": "What findings, conditions and limitations are supported?",
+    "description": "Q15/Q16: evaluate method A only. Synthetic evaluation; no external knowledge."
+  },
+  "sources": [
+    {
+      "alias": "A",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0001"
+      ],
+      "text": "Method A improved performance under low load.",
+      "sha256": "9ea9ea83f5170b4a2183dcf9175f893cd04345a6f75f1778fdf2bcf6845875d8"
+    },
+    {
+      "alias": "B",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0002"
+      ],
+      "text": "Method A decreased performance under high load.",
+      "sha256": "8a8d5668a3e4f4cbce71bbdb18f56fdbd8478032e89db07ed0b572b5b24d1770"
+    }
+  ],
+  "facts": [
+    {
+      "fact_id": "F1",
+      "proposition": "Method A improved performance under low load.",
+      "subject": "synthetic-study-A",
+      "method": "A",
+      "comparison": "as explicitly stated",
+      "result": "Method A improved performance under low load.",
+      "value_unit": "as explicitly stated",
+      "polarity": "as explicitly stated",
+      "conditions": "preserve population and setting",
+      "uncertainty": "do not infer unreported outcomes",
+      "evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 45,
+          "sha256": "9ea9ea83f5170b4a2183dcf9175f893cd04345a6f75f1778fdf2bcf6845875d8"
+        }
+      ],
+      "critical": true,
+      "limitation": true,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    },
+    {
+      "fact_id": "F2",
+      "proposition": "Method A decreased performance under high load.",
+      "subject": "synthetic-study-B",
+      "method": "A",
+      "comparison": "as explicitly stated",
+      "result": "Method A decreased performance under high load.",
+      "value_unit": "as explicitly stated",
+      "polarity": "as explicitly stated",
+      "conditions": "preserve population and setting",
+      "uncertainty": "do not infer unreported outcomes",
+      "evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 47,
+          "sha256": "8a8d5668a3e4f4cbce71bbdb18f56fdbd8478032e89db07ed0b572b5b24d1770"
+        }
+      ],
+      "critical": true,
+      "limitation": true,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "relation_id": "R1",
+      "facts": [
+        "F1",
+        "F2"
+      ],
+      "kind": "conditional",
+      "conditions": "Preserve the explicitly stated settings and source identities.",
+      "expected": "The direction depends on load: low improves, high decreases."
+    }
+  ],
+  "max_chars": 8000,
+  "overlap_chars": 0,
+  "forbidden": [
+    "Method A improves performance at every load."
+  ]
+}

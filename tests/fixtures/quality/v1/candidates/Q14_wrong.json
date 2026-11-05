@@ -1,0 +1,82 @@
+{
+  "version": "quality-candidate-v1",
+  "candidate_id": "Q14_wrong",
+  "revision": 1,
+  "case_id": "Q14",
+  "stages": [
+    {
+      "alias": "A/map/1",
+      "findings": [
+        {
+          "alias": "A/map/1/f1",
+          "text": "Experiment E observed a 2 point gain; this is one experiment.",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "A/chunk/1"
+          ]
+        }
+      ]
+    },
+    {
+      "alias": "A/document",
+      "findings": [
+        {
+          "alias": "A/document/f1",
+          "text": "Experiment E observed a 2 point gain; this is one experiment.",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "A/map/1/f1"
+          ]
+        }
+      ]
+    },
+    {
+      "alias": "B/map/1",
+      "findings": [
+        {
+          "alias": "B/map/1/f1",
+          "text": "This report retells experiment E, not an independent replication.",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "B/chunk/1"
+          ]
+        }
+      ]
+    },
+    {
+      "alias": "B/document",
+      "findings": [
+        {
+          "alias": "B/document/f1",
+          "text": "This report retells experiment E, not an independent replication.",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "B/map/1/f1"
+          ]
+        }
+      ]
+    },
+    {
+      "alias": "cross",
+      "findings": [
+        {
+          "alias": "cross/f1",
+          "text": "Two independent replications confirm the result.",
+          "kind": "ai_inference",
+          "category": "finding",
+          "citations": [
+            "A/document/f1",
+            "B/document/f1"
+          ]
+        }
+      ]
+    }
+  ],
+  "expected": "completed",
+  "max_calls": 106,
+  "stage_input_limit": 24000
+}

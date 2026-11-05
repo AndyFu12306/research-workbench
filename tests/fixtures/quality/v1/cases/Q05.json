@@ -1,0 +1,107 @@
+{
+  "version": "research-quality-benchmark-v1",
+  "case_id": "Q05",
+  "revision": 1,
+  "language": "zh",
+  "requirements_version": "quality-requirements-v1",
+  "question": {
+    "version": "quality-question-v1",
+    "title": "方法A的研究结果、条件和限制是什么？",
+    "description": "Q15/Q16: evaluate method A only. Synthetic evaluation; no external knowledge."
+  },
+  "sources": [
+    {
+      "alias": "A",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0001"
+      ],
+      "text": "研究甲准确率提高，但仅测试了一个数据集。",
+      "sha256": "b05aa95de1a7bf9216dbd35f59a956c52bf64c1dec7a714711739a008e2f097a"
+    },
+    {
+      "alias": "B",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0002"
+      ],
+      "text": "研究乙延迟降低，但未进行重复实验。",
+      "sha256": "fca54cd7f112441be4179256de4a08061147f04d1ba08a7566cfb219c705910e"
+    }
+  ],
+  "facts": [
+    {
+      "fact_id": "F1",
+      "proposition": "研究甲准确率提高，但仅测试了一个数据集。",
+      "subject": "synthetic-study-A",
+      "method": "A",
+      "comparison": "as explicitly stated",
+      "result": "研究甲准确率提高，但仅测试了一个数据集。",
+      "value_unit": "as explicitly stated",
+      "polarity": "as explicitly stated",
+      "conditions": "preserve population and setting",
+      "uncertainty": "do not infer unreported outcomes",
+      "evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 20,
+          "sha256": "b05aa95de1a7bf9216dbd35f59a956c52bf64c1dec7a714711739a008e2f097a"
+        }
+      ],
+      "critical": true,
+      "limitation": true,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    },
+    {
+      "fact_id": "F2",
+      "proposition": "研究乙延迟降低，但未进行重复实验。",
+      "subject": "synthetic-study-B",
+      "method": "A",
+      "comparison": "as explicitly stated",
+      "result": "研究乙延迟降低，但未进行重复实验。",
+      "value_unit": "as explicitly stated",
+      "polarity": "as explicitly stated",
+      "conditions": "preserve population and setting",
+      "uncertainty": "do not infer unreported outcomes",
+      "evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 17,
+          "sha256": "fca54cd7f112441be4179256de4a08061147f04d1ba08a7566cfb219c705910e"
+        }
+      ],
+      "critical": true,
+      "limitation": true,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "relation_id": "R1",
+      "facts": [
+        "F1",
+        "F2"
+      ],
+      "kind": "support",
+      "conditions": "Preserve the explicitly stated settings and source identities.",
+      "expected": "甲的单数据集结果及乙的未重复限制均须保留。"
+    }
+  ],
+  "max_chars": 8000,
+  "overlap_chars": 0,
+  "forbidden": [
+    "研究结果充分证明该方法普遍有效。"
+  ]
+}

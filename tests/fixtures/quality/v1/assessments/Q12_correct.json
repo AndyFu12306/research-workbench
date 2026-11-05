@@ -1,0 +1,321 @@
+{
+  "version": "quality-assessment-v1",
+  "assessment_id": "Q12_correct_draft",
+  "revision": 1,
+  "candidate_id": "Q12_correct",
+  "rubric": "quality-rubric-v1",
+  "atomization": "quality-atomization-v1",
+  "claims": [
+    {
+      "claim_id": "A/map/1/f1/c1",
+      "stage": "A/map/1",
+      "finding": "A/map/1/f1",
+      "start": 0,
+      "end": 55,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/chunk/1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 55,
+          "sha256": "7a013b22c17c856e90c0e3741c1200548abad38c99ac71d8c51ecd04857a93b7"
+        }
+      ],
+      "reason": "AI-authored draft: inspect this claim against direct inputs and original spans; independent review pending.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 55,
+              "sha256": "7a013b22c17c856e90c0e3741c1200548abad38c99ac71d8c51ecd04857a93b7"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [],
+      "link": "root",
+      "critical": true
+    },
+    {
+      "claim_id": "A/document/f1/c1",
+      "stage": "A/document",
+      "finding": "A/document/f1",
+      "start": 0,
+      "end": 55,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/map/1/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 55,
+          "sha256": "7a013b22c17c856e90c0e3741c1200548abad38c99ac71d8c51ecd04857a93b7"
+        }
+      ],
+      "reason": "AI-authored draft: inspect this claim against direct inputs and original spans; independent review pending.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 55,
+              "sha256": "7a013b22c17c856e90c0e3741c1200548abad38c99ac71d8c51ecd04857a93b7"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "A/map/1/f1/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "B/map/1/f1/c1",
+      "stage": "B/map/1",
+      "finding": "B/map/1/f1",
+      "start": 0,
+      "end": 55,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/chunk/1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 55,
+          "sha256": "d320ca3e9f05e9a1efbf90077e1c27203bb56f89f72df32f6695d026889decb6"
+        }
+      ],
+      "reason": "AI-authored draft: inspect this claim against direct inputs and original spans; independent review pending.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 55,
+              "sha256": "d320ca3e9f05e9a1efbf90077e1c27203bb56f89f72df32f6695d026889decb6"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [],
+      "link": "root",
+      "critical": true
+    },
+    {
+      "claim_id": "B/document/f1/c1",
+      "stage": "B/document",
+      "finding": "B/document/f1",
+      "start": 0,
+      "end": 55,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/map/1/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 55,
+          "sha256": "d320ca3e9f05e9a1efbf90077e1c27203bb56f89f72df32f6695d026889decb6"
+        }
+      ],
+      "reason": "AI-authored draft: inspect this claim against direct inputs and original spans; independent review pending.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 55,
+              "sha256": "d320ca3e9f05e9a1efbf90077e1c27203bb56f89f72df32f6695d026889decb6"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "B/map/1/f1/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "cross/f1/c1",
+      "stage": "cross",
+      "finding": "cross/f1",
+      "start": 0,
+      "end": 58,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/document/f1",
+        "B/document/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 55,
+          "sha256": "7a013b22c17c856e90c0e3741c1200548abad38c99ac71d8c51ecd04857a93b7"
+        },
+        {
+          "source": "B",
+          "start": 0,
+          "end": 55,
+          "sha256": "d320ca3e9f05e9a1efbf90077e1c27203bb56f89f72df32f6695d026889decb6"
+        }
+      ],
+      "reason": "AI-authored draft: inspect this claim against direct inputs and original spans; independent review pending.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 55,
+              "sha256": "7a013b22c17c856e90c0e3741c1200548abad38c99ac71d8c51ecd04857a93b7"
+            }
+          ]
+        },
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 55,
+              "sha256": "d320ca3e9f05e9a1efbf90077e1c27203bb56f89f72df32f6695d026889decb6"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "A/document/f1/c1",
+        "B/document/f1/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    }
+  ],
+  "retentions": [
+    {
+      "fact_id": "F1",
+      "layer": "map_collection",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/chunk/1"
+      ],
+      "reason": "AI draft: required fact is assessed as a set, not per repeated chunk.",
+      "counter_information": "Preserve population and contrary evidence; inspect the cited inputs."
+    },
+    {
+      "fact_id": "F1",
+      "layer": "document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/map/1/f1"
+      ],
+      "reason": "AI draft: required fact is assessed as a set, not per repeated chunk.",
+      "counter_information": "Preserve population and contrary evidence; inspect the cited inputs."
+    },
+    {
+      "fact_id": "F1",
+      "layer": "cross_document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/document/f1"
+      ],
+      "reason": "AI draft: required fact is assessed as a set, not per repeated chunk.",
+      "counter_information": "Preserve population and contrary evidence; inspect the cited inputs."
+    },
+    {
+      "fact_id": "F2",
+      "layer": "map_collection",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/chunk/1"
+      ],
+      "reason": "AI draft: required fact is assessed as a set, not per repeated chunk.",
+      "counter_information": "Preserve population and contrary evidence; inspect the cited inputs."
+    },
+    {
+      "fact_id": "F2",
+      "layer": "document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/map/1/f1"
+      ],
+      "reason": "AI draft: required fact is assessed as a set, not per repeated chunk.",
+      "counter_information": "Preserve population and contrary evidence; inspect the cited inputs."
+    },
+    {
+      "fact_id": "F2",
+      "layer": "cross_document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/document/f1"
+      ],
+      "reason": "AI draft: required fact is assessed as a set, not per repeated chunk.",
+      "counter_information": "Preserve population and contrary evidence; inspect the cited inputs."
+    }
+  ],
+  "relations": [
+    {
+      "relation_id": "R1",
+      "classification": "pass",
+      "conflict_recalled": "na",
+      "conflict_asserted": false,
+      "conflict_correct": "na"
+    }
+  ],
+  "atomized_findings": [
+    "A/map/1/f1",
+    "A/document/f1",
+    "B/map/1/f1",
+    "B/document/f1",
+    "cross/f1"
+  ],
+  "reviews": []
+}

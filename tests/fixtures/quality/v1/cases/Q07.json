@@ -1,0 +1,107 @@
+{
+  "version": "research-quality-benchmark-v1",
+  "case_id": "Q07",
+  "revision": 1,
+  "language": "zh",
+  "requirements_version": "quality-requirements-v1",
+  "question": {
+    "version": "quality-question-v1",
+    "title": "方法A的研究结果、条件和限制是什么？",
+    "description": "Q15/Q16: evaluate method A only. Synthetic evaluation; no external knowledge."
+  },
+  "sources": [
+    {
+      "alias": "A",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0001"
+      ],
+      "text": "研究甲只纳入健康成年人，排除了儿童。",
+      "sha256": "2bfa823541000cdf6d91b195c7940542cd4e9a94bcbe71d3fec5ba5a534f586f"
+    },
+    {
+      "alias": "B",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0002"
+      ],
+      "text": "研究乙仅研究健康成人，儿童适用性未知。",
+      "sha256": "79c1f7a8db6f1349f3c8bc3570c2f1a223bf11678c878554794eced73df2634f"
+    }
+  ],
+  "facts": [
+    {
+      "fact_id": "F1",
+      "proposition": "研究甲只纳入健康成年人，排除了儿童。",
+      "subject": "synthetic-study-A",
+      "method": "A",
+      "comparison": "as explicitly stated",
+      "result": "研究甲只纳入健康成年人，排除了儿童。",
+      "value_unit": "as explicitly stated",
+      "polarity": "as explicitly stated",
+      "conditions": "preserve population and setting",
+      "uncertainty": "do not infer unreported outcomes",
+      "evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 18,
+          "sha256": "2bfa823541000cdf6d91b195c7940542cd4e9a94bcbe71d3fec5ba5a534f586f"
+        }
+      ],
+      "critical": true,
+      "limitation": true,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    },
+    {
+      "fact_id": "F2",
+      "proposition": "研究乙仅研究健康成人，儿童适用性未知。",
+      "subject": "synthetic-study-B",
+      "method": "A",
+      "comparison": "as explicitly stated",
+      "result": "研究乙仅研究健康成人，儿童适用性未知。",
+      "value_unit": "as explicitly stated",
+      "polarity": "as explicitly stated",
+      "conditions": "preserve population and setting",
+      "uncertainty": "do not infer unreported outcomes",
+      "evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 19,
+          "sha256": "79c1f7a8db6f1349f3c8bc3570c2f1a223bf11678c878554794eced73df2634f"
+        }
+      ],
+      "critical": true,
+      "limitation": true,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "relation_id": "R1",
+      "facts": [
+        "F1",
+        "F2"
+      ],
+      "kind": "support",
+      "conditions": "Preserve the explicitly stated settings and source identities.",
+      "expected": "结论只适用于已研究的健康成人，儿童未知。"
+    }
+  ],
+  "max_chars": 8000,
+  "overlap_chars": 0,
+  "forbidden": [
+    "该结论适用于所有年龄。"
+  ]
+}

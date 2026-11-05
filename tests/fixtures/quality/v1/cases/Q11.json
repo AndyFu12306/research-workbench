@@ -1,0 +1,107 @@
+{
+  "version": "research-quality-benchmark-v1",
+  "case_id": "Q11",
+  "revision": 1,
+  "language": "zh",
+  "requirements_version": "quality-requirements-v1",
+  "question": {
+    "version": "quality-question-v1",
+    "title": "方法A的研究结果、条件和限制是什么？",
+    "description": "Q15/Q16: evaluate method A only. Synthetic evaluation; no external knowledge."
+  },
+  "sources": [
+    {
+      "alias": "A",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0001"
+      ],
+      "text": "方法A在成人样本中改善结果。",
+      "sha256": "08eddf5e55266967f5507e60d3720cff9197376f23a29c46923f2bc9a34a3567"
+    },
+    {
+      "alias": "B",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0002"
+      ],
+      "text": "方法A在儿童样本中未改善结果。",
+      "sha256": "522ff15f5de5b9c8ab761ed5f770db572d83b342fc6c03d5207bdd628f687a83"
+    }
+  ],
+  "facts": [
+    {
+      "fact_id": "F1",
+      "proposition": "方法A在成人样本中改善结果。",
+      "subject": "synthetic-study-A",
+      "method": "A",
+      "comparison": "as explicitly stated",
+      "result": "方法A在成人样本中改善结果。",
+      "value_unit": "as explicitly stated",
+      "polarity": "as explicitly stated",
+      "conditions": "preserve population and setting",
+      "uncertainty": "do not infer unreported outcomes",
+      "evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 14,
+          "sha256": "08eddf5e55266967f5507e60d3720cff9197376f23a29c46923f2bc9a34a3567"
+        }
+      ],
+      "critical": true,
+      "limitation": true,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    },
+    {
+      "fact_id": "F2",
+      "proposition": "方法A在儿童样本中未改善结果。",
+      "subject": "synthetic-study-B",
+      "method": "A",
+      "comparison": "as explicitly stated",
+      "result": "方法A在儿童样本中未改善结果。",
+      "value_unit": "as explicitly stated",
+      "polarity": "as explicitly stated",
+      "conditions": "preserve population and setting",
+      "uncertainty": "do not infer unreported outcomes",
+      "evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 15,
+          "sha256": "522ff15f5de5b9c8ab761ed5f770db572d83b342fc6c03d5207bdd628f687a83"
+        }
+      ],
+      "critical": true,
+      "limitation": true,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "relation_id": "R1",
+      "facts": [
+        "F1",
+        "F2"
+      ],
+      "kind": "conditional",
+      "conditions": "Preserve the explicitly stated settings and source identities.",
+      "expected": "这是人群条件差异，不能直接称为同条件矛盾。"
+    }
+  ],
+  "max_chars": 8000,
+  "overlap_chars": 0,
+  "forbidden": [
+    "两篇在完全相同人群中直接矛盾。"
+  ]
+}

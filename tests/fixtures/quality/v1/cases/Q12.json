@@ -1,0 +1,107 @@
+{
+  "version": "research-quality-benchmark-v1",
+  "case_id": "Q12",
+  "revision": 1,
+  "language": "en",
+  "requirements_version": "quality-requirements-v1",
+  "question": {
+    "version": "quality-question-v1",
+    "title": "What findings, conditions and limitations are supported?",
+    "description": "Q15/Q16: evaluate method A only. Synthetic evaluation; no external knowledge."
+  },
+  "sources": [
+    {
+      "alias": "A",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0001"
+      ],
+      "text": "Study A measured accuracy only, with no energy measure.",
+      "sha256": "7a013b22c17c856e90c0e3741c1200548abad38c99ac71d8c51ecd04857a93b7"
+    },
+    {
+      "alias": "B",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0002"
+      ],
+      "text": "Study B measured energy only, with no accuracy measure.",
+      "sha256": "d320ca3e9f05e9a1efbf90077e1c27203bb56f89f72df32f6695d026889decb6"
+    }
+  ],
+  "facts": [
+    {
+      "fact_id": "F1",
+      "proposition": "Study A measured accuracy only, with no energy measure.",
+      "subject": "synthetic-study-A",
+      "method": "A",
+      "comparison": "as explicitly stated",
+      "result": "Study A measured accuracy only, with no energy measure.",
+      "value_unit": "as explicitly stated",
+      "polarity": "as explicitly stated",
+      "conditions": "preserve population and setting",
+      "uncertainty": "do not infer unreported outcomes",
+      "evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 55,
+          "sha256": "7a013b22c17c856e90c0e3741c1200548abad38c99ac71d8c51ecd04857a93b7"
+        }
+      ],
+      "critical": true,
+      "limitation": true,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    },
+    {
+      "fact_id": "F2",
+      "proposition": "Study B measured energy only, with no accuracy measure.",
+      "subject": "synthetic-study-B",
+      "method": "A",
+      "comparison": "as explicitly stated",
+      "result": "Study B measured energy only, with no accuracy measure.",
+      "value_unit": "as explicitly stated",
+      "polarity": "as explicitly stated",
+      "conditions": "preserve population and setting",
+      "uncertainty": "do not infer unreported outcomes",
+      "evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 55,
+          "sha256": "d320ca3e9f05e9a1efbf90077e1c27203bb56f89f72df32f6695d026889decb6"
+        }
+      ],
+      "critical": true,
+      "limitation": true,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "relation_id": "R1",
+      "facts": [
+        "F1",
+        "F2"
+      ],
+      "kind": "incomparable",
+      "conditions": "Preserve the explicitly stated settings and source identities.",
+      "expected": "No overall ranking follows without a common utility scale."
+    }
+  ],
+  "max_chars": 8000,
+  "overlap_chars": 0,
+  "forbidden": [
+    "Study A is unconditionally superior overall."
+  ]
+}

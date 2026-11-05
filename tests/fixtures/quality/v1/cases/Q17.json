@@ -1,0 +1,41 @@
+{
+  "version": "research-quality-benchmark-v1",
+  "case_id": "Q17",
+  "revision": 1,
+  "language": "zh",
+  "requirements_version": "quality-requirements-v1",
+  "question": {
+    "version": "quality-question-v1",
+    "title": "方法A的研究结果、条件和限制是什么？",
+    "description": "Q15/Q16: evaluate method A only. Synthetic evaluation; no external knowledge."
+  },
+  "sources": [
+    {
+      "alias": "A",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0001"
+      ],
+      "text": "合成试验甲只用于预算边界测试。",
+      "sha256": "2f3c1af45a4ac52f97a46c35f67744cfb6953cd9f3a03638f01d6f979e1c1241"
+    },
+    {
+      "alias": "B",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0002"
+      ],
+      "text": "合成试验乙只用于容量拒绝测试。",
+      "sha256": "f92fb1b3d18f14545c4d8c2cb77a7c435bbf480bbdd7940b55f315d93d0db357"
+    }
+  ],
+  "facts": [],
+  "relations": [],
+  "max_chars": 8000,
+  "overlap_chars": 0,
+  "forbidden": [
+    "Do not present rejected execution as a completed synthesis."
+  ]
+}
