@@ -5,6 +5,7 @@ from sqlalchemy import URL, inspect
 
 from research_workbench.persistence import (
     analysis_models,  # noqa: F401 -- register analysis mappings
+    cross_document_models,  # noqa: F401 -- register cross-document history
     document_models,  # noqa: F401 -- register document history tables
     source_models,  # noqa: F401 -- register source mappings
 )
