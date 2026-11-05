@@ -124,4 +124,7 @@ Step 2：固定逐调用预算、Decimal精确计算和首版三层拓扑策略�
 4B.4实现阶段：准备/执行有限拆分、固定计划/预算、0005父执行持久化、顺序编排、专用历史已实现。最终完整离线与容量/迁移/打包/隐私/兼容性门槛以[本轮验收记录](PHASE4B4_VALIDATION.md)为准；Windows/Ubuntu最终head CI需后续获准推送/PR后验证，不把本机通过转记远程通过。
 
 
-4B.4最终本机完整离线：918 passed / 8 deselected，新增236项；Ruff（89文件）、锁、临时Alembic CLI/metadata/repeat和wheel五份迁移资源通过。所有旧迁移、4A/4B.2契约、adapter及依赖无diff。完整数据与性能限制见PHASE4B4_VALIDATION.md。仅本地提交，未推送/创建PR，最终远程双平台CI仍待后续授权；不关闭Issue #19、不进入4B.5。
+4B.4初版历史完整离线（HEAD1244f697；非e5a342e最终HEAD）：918 passed / 8 deselected，新增236项；Ruff（89文件）、锁、临时Alembic CLI/metadata/repeat和wheel五份迁移资源通过。所有旧迁移、4A/4B.2契约、adapter及依赖无diff。完整数据与性能限制见PHASE4B4_VALIDATION.md。仅本地提交，未推送/创建PR，最终远程双平台CI仍待后续授权；不关闭Issue #19、不进入4B.5。
+
+
+2026-11-06 独立审核P1-08/P1-09：仅修复单篇repository关键字兼容性与跨文献SDK歧义结果分类。初版最终e5a342e未完整回归的记录已更正。两项均先建立失败回归，再最小修复；全部修复提交后从新的最终HEAD重跑离线验收，结果写仓库外PHASE4B4_P1_FIX_VALIDATION.txt，不在验收后追加提交。未授权push/PR/merge/4B.5，真实API/Zotero和远程CI仍未测。

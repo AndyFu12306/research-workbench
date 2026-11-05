@@ -261,3 +261,6 @@ cross-document-history-v1为白名单投影，保存精确成员/执行/阶段�
 ## ADR-059：未知返回与安全失败不制造完整综合
 
 超时/连接异常未确认返回用interrupted/unknown；已收到无效候选仍尽力保存合法usage/id，候选不落库。失败即停，保留成功子历史，剩余not_started。T4仅一次原子成功；确认不明只读复查完成状态，不重发请求。KeyboardInterrupt尽力TF后重抛，SystemExit/强杀/持续DB故障可残留running，无后台修复。仅离线合成/Fake/SDK MockTransport；真实API/Zotero、PR、merge、关闭Issue及4B.5均未授权。
+
+
+ADR-059独立审核补充（P1-09）：provider_sdk_incompatible不是可靠的响应凭据，同一码可能由responses.create内部未知异常或归一化错误产生。保持adapter协议不变，在新跨文献路径无显式返回证据时保守unknown；不检查异常原文/上下文猜测服务端结果。已有返回hook证据优先，拒答/incomplete等独立码不变，未知usage/费用保持None。P1-08仅恢复单篇repository显式签名兼容性，不改变父所有权或事务策略。

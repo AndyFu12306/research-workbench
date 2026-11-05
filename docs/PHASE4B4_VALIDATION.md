@@ -35,7 +35,7 @@ frozen dataclass表示不允许意外改写属性；tuple保留调用者给定�
 
 ## 验证结果
 
-前置基线实际运行：**682 passed，8 deselected**。最终完整离线回归：**918 passed，8 deselected，170.65秒**；新增**236项**测试，既有682项继续通过。随后仅补充两项最大夹具的测量输出（2 passed / 3 deselected）以及无效返回usage/id保留断言（7 passed / 25 deselected），对应全部针对性重跑通过；生产代码未变，不把deselected记作真实PASS。
+前置基线实际运行：**682 passed，8 deselected**。历史完整离线回归（HEAD `1244f69780b4dc88f806c31f8300d4c8046144c8`）：**918 passed，8 deselected，170.65秒**；新增**236项**测试，既有682项继续通过。随后仅补充两项最大夹具的测量输出（2 passed / 3 deselected）以及无效返回usage/id保留断言（7 passed / 25 deselected），对应全部针对性重跑通过；生产代码未变，但测试文件有变更，因此该918项记录不能声明为初版最终HEAD `e5a342e9d7fea958a124f61dde19708bb64b6c33`的完整回归；该HEAD未重跑全量。不把deselected记作真实PASS。
 
 | 检查 | 结果 |
 |---|---|
@@ -106,4 +106,28 @@ E.child_result_sha256的明确版本为`document-history-chain-sha256-v1`：包�
 
 ## 质量门槛与未完成项
 
-已达到本地代码审核及申请创建PR的离线质量门槛；六步实现与本机检查完成。远程最终head双平台CI、真实StageProvider、Zotero Level B、语义质量/信息损失和4B.5均未验收；前两类远程/真实验证不能由离线Fake结果替代。本轮结束后保留未合并开发分支与Open Issue，等待用户代码审核以及是否创建PR的另行授权，不主动推进。
+初版已完成实现及上述离线检查；独立Code Review随后发现P1-08/P1-09，原质量判断需经修复复核，不能沿用918项记录声明新最终HEAD完整通过。远程最终head双平台CI、真实StageProvider、Zotero Level B、语义质量/信息损失和4B.5均未验收；前两类远程/真实验证不能由离线Fake结果替代。本轮结束后保留未合并开发分支与Open Issue，等待用户代码审核以及是否创建PR的另行授权，不主动推进。
+
+
+## 独立审核 P1-08 / P1-09 修复（2026-11-06）
+
+本轮只授权现有分支/worktree内的这两项本地修复、测试、必要文档和本地提交；无push、PR、merge、Issue关闭、4B.5或真实外部调用。生产diff只涉及document_repository.py和cross_document_analysis.py；没有迁移、依赖、4A、4B.2通用契约或adapter协议改动。
+
+P1-08先新增回归，确认 **9 failed / 12 passed**：三个方法的全关键字调用均因args[0]触发IndexError（普通子执行和父成员各三例），三个显式签名断言也失败。恢复start_stage/complete_stage/fail_run原显式签名及fail_run原keyword-only选项，按execution_id执行原父成员保护，再转发到同session helper；不改变返回值、事务边界或终态语义。21项新测试覆盖位置/关键字/混合调用、返回值、usage、终态和父成员拒绝；连同原单篇67项及准备1项 **89 passed**。
+
+P1-09先在真实SDK+MockTransport建立失败回归，确认 **18 failed / 21 deselected**。两家StageProvider都使用_StageCalls.generate_stage，以下路径可能合并成provider_sdk_incompatible：
+
+| 路径 | 能否仅凭该错误码证明收到响应 |
+|---|---|
+| responses.create期间除timeout/connection/status之外的未知异常 | 不能；可能根本没有服务端响应 |
+| _normalize显式拒绝异常status/object/error、output类型、消息类型/角色/状态/数量、content类型/数量/part类型、text类型 | 该层可能已拿到对象，但跨文献服务没有独立可信返回标记；代码含义与上一行混用 |
+| _normalize拒绝非法response_id、usage类型、input/output token类型或负数 | 同上；不得将该码当receipt证据 |
+| normalize_response期间意外异常，被StageCalls第二个generic catch封装 | 同上；错误码仍有歧义 |
+
+原DeepSeek v1 generate也有同名封装，但跨文献服务不调用它；未改其代码。JSON解析失败、空JSON、拒答和incomplete走既有独立错误码，不受本修复收紧影响。
+
+跨文献层将该歧义码与timeout/network一起纳入“没有显式返回证据则unknown”，并从隐式response_received白名单移除。Provider确实返回过候选（包括None）时，已有response hook的布尔证据仍优先，不会被此码抹除。归一化错误即使在MockTransport中确实出现HTTP响应，服务层因协议不提供独立receipt凭据也保守记unknown；这表示不能确认结果，不表示远端没有处理。没有解析异常prose或上下文来猜测响应，也没有重试。
+
+新增39项SDK结果测试：18项歧义码覆盖Map/Document/Cross、两家SDK及create异常/显式结构拒绝/归一化异常；18项可靠非法引用/拒答/incomplete覆盖同三阶段；3项显式返回后同码异常保留receipt和usage。未知usage和整次usage费用为None，已知部分单独保留，不推断零费。与既有跨文献SDK测试合计 **47 passed**。
+
+最终验收方式：先提交全部修复、测试及本文档，再在干净的新最终HEAD运行完整离线pytest、Ruff、锁、临时Alembic及wheel检查；之后不为记录结果追加提交。最终完整SHA、命令结果、失败复现原始输出和修复patch保存到仓库外 `C:/Projects/PHASE4B4_P1_FIX_VALIDATION.txt` 及同前缀审核文件，最终回复提供链接。远程双平台CI和真实AI/Zotero仍未测。

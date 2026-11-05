@@ -260,8 +260,11 @@ class CrossDocumentAnalysisService:
                     "persistence_failed" if isinstance(exc, PersistenceError) else "provider_failed"
                 )
             )
+            # SDK incompatibility also wraps exceptions from responses.create itself.
+            # Its code alone cannot prove receipt; only an explicit return overrides this.
             unknown = not response_received and (
-                getattr(exc, "code", None) in ("provider_timeout", "provider_network")
+                getattr(exc, "code", None)
+                in ("provider_timeout", "provider_network", "provider_sdk_incompatible")
                 or isinstance(exc, (TimeoutError, ConnectionError))
                 or (call_attempted and not isinstance(exc, AnalysisProviderFailure))
             )
@@ -287,7 +290,6 @@ class CrossDocumentAnalysisService:
                     "provider_incomplete",
                     "provider_invalid_json",
                     "provider_empty_json",
-                    "provider_sdk_incompatible",
                 ),
             )
             raise CrossDocumentError(code) from None

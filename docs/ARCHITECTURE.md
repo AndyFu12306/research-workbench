@@ -370,3 +370,6 @@ Map额度为正式输入估算+输出上限+安全余量；每篇及Cross各有�
 
 
 Cross复用单篇执行时，私有hook只报告“即将调用/已返回”和复查Provider冻结标识；Provider对象本身保持同一个注入实例。单篇原公开入口不安装这些hook，旧错误语义保持。返回None等非法值仍算已收到返回；未知异常只有未确认返回才记unknown，不能通过metadata对象是否为None混淆两者。
+
+
+独立审核P1-08/P1-09修订：单篇start_stage/complete_stage/fail_run保留原显式参数及关键字调用，父成员检查仍在同session helper之前。跨文献层不再凭provider_sdk_incompatible推断receipt：该码同时覆盖SDK调用内未知异常和归一化拒绝，未有显式返回证据时保守interrupted/unknown；已有Provider返回hook或可靠拒答/incomplete/非法JSON码的行为不变。未改变4B.2/adapter契约、存储格式或schema。
