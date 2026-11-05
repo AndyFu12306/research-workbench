@@ -111,7 +111,7 @@
       "citations": [
         {
           "source": "B",
-          "stance": "opposes",
+          "stance": "supports",
           "evidence": [
             {
               "source": "B",
@@ -172,5 +172,6 @@
     "B/document/f1",
     "cross/f1"
   ],
-  "reviews": []
+  "reviews": [],
+  "origin": "codex_draft"
 }

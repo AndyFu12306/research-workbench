@@ -1,7 +1,7 @@
 """Annotator-declared propagation and availability; no textual inference."""
 
 from .contracts import Opportunity, require
-from .scoring import count, layer_metrics, verdict
+from .scoring import count, layer_metrics, retention_verdict
 
 
 def error_events(claims):
@@ -51,14 +51,11 @@ def error_events(claims):
 
 def loss_summary(case, retentions):
     result = layer_metrics(retentions)
-    final = {r.fact_id: r for r in retentions if r.layer == "cross_document_reduce"}
     result["end_to_end"] = count(
         tuple(
             Opportunity(
                 f.fact_id,
-                verdict(final[f.fact_id].outcome, "preserved")
-                if f.fact_id in final
-                else "unscored",
+                retention_verdict(f.fact_id, retentions),
             )
             for f in case.facts
         )

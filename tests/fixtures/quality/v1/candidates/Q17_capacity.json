@@ -78,5 +78,5 @@
   ],
   "expected": "cross_rejected",
   "max_calls": 106,
-  "stage_input_limit": 24000
+  "stage_input_limit": 5000
 }

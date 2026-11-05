@@ -10,7 +10,7 @@ from research_workbench.analysis.chunking import (
 )
 
 from .contracts import ATOMIZATION, BENCHMARK, RUBRIC, require
-from .loading import text_hash
+from .loading import canonical, text_hash, typed
 
 LAYERS = ("map_collection", "document_reduce", "cross_document_reduce")
 
@@ -58,8 +58,10 @@ def layout(case):
 
 
 def validate_case(case):
+    typed(type(case), canonical(case))
     require(case.version == BENCHMARK and case.revision > 0)
     identifier(case.case_id)
+    require(re.fullmatch(r"Q(?:0[1-9]|1[0-8])", case.case_id))
     require(case.question.version == "quality-question-v1" and bool(case.question.title.strip()))
     require(bool(case.requirements_version) and 2 <= len(case.sources) <= 5)
     unique([s.alias for s in case.sources])
@@ -84,10 +86,12 @@ def validate_case(case):
 
 
 def validate_candidate(case, candidate):
+    typed(type(candidate), canonical(candidate))
     require(candidate.version == "quality-candidate-v1" and candidate.revision > 0)
     require(candidate.case_id == case.case_id and candidate.max_calls > 0)
     require(candidate.stage_input_limit > 0)
     identifier(candidate.candidate_id)
+    require(re.fullmatch(case.case_id + r"_[a-z_]+", candidate.candidate_id))
     planned = layout(case)
     require(tuple(s.alias for s in candidate.stages) == tuple(planned))
     known, owners = {}, {}
@@ -138,6 +142,7 @@ def review_targets(case, assessment):
 
 
 def validate_assessment(case, candidate, assessment):
+    typed(type(assessment), canonical(assessment))
     require(assessment.version == "quality-assessment-v1" and assessment.revision > 0)
     require(assessment.candidate_id == candidate.candidate_id)
     require(assessment.rubric == RUBRIC and assessment.atomization == ATOMIZATION)
@@ -163,6 +168,7 @@ def validate_assessment(case, candidate, assessment):
         require(
             bool(c.upstream_refs) and set(c.upstream_refs) <= set(findings[c.finding].citations)
         )
+        require(c.kind_correct != "na")
         evidence(case, c.source_evidence)
         require(bool(c.source_evidence))
         require({s.source for s in c.source_evidence} <= closure[c.finding])
@@ -202,6 +208,7 @@ def validate_assessment(case, candidate, assessment):
         {r.relation_id for r in assessment.relations} == {r.relation_id for r in case.relations}
     )
     for r in assessment.relations:
+        require(r.classification != "na")
         original = next(x for x in case.relations if x.relation_id == r.relation_id)
         require((r.conflict_recalled == "na") == (original.kind != "conflict"))
         require((r.conflict_correct == "na") == (not r.conflict_asserted))

@@ -65,6 +65,8 @@ def test_collective_q13_and_first_extraction_loss():
     assert loss["map_collection"]["metric"]["success"] == 1
     assert loss["document_reduce"]["insufficient"] == 1
     assert loss["document_reduce"]["metric"]["N"] == 1
+    assert loss["end_to_end"]["success"] == 1
+    assert loss["unsupported_reappearances"] == 1
     _, _, amb = draft("Q13", "ambiguous")
     assert loss_summary(case, amb.retentions)["document_reduce"]["indeterminate_input"] == 1
 

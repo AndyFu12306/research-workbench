@@ -7,7 +7,7 @@ from dataclasses import fields, is_dataclass
 from pathlib import Path
 from typing import Literal, get_args, get_origin, get_type_hints
 
-from .contracts import Assessment, Candidate, Case, QualityError, require
+from .contracts import BENCHMARK, Assessment, Candidate, Case, Manifest, QualityError, require
 
 ROOT = Path(__file__).resolve().parents[1] / "fixtures" / "quality" / "v1"
 
@@ -89,19 +89,35 @@ def load_case(case_id):
     return case
 
 
+def load_manifest():
+    manifest = typed(Manifest, decode((ROOT / "manifest.json").read_text("utf-8")))
+    require(manifest.version == BENCHMARK)
+    require(tuple(e.case_id for e in manifest.cases) == tuple(f"Q{i:02}" for i in range(1, 19)))
+    for entry in manifest.cases:
+        require(bool(entry.candidates) and len(set(entry.candidates)) == len(entry.candidates))
+        require(all(re.fullmatch(r"[a-z_]+", name) for name in entry.candidates))
+    return manifest
+
+
 def load_candidate(case, name):
     require(type(name) is str and re.fullmatch(r"[a-z_]+", name))
     from .validation import validate_candidate
+
+    require(name in next(e.candidates for e in load_manifest().cases if e.case_id == case.case_id))
 
     candidate = typed(
         Candidate, decode((ROOT / "candidates" / f"{case.case_id}_{name}.json").read_text("utf-8"))
     )
     validate_candidate(case, candidate)
+    require(candidate.candidate_id == f"{case.case_id}_{name}")
     return candidate
 
 
 def load_assessment(case, candidate):
-    from .validation import validate_assessment
+    from .validation import validate_assessment, validate_candidate, validate_case
+
+    validate_case(case)
+    validate_candidate(case, candidate)
 
     assessment = typed(
         Assessment,

@@ -146,7 +146,7 @@ class Claim:
     source_evidence: tuple[Span, ...]
     reason: str = field(repr=False)
     citations: tuple[CitationJudgment, ...]
-    severity: Literal["none", "ordinary", "severe"]
+    severity: Literal["none", "ordinary", "severe", "indeterminate", "unscored"]
     kind_correct: Verdict
     predecessor_claims: tuple[str, ...]
     link: Literal["root", "faithful", "changed", "combined", "new"]
@@ -188,6 +188,7 @@ class Assessment:
     version: str
     assessment_id: str
     revision: int
+    origin: Literal["human", "codex_draft", "mechanism_fixture"]
     candidate_id: str
     rubric: str
     atomization: str
@@ -237,3 +238,17 @@ class Opportunity:
     key: str
     verdict: Verdict
     reason: str = ""
+
+
+@dataclass(frozen=True, slots=True)
+class ManifestEntry:
+    case_id: str
+    candidates: tuple[str, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class Manifest:
+    version: str
+    mode: Literal["synthetic_reference"]
+    cases: tuple[ManifestEntry, ...]
+    review_status: Literal["pending_independent_human_review"]

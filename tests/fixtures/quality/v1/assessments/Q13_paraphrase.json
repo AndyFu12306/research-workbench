@@ -242,7 +242,7 @@
       "citations": [
         {
           "source": "A",
-          "stance": "conditional",
+          "stance": "supports",
           "evidence": [
             {
               "source": "A",
@@ -254,7 +254,7 @@
         },
         {
           "source": "B",
-          "stance": "conditional",
+          "stance": "irrelevant",
           "evidence": [
             {
               "source": "B",
@@ -362,5 +362,6 @@
     "B/document/f1",
     "cross/f1"
   ],
-  "reviews": []
+  "reviews": [],
+  "origin": "codex_draft"
 }

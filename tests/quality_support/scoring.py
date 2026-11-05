@@ -33,6 +33,17 @@ def verdict(value, success):
     return "pass" if value == success else "fail"
 
 
+def retention_verdict(fact_id, retentions):
+    trace = [r for r in retentions if r.fact_id == fact_id]
+    final = next((r for r in trace if r.layer == "cross_document_reduce"), None)
+    if final is None:
+        return "unscored"
+    # A source-correct reappearance is not evidence of faithful retention.
+    if any(r.availability == "insufficient" and r.outcome == "preserved" for r in trace):
+        return "fail"
+    return verdict(final.outcome, "preserved")
+
+
 def semantic_metrics(case, assessment):
     """Counts stage observations, not independent answers; report per-stage as well."""
     metrics = {}
@@ -46,7 +57,6 @@ def semantic_metrics(case, assessment):
     metrics["kind_correct"] = count(
         tuple(Opportunity(c.claim_id, c.kind_correct, "not_applicable") for c in assessment.claims)
     )
-    final = {r.fact_id: r for r in assessment.retentions if r.layer == "cross_document_reduce"}
     for name, facts in (
         ("critical_fact_retention", [f for f in case.facts if f.critical]),
         ("qualification_retention", [f for f in case.facts if f.limitation]),
@@ -56,9 +66,7 @@ def semantic_metrics(case, assessment):
             tuple(
                 Opportunity(
                     f.fact_id,
-                    verdict(final[f.fact_id].outcome, "preserved")
-                    if f.fact_id in final
-                    else "unscored",
+                    retention_verdict(f.fact_id, assessment.retentions),
                 )
                 for f in facts
             )
@@ -85,7 +93,13 @@ def semantic_metrics(case, assessment):
         (
             Opportunity(
                 assessment.candidate_id,
-                "pass" if any(c.severity == "severe" for c in assessment.claims) else "fail",
+                "pass"
+                if any(c.severity == "severe" for c in assessment.claims)
+                else "unscored"
+                if any(c.severity == "unscored" for c in assessment.claims)
+                else "indeterminate"
+                if any(c.severity == "indeterminate" for c in assessment.claims)
+                else "fail",
             ),
         )
     )
@@ -100,6 +114,8 @@ def review_status(case, assessment, *, mechanism=False):
     targets = review_targets(case, assessment)
     origin = "mechanism_fixture" if mechanism else "human"
     reviews = [r for r in assessment.reviews if r.origin == origin]
+    if not mechanism and assessment.origin != "human":
+        reviews = []
     missing, disputed = [], []
     for target in sorted(targets):
         primary = [r for r in reviews if r.role == "primary" and target in r.targets]
