@@ -108,3 +108,13 @@ v0.1.0 = Project + Question + Zotero Source + AI Analysis；v0.2.0 = Inbox；v0.
 PR #18 合并前修复：补齐 Question.description。先新增回归并确认旧代码7项失败，再统一 title/description JSON 快照、规划/阶段请求和完整问题指纹，并在 create_run 事务中重验数据库当前字段；未修改迁移、阶段契约或 Phase 4A。补充8项离线测试，覆盖空描述、描述更新、计划期间/提交后变更、Planner/Provider预算及隐私。最终验证与新 head 双平台 CI 记录在现有 PR #18，保持 Open，不创建新分支/PR，不进入4B.4。
 
 本次修复本机验证：**682 passed，8 deselected**；迁移回归19项通过，Ruff check/format、锁检查及变更敏感信息扫描通过。真实服务未调用；最终 head 双平台 CI 结果以 PR #18 为准。
+
+
+## Phase 4B.4 实施授权（Issue #19，v2 + v2.1）
+
+用户正式授权独立分支/worktree实施及本地提交，覆盖前述历史未授权描述。
+基线 main=41b136113aaaa56a9801590f938fcc745a0e546d，离线682 passed / 8 deselected。
+不创建PR、不合并、不关闭Issue、不进入4B.5；真实能力仍NOT TESTED。
+Step 1：准备/登记/执行有限拆分，run_analysis公开行为不变。新增失败回归后，针对性68项通过。
+Step 2：固定逐调用预算、Decimal精确计算和首版三层拓扑策略；预算合成案例12项通过。
+其余阶段待本分支实际验证，不以前置阶段结果代替。
