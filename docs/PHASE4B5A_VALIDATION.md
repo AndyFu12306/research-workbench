@@ -1,5 +1,7 @@
 # Phase 4B.5a 本地实施验收
 
+> 更新：下方初版结果保留为历史证据；PR #22 独立审核后两项P1的本地修复、1147项最终回归及未Push状态见本文末尾。
+
 日期：2026-11-06（Asia/Shanghai）。依据 Issue #21 v1+v1.1。
 基线 b716ad74e8ad29efd31dad79cf88670f70d7bd81；专用分支/worktree，未改main。
 
@@ -216,3 +218,37 @@ tests/unit/quality/test_pipeline.py
 tests/unit/quality/test_reporting.py
 tests/unit/quality/test_scoring.py
 ```
+
+## PR #22 独立审核 P1 本地修复（2026-11-06）
+
+审核基线fbae65e08f0e38236763db9f506b3d706c13e84b。用户仅授权原分支/worktree最小修复、
+离线验证、本地commit；未授权Push、Ready、Merge、Issue修改或真实服务。本段覆盖初版验收结论，保留旧结果上下文。
+
+### 先失败，再修复
+
+在原实现上新增27项回归后运行：
+`uv run --frozen --offline --extra dev pytest tests/unit/quality/test_scoring.py -q -k review`
+结果 **22 failed / 6 passed / 6 deselected**（其中包括1项原有复核机制控制测试）。
+P1-01实际失败14项，P1-02实际失败8项；不是只记录尚未实现模块的导入失败。
+最小修复后同一筛选 **28 passed / 6 deselected**；评估测试集 **169 passed，7.68秒**。
+
+- P1-01：retention_verdict检查完整已登记事实轨迹，而非仅检查最终Cross或insufficient+preserved。
+  任一层partial/absent/distorted或输入insufficient计fail；没有已知失败时，unscored保留U，
+  其余indeterminate保留I，不提升成功分子。Q13_ambiguous的F1因Map集合partial为fail，端到端为1/2。
+  单独未知状态的I/U及已知失败优先均有断言；原Q13正确/集合充分案例仍通过。
+- P1-02：共用validate_source_support作必要一致性约束：所有引用均opposes/irrelevant时，
+  source_support不能为supported。严格标注校验及直接评分入口都拒绝矛盾记录，不能绕过加载器抬高来源支持率。
+  Q18覆盖四种全负引用组合和两个入口；conditional、支持/反对混合及合法组合仍保留人工审定，
+  不进行多数投票，也不因存在支持自动赋予整体supported。
+
+### 最终技术树验证
+
+- 实现提交：86b27a2c8a1ceb1b3f48ac79e760d5d7a8314fd5。
+- 最终完整离线pytest：**1147 passed / 8 deselected，176.77秒**，即原1120项全部通过，加27项新回归。
+- 测试树：5fffbbfe6ed5d58a455fee788cddfb6f4ffc7fbf；收尾仅更新本文件，不改变上述测试树。
+- Ruff check和format --check通过（105个Python文件）；锁检查通过（28包）。
+- 相对审核基线，src、依赖、migration、CI配置、全部tests/fixtures均零diff；18组研究含义、候选和标注未修改。
+- 本轮仅5个文件变化：scoring.py、validation.py、test_scoring.py、QUALITY_BENCHMARK.md及本验收记录。
+- 人工语义独立复核仍未完成，全部实际草稿provisional；离线机制测试不等于真实模型质量验收。
+- 没有发现仍未解决的已报告P1；修复仍需独立复核，不能把本地自审声明为新的独立Approval。
+- 本轮没有Push或远程CI；PR #22原fbae65e的绿灯不覆盖本次修复。远端保持审核基线，等待下一次授权。
