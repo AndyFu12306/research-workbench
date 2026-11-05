@@ -2,7 +2,7 @@
 
 建立在 Zotero 之上的个人 AI 研究工作台。Zotero 是唯一文献事实源，Workbench 保存研究对象及来源引用，不建立第二套文献库。
 
-当前交付 **Phase 4A.1：DeepSeek Responses Provider Hardening（Option A）**。从已合并 PR #8 的 main 基线 `aceca63` 建立独立 worktree / `codex/deepseek-responses-hardening`，由 [Issue #11](https://github.com/AndyFu12306/research-workbench/issues/11) 跟踪。保留 Responses + JSON Schema + strict=True + Workbench 本地严格校验，不合并或关闭 [Chat PR #10](https://github.com/AndyFu12306/research-workbench/pull/10)。两种协议已有用户单次真实 Level A PASS；正式 hardening 版本仍需独立真实验收，Level B 未测。完整证据与历史故障见 [DeepSeek 验证记录](docs/DEEPSEEK_VALIDATION.md)。不自动 merge，不进入 Phase 4B。
+当前交付 **Phase 4A.1：DeepSeek Responses Provider Hardening（Option A）**。从已合并 PR #8 的 main 基线 `aceca63` 建立独立 worktree / `codex/deepseek-responses-hardening`，由 [Issue #11](https://github.com/AndyFu12306/research-workbench/issues/11) 跟踪。保留 Responses + JSON Schema + strict=True + Workbench 本地严格校验，不合并或关闭 [Chat PR #10](https://github.com/AndyFu12306/research-workbench/pull/10)。两种协议已有用户单次真实 Level A PASS；正式 hardening Provider 已由用户单次真实验收PASS（2026-11-05，1 passed in 8.40s），Level B 未测。完整证据与历史故障见 [DeepSeek 验证记录](docs/DEEPSEEK_VALIDATION.md)。不自动 merge，不进入 Phase 4B。
 
 ## 环境与安装
 
@@ -232,7 +232,7 @@ with DeepSeekAnalysisProvider() as provider:
 
 2026-11-03 核对 [DeepSeek Responses guide](https://api-docs.deepseek.com/guides/responses_api/) 与 [API reference](https://api-docs.deepseek.com/api/create-response/)：官方 endpoint 是 https://api.deepseek.com，支持 Responses / json_schema；当前模型示例为 deepseek-flash、deepseek-v4-pro。示例不是源码默认或长期可用保证，选择账户实际可用模型。
 
-adapter 发送现有 analysis-schema-v1、strict=true、同一 prompt 和4096 output token上限；应用层仍校验完整结构与所有 source_labels，再映射来源ID。官方文档未单独说明 strict 字段的保证，因此仅发送 strict 请求不算真实验收。DeepSeek guide 标记 store/truncation 参数不支持，adapter 不发送它们；不回退 Chat Completions/普通 JSON/普通文本，不放松校验。预算仍为5来源、每来源24k字符、总60k字符；context超限和不完整输出失败，不自动截断或重试。推理 tokens 可能消耗输出预算；用户已单次验证本地 Responses 原型，正式 hardening 版本仍待独立真实验收。
+adapter 发送现有 analysis-schema-v1、strict=true、同一 prompt 和4096 output token上限；应用层仍校验完整结构与所有 source_labels，再映射来源ID。官方文档未单独说明 strict 字段的保证，因此仅发送 strict 请求不算真实验收。DeepSeek guide 标记 store/truncation 参数不支持，adapter 不发送它们；不回退 Chat Completions/普通 JSON/普通文本，不放松校验。预算仍为5来源、每来源24k字符、总60k字符；context超限和不完整输出失败，不自动截断或重试。推理 tokens 可能消耗输出预算；用户已分别单次验证本地 Responses 原型和正式 hardening Provider，不代表长期稳定性已验证。
 
 错误仅使用固定安全码和消息：5xx（包括503）→provider_unavailable；通用404→provider_invalid_request，不宣称Responses不兼容。已知model/schema机器code仍分类；HTTP200但status=failed的安全code继续通过服务落为failed历史。空白、非法JSON、拒答、incomplete和异常SDK结构分别报告；未知错误仍provider_failed，不猜测或记录provider prose。
 
@@ -281,4 +281,4 @@ $env:RUN_DEEPSEEK_ZOTERO_E2E = '0'
 
 本轮 hardening 离线验收：**315 passed，8 integration deselected**，Ruff及依赖锁检查通过。Codex未读取实际key、未发送真实provider请求。真实开关关闭时两条DeepSeek测试跳过；skip不是PASS。
 
-用户证据（2026-11-05）：Chat JSON Level A单次PASS；Responses原型的minimal、strict-minimal、完整schema及完整AnalysisService Level A单次PASS。正式hardening版本 **Level A: NOT TESTED**；真实Zotero **Level B: NOT TESTED**；workflow仍 **NOT FULLY VALIDATED**。旧503/timeout保留为历史观察，根因未严格证明，不能凭单次成功认定长期稳定。OpenAI真实状态独立。请在本worktree项目根目录执行上述synthetic单节点，避免误测原Chat目录；成功后也不自动授权Level B或4B。详见[验证记录](docs/DEEPSEEK_VALIDATION.md)。
+用户证据（2026-11-05）：Chat JSON Level A单次PASS；Responses原型的minimal、strict-minimal、完整schema及完整AnalysisService Level A单次PASS。正式hardening版本 **Level A: PASS（单次真实验收，1 passed in 8.40s）**；真实Zotero **Level B: NOT TESTED**；workflow仍 **NOT FULLY VALIDATED**。旧503/timeout保留为历史观察，根因未严格证明，不能凭单次成功认定长期稳定。OpenAI真实状态独立。本次正式验收通过uv run --directory明确选择hardening worktree，1049/925 input/output tokens、response-id存在、manifest/immutable/security通过；与原型证据分开记录。上述命令仅供后续显式复验参考，不自动授权Level B或4B。详见[验证记录](docs/DEEPSEEK_VALIDATION.md)。

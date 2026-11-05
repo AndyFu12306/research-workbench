@@ -179,3 +179,6 @@ B额外要求RUN_DEEPSEEK_ZOTERO_E2E=1和用户明确选择的ZOTERO_TEST_ITEM_K
 ## ADR-044：原型证据不代替正式版本验收
 
 用户真实Responses原型Level A：completed，10.494s（provider10.353s），1049/1397 tokens，4096预算，calls1/retries0，manifest/fingerprint/provenance/metadata/immutable/security通过。Chat单次A PASS仍保留。新正式hardening版本必须由用户另行显式运行单个synthetic A，普通测试/CI不使用真实凭据；真实Zotero B仍未测，必须另行同意及显式item key。历史503/timeout根因未严格证明，不宣称已永久恢复或FULLY VALIDATED。SDK逐I/O timeout不是墙钟deadline；预算4096不增加，不repair/extract/fallback/retry。
+
+
+验收更新（2026-11-05，非架构变更）：用户通过hardening worktree的正式Provider完成独立Level A，**1 passed in 8.40s**，deepseek-flash / Responses / completed；1049/925 tokens，response-id存在，analysis-v1 / analysis-schema-v1，4096预算、calls1/retries0，immutable/manifest/security通过。正式Level A现为**单次真实PASS**；上述ADR中“须另行验收”为决策时门槛，现已满足。原型与Chat证据仍独立保留，历史503/timeout根因仍未严格证明。Level B仍NOT TESTED，workflow仍NOT FULLY VALIDATED；本次仅文档记录，不授权merge或4B。

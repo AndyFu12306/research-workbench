@@ -13,7 +13,7 @@
 | Responses minimal schema + strict=True | 用户单次真实PASS | 1.767s，92/20 input/output tokens；仍是最小诊断 |
 | Responses full analysis-schema-v1 | 用户单次真实PASS | 19.732s，1141/3435 tokens；本地schema/citation通过，未执行AnalysisService |
 | Responses本地原型完整Level A | 用户单次真实PASS | 真实AnalysisService + Fake Zotero + 临时DB；见下表 |
-| 正式hardening provider Level A | **NOT TESTED** | 本PR离线通过，不用原型或mock代替正式版本真实验收 |
+| 正式hardening provider Level A | **PASS（单次真实验收），2026-11-05** | 用户在hardening worktree调用正式provider，1 passed in 8.40s；见独立记录 |
 | 真实Zotero摘要Level B | **NOT TESTED** | 需要独立外发同意和明确item key，本轮不执行 |
 | DeepSeek workflow | **NOT FULLY VALIDATED** | 不自动进入4B；OpenAI真实验收独立NOT TESTED |
 
@@ -31,7 +31,24 @@
 | manifest / fingerprints / provenance / metadata | verified=true |
 | immutable_history_verified / security_check | true / PASS |
 
-不保存实际response ID、请求/响应正文、源内容或key。最新用户报告未单独提供response ID存在性，不推断该值。原型使用PR #10分支的共享pipeline及错误helper，不是本PR正式adapter；本PR最终代码需单独验收。
+不保存实际response ID、请求/响应正文、源内容或key。原型报告未单独提供response ID存在性，不推断该值。原型使用PR #10分支的共享pipeline及错误helper，不是本PR正式adapter；正式版本的独立验收记录如下，二者不混用。
+
+### 用户提供的正式hardening Provider Level A验收（2026-11-05）
+
+证据来源：用户在已有PowerShell中使用 `uv run --directory C:\Projects\research-workbench-responses` 运行正式synthetic测试节点，实际调用 `codex/deepseek-responses-hardening` worktree内的 `DeepSeekAnalysisProvider`，不是ignored local原型或原Chat目录。此次用户验收对应代码提交784876e（提交后文档head为c21c983）；本次收尾仅改文档，业务代码和测试不变。Codex仅记录用户结果，没有重跑请求、读取真实key或保存实际response ID/原始响应。
+
+| 项目 | 正式版本结果 |
+| --- | --- |
+| pytest | **1 passed in 8.40s** |
+| model / api / status | deepseek-flash / Responses / completed |
+| input_tokens / output_tokens | 1049 / 925 |
+| response_id_present | true（只记录存在性） |
+| prompt_version / schema_version | analysis-v1 / analysis-schema-v1 |
+| max_output_tokens / provider_calls / max_retries | 4096 / 1 / 0 |
+| immutable_history_verified / manifest_verified | true / true |
+| security_check | PASS |
+
+正式Provider Level A = **PASS（单次真实验收）**；真实Zotero Level B = **NOT TESTED**；DeepSeek workflow仍 **NOT FULLY VALIDATED**。925/4096约22.6%，本次余3171 tokens，不代表后续请求没有截断风险。pytest总耗时不是独立provider延迟，不与原型或Chat单次耗时进行协议性能排名。此前503/timeout历史及原型证据原样保留，故障根因与长期稳定性仍未严格证明。本次PASS不授权merge、Level B或Phase4B。
 
 ### 保留Option B的真实证据
 
@@ -63,7 +80,7 @@
 uv run --directory C:\Projects\research-workbench-responses --frozen --extra dev pytest -m deepseek_integration tests/integration/test_analysis_deepseek_integration.py::test_synthetic_deepseek_analysis -q -rPs --tb=short
 ```
 
-此命令测试正式DeepSeekAnalysisProvider，不是ignored local原型，也不是原Chat worktree。使用1合成摘要/Fake Zotero/新临时SQLite，经过AnalysisService、schema/citation及repository校验，检查manifest/fingerprint、usage/id、版本、单次调用和immutable history；不读取或发送真实文献。未运行本命令之前正式版本仍NOT TESTED。成功不自动授权Level B、merge或4B。
+此命令测试正式DeepSeekAnalysisProvider，不是ignored local原型，也不是原Chat worktree。使用1合成摘要/Fake Zotero/新临时SQLite，经过AnalysisService、schema/citation及repository校验，检查manifest/fingerprint、usage/id、版本、单次调用和immutable history；不读取或发送真实文献。用户已于2026-11-05按此worktree路径单次真实验收PASS；命令保留供显式复验参考，不表示应立即重跑。该结果不自动授权Level B、merge或4B。
 
 ## 风险与限制
 

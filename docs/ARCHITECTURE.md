@@ -175,3 +175,6 @@ adapter验证completed响应结构，仅允许reasoning元数据（忽略、不�
 Responses input_tokens/output_tokens/id归一化到既有DTO，可选缺失None；不接受异常类型。provider只返回候选，不替代服务和repository校验；failed历史与manifest仍保留、终态不覆盖。新增安全错误只扩展既有allowlist，不改变schema。
 
 SDK I/O timeout和max_retries=0保持原行为；没有生产墙钟deadline、自动重试、协议fallback或预算增加。4096输出不完整即失败。原型的子进程deadline仅是ignored本地诊断工具能力，不声称正式provider具备同样控制。用户提供的原型/Chat各一次真实PASS不能替代最终正式版本验收、语义审阅或真实Zotero B授权。
+
+
+验收状态更新（2026-11-05）：用户已在hardening worktree调用正式Provider，synthetic Level A单次真实PASS（1 passed in 8.40s），独立于原型/Chat结果。详情见DEEPSEEK_VALIDATION.md。此更新不改变架构、prompt/schema或预算；Level B仍NOT TESTED，不宣称长期稳定/FULLY VALIDATED，不自动授权merge或4B。

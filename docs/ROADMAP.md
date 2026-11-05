@@ -1,6 +1,6 @@
 # 路线与阶段门槛
 
-当前：**Phase 4A.1 — DeepSeek Responses hardening（Option A）**。[Issue #11](https://github.com/AndyFu12306/research-workbench/issues/11)，分支 `codex/deepseek-responses-hardening`；基于已合并PR #8的main=aceca63，不基于PR #10。日期2026-11-05（Asia/Shanghai）。用户已确定Responses + strict schema + 本地严格校验；Chat PR #10保留未合并。Responses原型和Chat均有单次真实Level A PASS，正式hardening版本仍需独立验收，真实Zotero Level B未测。不自动merge、不进入4B。
+当前：**Phase 4A.1 — DeepSeek Responses hardening（Option A）**。[Issue #11](https://github.com/AndyFu12306/research-workbench/issues/11)，分支 `codex/deepseek-responses-hardening`；基于已合并PR #8的main=aceca63，不基于PR #10。日期2026-11-05（Asia/Shanghai）。用户已确定Responses + strict schema + 本地严格校验；Chat PR #10保留未合并。Responses原型和Chat均有单次真实Level A PASS，正式hardening Provider也已由用户单次真实验收PASS（1 passed in 8.40s），真实Zotero Level B未测。不自动merge、不进入4B。
 
 | Phase | 内容 | 状态 |
 | --- | --- | --- |
@@ -10,7 +10,7 @@
 | 2 | Project + Question + Minimal Database | PR #2 已合并，main 包含 6bb505ab |
 | 3 | Question ↔ Zotero Source Association | PR #4 已合并 |
 | 4A | Structured AI Analysis MVP | PR #6 已合并；真实 OpenAI 仍 NOT TESTED |
-| 4A.1 | DeepSeek provider + hardening | PR #8已合并；原型/Chat各单次A PASS；hardening A、真实Zotero B待测 |
+| 4A.1 | DeepSeek provider + hardening | PR #8已合并；原型/Chat/正式hardening各单次A PASS；真实Zotero B待测 |
 | 4B | 大 corpus / chunking / map-reduce / hierarchical synthesis | 延后，未授权 |
 | 后续 | Basic UI | 未开始，需另行授权 |
 | 后续 | Inbox / Claim + Evidence / Knowledge Graph / Memory / Automation | 延后 |
@@ -81,4 +81,4 @@ v0.1.0 = Project + Question + Zotero Source + AI Analysis；v0.2.0 = Inbox；v0.
 - Option A方向已确定；仅Responses adapter、安全错误目录、回归测试/验收入口与文档。OpenAI、共享prompt/schema、corpus、Zotero、数据库/migrations、依赖不改。
 - 315离线测试通过，8真实测试默认排除；Ruff和锁检查通过。包含503/404、完整响应结构、JSON/重复key/引用、failed分类持久化、usage/id和immutable history。最终双平台CI和self-review见独立PR。
 - Responses原型A单次真实PASS（10.494s，1049/1397 input/output tokens）与Chat A单次PASS均为用户证据，不代表正式hardening版本或长期可靠性验收。历史故障保留，见DEEPSEEK_VALIDATION.md。
-- 正式版本由用户单独运行synthetic A；真实Zotero B仍需独立外发同意及明确item key，未在本轮执行。保留analysis-v1 / analysis-schema-v1、4096预算、零retry/fallback。PR #10未关闭/合并，4B未授权。
+- 正式版本已由用户在独立worktree运行synthetic A单次PASS（2026-11-05，1049/925 tokens、immutable/manifest/security通过）；真实Zotero B仍需独立外发同意及明确item key，未在本轮执行。保留analysis-v1 / analysis-schema-v1、4096预算、零retry/fallback。PR #10未关闭/合并，4B未授权。
