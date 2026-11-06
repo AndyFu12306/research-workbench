@@ -1,5 +1,9 @@
 # Phase 4B.5a — 离线质量评估（v1 + v1.1）
 
+> 校准实施更新（2026-11-06）：用户另行授权从cd83a33进行本地Benchmark Calibration。
+> 当前活动夹具位于tests/fixtures/quality/v2；原v1保留缺陷历史。仅测试DTO/评估器/文档变化，
+> 详见[校准记录](PHASE4B5A_CALIBRATION.md)。不授权Push、PR/Issue修改、Merge或真实服务。
+
 唯一实施依据：[Issue #21](https://github.com/AndyFu12306/research-workbench/issues/21)。
 基线 b716ad74e8ad29efd31dad79cf88670f70d7bd81，独立 worktree
 C:/Projects/research-workbench-phase4b5a，分支 codex/phase4b5a-quality-benchmark。

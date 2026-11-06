@@ -252,3 +252,23 @@ P1-01实际失败14项，P1-02实际失败8项；不是只记录尚未实现模�
 - 人工语义独立复核仍未完成，全部实际草稿provisional；离线机制测试不等于真实模型质量验收。
 - 没有发现仍未解决的已报告P1；修复仍需独立复核，不能把本地自审声明为新的独立Approval。
 - 本轮没有Push或远程CI；PR #22原fbae65e的绿灯不覆盖本次修复。远端保持审核基线，等待下一次授权。
+
+## Benchmark Calibration 本地验收（2026-11-06）
+
+用户另行授权从cd83a336db135a289816a6a9a655801c8998c921开展本地校准、离线验证及必要本地提交。
+该起点是本轮核对的实际开发HEAD；上文早期Push/CI状态保留其历史时间上下文。
+
+- 保留v1全部原始草稿及缺陷，新增活动v2；18个逐案例Question、原有46个候选ID，无新增候选。
+- 数量：Fact 31→45（critical 38、非critical 7）；Relation 15→12；Claim 216→363；Retention 246→354；复核目标718→1004。
+- Q15/Q17独立Case验收目标7个、适用候选的判断9条，不伪造Fact/Finding；全部实际记录仍codex_draft，人工复核0。
+- 30项校准回归在旧数据上失败；3项旧观察重新attach回归在旧绑定实现上失败，随后最小修复测试观察器。
+- 46候选全部重新执行实际Fake/validator并verify绑定：231阶段观察、361真实Finding映射；清单hash见校准记录。
+- 评估器 **211 passed**，含26组临时SQLite/实际三层服务E2E；最终冻结数据完整离线 **1189 passed / 8 deselected，174.80秒**。
+- Ruff check及format --check通过（106文件）；uv lock --check --offline通过（28包）。
+- 已验证测试树 **1223db367d4560c15d8e9da7a7ff4ed4d70ad9da**；此后只补验收文档，再提交同一技术树。
+- src、依赖、迁移、Prompt/Stage Schema及CI相对起点/main均无diff，旧v1无diff，18组完整来源对象不变。
+- 范围、凭据模式、禁止产物、原始材料隔离及diff检查通过；不宣称完整安全审计。
+- 未调用真实AI/Zotero，未读取.env/密钥或私人研究数据库，未Push/更新PR或Issue；新HEAD远程CI及独立Approval未执行。
+
+18组实际Question、8重点候选、版本对应、复核范围及限制见[完整校准记录](PHASE4B5A_CALIBRATION.md)。
+95%/90%仍待校准，不是CI质量阈值；所有实际报告provisional，不能自动合并或进入4B.5b/c/d。

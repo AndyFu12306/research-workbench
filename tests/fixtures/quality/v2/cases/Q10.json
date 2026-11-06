@@ -1,0 +1,108 @@
+{
+  "version": "research-quality-benchmark-v2",
+  "case_id": "Q10",
+  "revision": 3,
+  "language": "en",
+  "requirements_version": "quality-requirements-v2",
+  "question": {
+    "version": "quality-question-v1",
+    "title": "Compare the two reports about A versus B under setting X.",
+    "description": "Retain source A outperformed, source B underperformed, setting X and the unresolved conflict. Compact attribution is allowed; omit unrelated background. Do not adjudicate a winner or assert agreement. Use synthetic sources only; no external knowledge."
+  },
+  "sources": [
+    {
+      "alias": "A",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0001"
+      ],
+      "text": "Under setting X, method A outperformed method B.",
+      "sha256": "34d791d6a2341a58d3df508a4f58295236f2360667343c857e4aeb41238b1051"
+    },
+    {
+      "alias": "B",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0002"
+      ],
+      "text": "Under setting X, method A underperformed method B.",
+      "sha256": "4aff81ea10be938c6c1398a9ae33f557c7dfb1caea29742435ceebf82d634c5b"
+    }
+  ],
+  "facts": [
+    {
+      "fact_id": "F1",
+      "proposition": "Under setting X, source A reported method A outperformed method B.",
+      "subject": "method A versus B",
+      "method": "method A",
+      "comparison": "method A versus B",
+      "result": "Under setting X, source A reported method A outperformed method B.",
+      "value_unit": "",
+      "polarity": "outperformed",
+      "conditions": "setting X",
+      "uncertainty": "Reports conflict under X; neither report is adjudicated here.",
+      "evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 48,
+          "sha256": "34d791d6a2341a58d3df508a4f58295236f2360667343c857e4aeb41238b1051"
+        }
+      ],
+      "critical": true,
+      "limitation": false,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    },
+    {
+      "fact_id": "F2",
+      "proposition": "Under setting X, source B reported method A underperformed method B.",
+      "subject": "method A versus B",
+      "method": "method A",
+      "comparison": "method A versus B",
+      "result": "Under setting X, source B reported method A underperformed method B.",
+      "value_unit": "",
+      "polarity": "underperformed",
+      "conditions": "setting X",
+      "uncertainty": "Reports conflict under X; neither report is adjudicated here.",
+      "evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 50,
+          "sha256": "4aff81ea10be938c6c1398a9ae33f557c7dfb1caea29742435ceebf82d634c5b"
+        }
+      ],
+      "critical": true,
+      "limitation": false,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "relation_id": "R1",
+      "facts": [
+        "F1",
+        "F2"
+      ],
+      "kind": "conflict",
+      "conditions": "Retain source A outperformed, source B underperformed, setting X and the unresolved conflict. Compact attribution is allowed; omit unrelated background. Do not adjudicate a winner or assert agreement.",
+      "expected": "The studies directly conflict under setting X; neither is adjudicated here."
+    }
+  ],
+  "max_chars": 8000,
+  "overlap_chars": 0,
+  "forbidden": [
+    "Both studies agree that A outperforms B under X."
+  ],
+  "acceptance_targets": []
+}

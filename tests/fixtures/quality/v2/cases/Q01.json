@@ -1,0 +1,110 @@
+{
+  "version": "research-quality-benchmark-v2",
+  "case_id": "Q01",
+  "revision": 3,
+  "language": "zh",
+  "requirements_version": "quality-requirements-v2",
+  "question": {
+    "version": "quality-question-v1",
+    "title": "同一测试集上甲乙准确率分别是多少、相差多少？",
+    "description": "保留甲72%、乙68%、同一测试集及4个百分点差值；可合并句子，不可省略绝对值；不推断显著性或其他测试集。 仅使用合成来源，不引入外部知识。 已要求的来源事实不得省略；与本问题无关的背景可省略。"
+  },
+  "sources": [
+    {
+      "alias": "A",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0001"
+      ],
+      "text": "同一测试集上，甲方法准确率72%。",
+      "sha256": "620de654d3688139197132da250e2f21f7060615e9e3c06188d6d4e4cef4d272"
+    },
+    {
+      "alias": "B",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0002"
+      ],
+      "text": "同一测试集上，乙方法准确率68%。",
+      "sha256": "28c179e5fde405bdee284e1866f93388944af486b81029c20fad1f814aa22a1a"
+    }
+  ],
+  "facts": [
+    {
+      "fact_id": "F1",
+      "proposition": "同一测试集上，甲方法准确率72%。",
+      "subject": "甲方法",
+      "method": "甲方法",
+      "comparison": "甲方法 versus 乙方法",
+      "result": "同一测试集上，甲方法准确率72%。",
+      "value_unit": "72%",
+      "polarity": "reported_accuracy",
+      "conditions": "same test set",
+      "uncertainty": "所给文本不能建立显著性或其他测试集上的效果。",
+      "evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 17,
+          "sha256": "620de654d3688139197132da250e2f21f7060615e9e3c06188d6d4e4cef4d272"
+        }
+      ],
+      "critical": true,
+      "limitation": false,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    },
+    {
+      "fact_id": "F2",
+      "proposition": "同一测试集上，乙方法准确率68%。",
+      "subject": "乙方法",
+      "method": "乙方法",
+      "comparison": "甲方法 versus 乙方法",
+      "result": "同一测试集上，乙方法准确率68%。",
+      "value_unit": "68%",
+      "polarity": "reported_accuracy",
+      "conditions": "same test set",
+      "uncertainty": "所给文本不能建立显著性或其他测试集上的效果。",
+      "evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 17,
+          "sha256": "28c179e5fde405bdee284e1866f93388944af486b81029c20fad1f814aa22a1a"
+        }
+      ],
+      "critical": true,
+      "limitation": false,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "relation_id": "R1",
+      "facts": [
+        "F1",
+        "F2"
+      ],
+      "kind": "support",
+      "conditions": "保留甲72%、乙68%、同一测试集及4个百分点差值；可合并句子，不可省略绝对值；不推断显著性或其他测试集。",
+      "expected": "甲比乙提高4个百分点。"
+    }
+  ],
+  "max_chars": 8000,
+  "overlap_chars": 0,
+  "forbidden": [
+    "甲比乙提高40个百分点。",
+    "甲比乙提高4%。",
+    "甲比乙下降4个百分点。"
+  ],
+  "acceptance_targets": []
+}

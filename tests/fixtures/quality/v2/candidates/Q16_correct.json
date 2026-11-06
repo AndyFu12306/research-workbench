@@ -1,0 +1,61 @@
+{
+  "version": "quality-candidate-v1",
+  "candidate_id": "Q16_correct",
+  "revision": 2,
+  "case_id": "Q16",
+  "stages": [
+    {
+      "alias": "A/map/1",
+      "findings": []
+    },
+    {
+      "alias": "A/document",
+      "findings": []
+    },
+    {
+      "alias": "B/map/1",
+      "findings": [
+        {
+          "alias": "B/map/1/f1",
+          "text": "Method A improved toy-task accuracy by 2 points.",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "B/chunk/1"
+          ]
+        }
+      ]
+    },
+    {
+      "alias": "B/document",
+      "findings": [
+        {
+          "alias": "B/document/f1",
+          "text": "Method A improved toy-task accuracy by 2 points.",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "B/map/1/f1"
+          ]
+        }
+      ]
+    },
+    {
+      "alias": "cross",
+      "findings": [
+        {
+          "alias": "cross/f1",
+          "text": "Method A improved toy-task accuracy by 2 points.",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "B/document/f1"
+          ]
+        }
+      ]
+    }
+  ],
+  "expected": "completed",
+  "max_calls": 106,
+  "stage_input_limit": 24000
+}

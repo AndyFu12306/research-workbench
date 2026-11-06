@@ -1,0 +1,108 @@
+{
+  "version": "research-quality-benchmark-v2",
+  "case_id": "Q02",
+  "revision": 3,
+  "language": "en",
+  "requirements_version": "quality-requirements-v2",
+  "question": {
+    "version": "quality-question-v1",
+    "title": "Compare method A and B latency under load X.",
+    "description": "Retain A=250 ms, B=0.5 s, load X and lower-latency direction. Equivalent unit conversion is allowed; omit unrelated background. Do not infer significance or outcomes at other loads. Use synthetic sources only; no external knowledge."
+  },
+  "sources": [
+    {
+      "alias": "A",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0001"
+      ],
+      "text": "Under load X, method A latency was 250 ms.",
+      "sha256": "ab48d60d6078e7d977b6072c887cedaf8e8c493b9120b3d037fdfcf24712a514"
+    },
+    {
+      "alias": "B",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0002"
+      ],
+      "text": "Under load X, method B latency was 0.5 s.",
+      "sha256": "86f7c54ee34fb1e99934905b4d241768181631a3a826cd2b129a2a253cf245cf"
+    }
+  ],
+  "facts": [
+    {
+      "fact_id": "F1",
+      "proposition": "Under load X, method A latency was 250 ms.",
+      "subject": "method A",
+      "method": "method A",
+      "comparison": "method A versus B",
+      "result": "Under load X, method A latency was 250 ms.",
+      "value_unit": "250 ms",
+      "polarity": "reported_latency",
+      "conditions": "load X",
+      "uncertainty": "The supplied text does not establish significance or behavior at other loads.",
+      "evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 42,
+          "sha256": "ab48d60d6078e7d977b6072c887cedaf8e8c493b9120b3d037fdfcf24712a514"
+        }
+      ],
+      "critical": true,
+      "limitation": false,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    },
+    {
+      "fact_id": "F2",
+      "proposition": "Under load X, method B latency was 0.5 s.",
+      "subject": "method B",
+      "method": "method B",
+      "comparison": "method A versus B",
+      "result": "Under load X, method B latency was 0.5 s.",
+      "value_unit": "0.5 s",
+      "polarity": "reported_latency",
+      "conditions": "load X",
+      "uncertainty": "The supplied text does not establish significance or behavior at other loads.",
+      "evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 41,
+          "sha256": "86f7c54ee34fb1e99934905b4d241768181631a3a826cd2b129a2a253cf245cf"
+        }
+      ],
+      "critical": true,
+      "limitation": false,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "relation_id": "R1",
+      "facts": [
+        "F1",
+        "F2"
+      ],
+      "kind": "support",
+      "conditions": "Retain A=250 ms, B=0.5 s, load X and lower-latency direction. Equivalent unit conversion is allowed; omit unrelated background. Do not infer significance or outcomes at other loads.",
+      "expected": "A has lower latency: 250 ms versus 500 ms."
+    }
+  ],
+  "max_chars": 8000,
+  "overlap_chars": 0,
+  "forbidden": [
+    "A is slower: 250 seconds versus 0.5 seconds."
+  ],
+  "acceptance_targets": []
+}

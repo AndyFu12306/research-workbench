@@ -63,7 +63,7 @@ def validate_case(case):
     identifier(case.case_id)
     require(re.fullmatch(r"Q(?:0[1-9]|1[0-8])", case.case_id))
     require(case.question.version == "quality-question-v1" and bool(case.question.title.strip()))
-    require(bool(case.requirements_version) and 2 <= len(case.sources) <= 5)
+    require(case.requirements_version == "quality-requirements-v2" and 2 <= len(case.sources) <= 5)
     unique([s.alias for s in case.sources])
     unique([s.identity for s in case.sources])
     for s in case.sources:
@@ -83,6 +83,10 @@ def validate_case(case):
         unique(r.facts)
         require(len(r.facts) >= 2 and set(r.facts) <= {f.fact_id for f in case.facts})
         require(bool(r.expected.strip()))
+    unique([t.target_id for t in case.acceptance_targets])
+    for target in case.acceptance_targets:
+        identifier(target.target_id)
+        require(target.target_id.startswith("acceptance/") and bool(target.criterion.strip()))
 
 
 def validate_candidate(case, candidate):
@@ -123,6 +127,7 @@ def finding_sources(case, candidate):
 
 def review_targets(case, assessment):
     targets = set(assessment.atomized_findings)
+    targets.update(j.target_id for j in assessment.acceptance_judgments)
     for c in assessment.claims:
         if (
             c.critical
@@ -150,13 +155,21 @@ def validate_source_support(claim):
 
 def validate_assessment(case, candidate, assessment):
     typed(type(assessment), canonical(assessment))
-    require(assessment.version == "quality-assessment-v1" and assessment.revision > 0)
+    require(assessment.version == "quality-assessment-v2" and assessment.revision > 0)
     require(assessment.candidate_id == candidate.candidate_id)
     require(assessment.rubric == RUBRIC and assessment.atomization == ATOMIZATION)
     identifier(assessment.assessment_id)
+    expected_targets = {
+        t.target_id for t in case.acceptance_targets if t.scenario == candidate.expected
+    }
+    unique([j.target_id for j in assessment.acceptance_judgments])
+    require({j.target_id for j in assessment.acceptance_judgments} == expected_targets)
+    for judgment in assessment.acceptance_judgments:
+        require(judgment.verdict != "na" and bool(judgment.reason.strip()))
     if candidate.expected != "completed":
         require(not assessment.claims and not assessment.retentions and not assessment.relations)
-        require(not assessment.atomized_findings and not assessment.reviews)
+        require(not assessment.atomized_findings)
+        validate_reviews(case, assessment)
         return
     findings = {f.alias: f for s in candidate.stages for f in s.findings}
     stages = {f.alias: s.alias for s in candidate.stages for f in s.findings}
@@ -225,6 +238,10 @@ def validate_assessment(case, candidate, assessment):
         original = next(x for x in case.relations if x.relation_id == r.relation_id)
         require((r.conflict_recalled == "na") == (original.kind != "conflict"))
         require((r.conflict_correct == "na") == (not r.conflict_asserted))
+    validate_reviews(case, assessment)
+
+
+def validate_reviews(case, assessment):
     targets = review_targets(case, assessment)
     # Noncritical claims are reviewable too, but arbitrary/sensitive target strings are not.
     targets |= {c.claim_id for c in assessment.claims}

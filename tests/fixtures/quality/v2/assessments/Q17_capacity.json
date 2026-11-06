@@ -1,0 +1,31 @@
+{
+  "version": "quality-assessment-v2",
+  "assessment_id": "Q17_capacity_draft",
+  "revision": 2,
+  "candidate_id": "Q17_capacity",
+  "rubric": "quality-rubric-v2",
+  "atomization": "quality-atomization-v2",
+  "claims": [],
+  "retentions": [],
+  "relations": [],
+  "atomized_findings": [],
+  "reviews": [],
+  "origin": "codex_draft",
+  "acceptance_judgments": [
+    {
+      "target_id": "acceptance/cross_zero_calls",
+      "verdict": "pass",
+      "reason": "AI draft intent: Reject dynamic Cross capacity before calling Cross. Independent human judgment pending; runtime evidence is checked separately."
+    },
+    {
+      "target_id": "acceptance/children_preserved",
+      "verdict": "pass",
+      "reason": "AI draft intent: Preserve both successful document histories. Independent human judgment pending; runtime evidence is checked separately."
+    },
+    {
+      "target_id": "acceptance/parent_failed",
+      "verdict": "pass",
+      "reason": "AI draft intent: Parent execution fails without presenting completed synthesis. Independent human judgment pending; runtime evidence is checked separately."
+    }
+  ]
+}

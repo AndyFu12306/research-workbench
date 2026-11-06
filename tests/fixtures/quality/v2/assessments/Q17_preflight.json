@@ -1,0 +1,26 @@
+{
+  "version": "quality-assessment-v2",
+  "assessment_id": "Q17_preflight_draft",
+  "revision": 2,
+  "candidate_id": "Q17_preflight",
+  "rubric": "quality-rubric-v2",
+  "atomization": "quality-atomization-v2",
+  "claims": [],
+  "retentions": [],
+  "relations": [],
+  "atomized_findings": [],
+  "reviews": [],
+  "origin": "codex_draft",
+  "acceptance_judgments": [
+    {
+      "target_id": "acceptance/preflight_zero_calls",
+      "verdict": "pass",
+      "reason": "AI draft intent: Budget preflight must reject before any provider call. Independent human judgment pending; runtime evidence is checked separately."
+    },
+    {
+      "target_id": "acceptance/preflight_no_completion",
+      "verdict": "pass",
+      "reason": "AI draft intent: Do not present a completed synthesis or register a parent run. Independent human judgment pending; runtime evidence is checked separately."
+    }
+  ]
+}

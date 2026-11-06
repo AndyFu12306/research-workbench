@@ -32,8 +32,10 @@ def test_hand_counted_denominators():
 def test_dual_axes_and_inherited_error():
     case, _, a = draft("Q18", "wrong")
     metrics = semantic_metrics(case, a)
-    assert metrics["upstream_support"]["success"] == 4
-    assert metrics["source_support"]["success"] == 2
+    # X has one faulty Map and two inherited observations; Y and its boundary
+    # are independently retained at Map, Document and Cross (six observations).
+    assert metrics["upstream_support"]["success"] == 8
+    assert metrics["source_support"]["success"] == 6
     events = error_events(a.claims)
     map_event = next(e for e in events if e["claim"] == "A/map/1/f1/c1")
     assert map_event["kind"] == "first_distortion"
@@ -59,14 +61,14 @@ def test_collective_q13_and_first_extraction_loss():
     summary = loss_summary(case, a.retentions)
     assert summary["map_collection"]["metric"]["success"] == 0
     assert summary["document_reduce"]["metric"]["success"] == 0
-    assert summary["end_to_end"]["success"] == 2
+    assert summary["end_to_end"]["success"] == 3
     _, _, missing = draft("Q13", "missing_condition")
     loss = loss_summary(case, missing.retentions)
-    assert loss["map_collection"]["metric"]["success"] == 1
-    assert loss["document_reduce"]["insufficient"] == 1
+    assert loss["map_collection"]["metric"]["success"] == 2
+    assert loss["document_reduce"]["insufficient"] == 2
     assert loss["document_reduce"]["metric"]["N"] == 1
     assert loss["end_to_end"]["success"] == 1
-    assert loss["unsupported_reappearances"] == 1
+    assert loss["unsupported_reappearances"] == 2
     _, _, amb = draft("Q13", "ambiguous")
     assert loss_summary(case, amb.retentions)["document_reduce"]["indeterminate_input"] == 1
 
@@ -116,7 +118,7 @@ def test_review_q13_ambiguous_is_not_faithfully_retained():
     assert [r.outcome for r in trace] == ["partial", "preserved", "preserved"]
     assert trace[1].availability == "indeterminate"
     assert retention_verdict("F1", assessment.retentions) == "fail"
-    assert semantic_metrics(case, assessment)["end_to_end_retention"]["rate"] == "1/2"
+    assert semantic_metrics(case, assessment)["end_to_end_retention"]["rate"] == "1/3"
     assert loss_summary(case, assessment.retentions)["end_to_end"]["success"] == 1
 
 
@@ -186,9 +188,10 @@ def test_review_known_loss_takes_precedence_over_pending_judgment():
     ],
 )
 @pytest.mark.parametrize("entry", ["validation", "scoring"])
-def test_review_q18_supported_cannot_have_only_negative_citations(stances, entry):
-    case, candidate, assessment = draft("Q18", "correct")
-    claim = next(c for c in assessment.claims if c.stage == "cross")
+def test_review_supported_cannot_have_only_negative_citations(stances, entry):
+    # Use a real two-premise inference. Q18 X now correctly cites only source A.
+    case, candidate, assessment = draft("Q01", "correct")
+    claim = next(c for c in assessment.claims if c.finding == "cross/f3")
     assert claim.source_support == "supported"
     changed_claim = replace(
         claim,
@@ -219,8 +222,8 @@ def test_review_q18_supported_cannot_have_only_negative_citations(stances, entry
     ],
 )
 def test_review_mixed_and_conditional_evidence_remains_manually_adjudicated(stances):
-    case, candidate, assessment = draft("Q18", "correct")
-    claim = next(c for c in assessment.claims if c.stage == "cross")
+    case, candidate, assessment = draft("Q01", "correct")
+    claim = next(c for c in assessment.claims if c.finding == "cross/f3")
     changed_claim = replace(
         claim,
         citations=tuple(

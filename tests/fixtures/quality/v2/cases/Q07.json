@@ -1,0 +1,164 @@
+{
+  "version": "research-quality-benchmark-v2",
+  "case_id": "Q07",
+  "revision": 3,
+  "language": "zh",
+  "requirements_version": "quality-requirements-v2",
+  "question": {
+    "version": "quality-question-v1",
+    "title": "健康成人研究能否支持儿童适用性？",
+    "description": "保留甲乙健康成人范围、甲排除儿童、乙儿童适用性未知；可合并范围，不能省略儿童证据边界或推广所有年龄；其他背景可省略。 仅使用合成来源，不引入外部知识。"
+  },
+  "sources": [
+    {
+      "alias": "A",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0001"
+      ],
+      "text": "研究甲只纳入健康成年人，排除了儿童。",
+      "sha256": "2bfa823541000cdf6d91b195c7940542cd4e9a94bcbe71d3fec5ba5a534f586f"
+    },
+    {
+      "alias": "B",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0002"
+      ],
+      "text": "研究乙仅研究健康成人，儿童适用性未知。",
+      "sha256": "79c1f7a8db6f1349f3c8bc3570c2f1a223bf11678c878554794eced73df2634f"
+    }
+  ],
+  "facts": [
+    {
+      "fact_id": "F1",
+      "proposition": "研究甲只纳入健康成年人。",
+      "subject": "研究甲",
+      "method": "",
+      "comparison": "",
+      "result": "研究甲只纳入健康成年人。",
+      "value_unit": "",
+      "polarity": "adults_only",
+      "conditions": "healthy adults only",
+      "uncertainty": "不能从健康成人研究外推儿童适用性。",
+      "evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 11,
+          "sha256": "988215f0942583726482ae9c5e3d03e1c09e1e662b77ce86fd8073f95e2760b4"
+        }
+      ],
+      "critical": true,
+      "limitation": true,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    },
+    {
+      "fact_id": "F2",
+      "proposition": "研究乙仅研究健康成人。",
+      "subject": "研究乙",
+      "method": "",
+      "comparison": "",
+      "result": "研究乙仅研究健康成人。",
+      "value_unit": "",
+      "polarity": "adults_only",
+      "conditions": "healthy adults only",
+      "uncertainty": "不能从健康成人研究外推儿童适用性。",
+      "evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 10,
+          "sha256": "3f7036208cd644f635083412becf5d221c8d0e6e4cd796ec6510645fb03dfd85"
+        }
+      ],
+      "critical": true,
+      "limitation": true,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    },
+    {
+      "fact_id": "F3",
+      "proposition": "研究甲排除了儿童。",
+      "subject": "研究甲",
+      "method": "",
+      "comparison": "",
+      "result": "研究甲排除了儿童。",
+      "value_unit": "",
+      "polarity": "children_excluded",
+      "conditions": "study A",
+      "uncertainty": "不能从健康成人研究外推儿童适用性。",
+      "evidence": [
+        {
+          "source": "A",
+          "start": 12,
+          "end": 17,
+          "sha256": "d38aef193e0513eb39166bb95b5985b9615df3b23cce547a284c8080937d4533"
+        }
+      ],
+      "critical": false,
+      "limitation": true,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    },
+    {
+      "fact_id": "F4",
+      "proposition": "研究乙儿童适用性未知。",
+      "subject": "研究乙",
+      "method": "",
+      "comparison": "",
+      "result": "研究乙儿童适用性未知。",
+      "value_unit": "",
+      "polarity": "applicability_unknown",
+      "conditions": "study B",
+      "uncertainty": "不能从健康成人研究外推儿童适用性。",
+      "evidence": [
+        {
+          "source": "B",
+          "start": 11,
+          "end": 18,
+          "sha256": "9387bada88f65dc6fb6724b1be6f130a73ae300b3601323d92c6fd83352fdfb9"
+        }
+      ],
+      "critical": true,
+      "limitation": true,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "relation_id": "R1",
+      "facts": [
+        "F1",
+        "F2",
+        "F3",
+        "F4"
+      ],
+      "kind": "support",
+      "conditions": "保留甲乙健康成人范围、甲排除儿童、乙儿童适用性未知；可合并范围，不能省略儿童证据边界或推广所有年龄；其他背景可省略。",
+      "expected": "两研究仅纳入健康成人；甲排除儿童，乙儿童适用性未知。"
+    }
+  ],
+  "max_chars": 8000,
+  "overlap_chars": 0,
+  "forbidden": [
+    "该结论适用于所有年龄。"
+  ],
+  "acceptance_targets": []
+}

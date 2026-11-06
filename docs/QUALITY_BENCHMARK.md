@@ -1,5 +1,10 @@
 # 离线基准与评分操作规范
 
+> 当前活动基准为校准后的v2，原v1数据完整保留作历史。Case格式增加验收目标，Assessment增加
+> 独立验收判断，Report增加acceptance计数，均升级v2；Candidate/Question/Binding字段形状未变。
+> 规则为rubric-v2/atomization-v2，Observer为v2。下文v1说明保留初版历史；当前口径、18组完整
+> Question、版本对应及验收结果以[校准记录](PHASE4B5A_CALIBRATION.md)为准。
+
 本页只描述 Issue #21 的测试工具，不是产品评分接口。所有来源、身份（FAKE0001等）、问题和候选均为合成。
 18组（中文9、英文9）、46个脚本候选；Q01–Q18含义以manifest及各case文件为准。
 `correct`只表示作者拟定的正例，不表示已经获得独立人工语义认可。

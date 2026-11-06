@@ -1,0 +1,409 @@
+{
+  "version": "quality-assessment-v2",
+  "assessment_id": "Q10_wrong_calibration_draft",
+  "revision": 2,
+  "candidate_id": "Q10_wrong",
+  "rubric": "quality-rubric-v2",
+  "atomization": "quality-atomization-v2",
+  "claims": [
+    {
+      "claim_id": "A/map/1/f1/c1",
+      "stage": "A/map/1",
+      "finding": "A/map/1/f1",
+      "start": 0,
+      "end": 66,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/chunk/1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 48,
+          "sha256": "34d791d6a2341a58d3df508a4f58295236f2360667343c857e4aeb41238b1051"
+        }
+      ],
+      "reason": "AI calibration draft proposition: Under setting X, source A reported method A outperformed method B. Direct inputs: A/chunk/1; upstream=supported; original evidence=supported. Evidence: Under setting X, method A outperformed method B.. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 48,
+              "sha256": "34d791d6a2341a58d3df508a4f58295236f2360667343c857e4aeb41238b1051"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [],
+      "link": "root",
+      "critical": true
+    },
+    {
+      "claim_id": "A/document/f1/c1",
+      "stage": "A/document",
+      "finding": "A/document/f1",
+      "start": 0,
+      "end": 66,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/map/1/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 48,
+          "sha256": "34d791d6a2341a58d3df508a4f58295236f2360667343c857e4aeb41238b1051"
+        }
+      ],
+      "reason": "AI calibration draft proposition: Under setting X, source A reported method A outperformed method B. Direct inputs: A/map/1/f1; upstream=supported; original evidence=supported. Evidence: Under setting X, method A outperformed method B.. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 48,
+              "sha256": "34d791d6a2341a58d3df508a4f58295236f2360667343c857e4aeb41238b1051"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "A/map/1/f1/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "B/map/1/f1/c1",
+      "stage": "B/map/1",
+      "finding": "B/map/1/f1",
+      "start": 0,
+      "end": 68,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/chunk/1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 50,
+          "sha256": "4aff81ea10be938c6c1398a9ae33f557c7dfb1caea29742435ceebf82d634c5b"
+        }
+      ],
+      "reason": "AI calibration draft proposition: Under setting X, source B reported method A underperformed method B. Direct inputs: B/chunk/1; upstream=supported; original evidence=supported. Evidence: Under setting X, method A underperformed method B.. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 50,
+              "sha256": "4aff81ea10be938c6c1398a9ae33f557c7dfb1caea29742435ceebf82d634c5b"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [],
+      "link": "root",
+      "critical": true
+    },
+    {
+      "claim_id": "B/document/f1/c1",
+      "stage": "B/document",
+      "finding": "B/document/f1",
+      "start": 0,
+      "end": 68,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/map/1/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 50,
+          "sha256": "4aff81ea10be938c6c1398a9ae33f557c7dfb1caea29742435ceebf82d634c5b"
+        }
+      ],
+      "reason": "AI calibration draft proposition: Under setting X, source B reported method A underperformed method B. Direct inputs: B/map/1/f1; upstream=supported; original evidence=supported. Evidence: Under setting X, method A underperformed method B.. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 50,
+              "sha256": "4aff81ea10be938c6c1398a9ae33f557c7dfb1caea29742435ceebf82d634c5b"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "B/map/1/f1/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "cross/f1/c1",
+      "stage": "cross",
+      "finding": "cross/f1",
+      "start": 0,
+      "end": 66,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/document/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 48,
+          "sha256": "34d791d6a2341a58d3df508a4f58295236f2360667343c857e4aeb41238b1051"
+        }
+      ],
+      "reason": "AI calibration draft proposition: Under setting X, source A reported method A outperformed method B. Direct inputs: A/document/f1; upstream=supported; original evidence=supported. Evidence: Under setting X, method A outperformed method B.. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 48,
+              "sha256": "34d791d6a2341a58d3df508a4f58295236f2360667343c857e4aeb41238b1051"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "A/document/f1/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "cross/f2/c1",
+      "stage": "cross",
+      "finding": "cross/f2",
+      "start": 0,
+      "end": 66,
+      "upstream_support": "contradicted",
+      "source_support": "contradicted",
+      "upstream_refs": [
+        "B/document/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 50,
+          "sha256": "4aff81ea10be938c6c1398a9ae33f557c7dfb1caea29742435ceebf82d634c5b"
+        }
+      ],
+      "reason": "AI calibration draft proposition: Under setting X, source B reported method A outperformed method B. Direct inputs: B/document/f1; upstream=contradicted; original evidence=contradicted. Evidence: Under setting X, method A underperformed method B.. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "opposes",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 50,
+              "sha256": "4aff81ea10be938c6c1398a9ae33f557c7dfb1caea29742435ceebf82d634c5b"
+            }
+          ]
+        }
+      ],
+      "severity": "severe",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "B/document/f1/c1"
+      ],
+      "link": "changed",
+      "critical": true
+    },
+    {
+      "claim_id": "cross/f3/c1",
+      "stage": "cross",
+      "finding": "cross/f3",
+      "start": 0,
+      "end": 35,
+      "upstream_support": "contradicted",
+      "source_support": "contradicted",
+      "upstream_refs": [
+        "A/document/f1",
+        "B/document/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 48,
+          "sha256": "34d791d6a2341a58d3df508a4f58295236f2360667343c857e4aeb41238b1051"
+        },
+        {
+          "source": "B",
+          "start": 0,
+          "end": 50,
+          "sha256": "4aff81ea10be938c6c1398a9ae33f557c7dfb1caea29742435ceebf82d634c5b"
+        }
+      ],
+      "reason": "AI calibration draft proposition: Both reports agree under setting X. Direct inputs: A/document/f1, B/document/f1; upstream=contradicted; original evidence=contradicted. Evidence: Under setting X, method A outperformed method B. | Under setting X, method A underperformed method B.. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "conditional",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 48,
+              "sha256": "34d791d6a2341a58d3df508a4f58295236f2360667343c857e4aeb41238b1051"
+            }
+          ]
+        },
+        {
+          "source": "B",
+          "stance": "conditional",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 50,
+              "sha256": "4aff81ea10be938c6c1398a9ae33f557c7dfb1caea29742435ceebf82d634c5b"
+            }
+          ]
+        }
+      ],
+      "severity": "severe",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "A/document/f1/c1",
+        "B/document/f1/c1"
+      ],
+      "link": "changed",
+      "critical": true
+    }
+  ],
+  "retentions": [
+    {
+      "fact_id": "F1",
+      "layer": "map_collection",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/chunk/1"
+      ],
+      "reason": "AI calibration draft F1: required proposition 'Under setting X, source A reported method A outperformed method B.' at map_collection. Actual direct input aliases: A/chunk/1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'setting X' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F1",
+      "layer": "document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/map/1/f1"
+      ],
+      "reason": "AI calibration draft F1: required proposition 'Under setting X, source A reported method A outperformed method B.' at document_reduce. Actual direct input aliases: A/map/1/f1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'setting X' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F1",
+      "layer": "cross_document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/document/f1"
+      ],
+      "reason": "AI calibration draft F1: required proposition 'Under setting X, source A reported method A outperformed method B.' at cross_document_reduce. Actual direct input aliases: A/document/f1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'setting X' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F2",
+      "layer": "map_collection",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/chunk/1"
+      ],
+      "reason": "AI calibration draft F2: required proposition 'Under setting X, source B reported method A underperformed method B.' at map_collection. Actual direct input aliases: B/chunk/1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'setting X' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F2",
+      "layer": "document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/map/1/f1"
+      ],
+      "reason": "AI calibration draft F2: required proposition 'Under setting X, source B reported method A underperformed method B.' at document_reduce. Actual direct input aliases: B/map/1/f1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'setting X' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F2",
+      "layer": "cross_document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "distorted",
+      "input_refs": [
+        "B/document/f1"
+      ],
+      "reason": "AI calibration draft F2: required proposition 'Under setting X, source B reported method A underperformed method B.' at cross_document_reduce. Actual direct input aliases: B/document/f1. availability=explicit_complete; output=distorted. The output omits or changes this required proposition; a citation or related aggregate does not recover its meaning.",
+      "counter_information": "Keep condition 'setting X' and all contrary evidence; no transfer between source identities."
+    }
+  ],
+  "relations": [
+    {
+      "relation_id": "R1",
+      "classification": "fail",
+      "conflict_recalled": "fail",
+      "conflict_asserted": false,
+      "conflict_correct": "na"
+    }
+  ],
+  "atomized_findings": [
+    "A/map/1/f1",
+    "A/document/f1",
+    "B/map/1/f1",
+    "B/document/f1",
+    "cross/f1",
+    "cross/f2",
+    "cross/f3"
+  ],
+  "reviews": [],
+  "origin": "codex_draft",
+  "acceptance_judgments": []
+}

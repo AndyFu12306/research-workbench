@@ -29,6 +29,8 @@ class ObservedRun:
     mapping: tuple[tuple[str, str, str], ...]
     config_json: str = field(repr=False)
     terminal: str
+    case_sha256: str
+    candidate_sha256: str
     metadata_json: str = field(default="{}", repr=False)
 
 
@@ -54,6 +56,8 @@ class ObservingProvider:
         validate_case(case)
         validate_candidate(case, candidate)
         self.case, self.candidate, self.transform = case, candidate, transform
+        # Freeze observation provenance before execution, not when attaching a score.
+        self.case_sha256, self.candidate_sha256 = digest(case), digest(candidate)
         self.observations, self.mapping, self.requests, self.results = [], [], [], []
         self.alias_to_id = {}
         self.id_to_alias = {}
@@ -199,7 +203,13 @@ class ObservingProvider:
             for r in self.requests
         ]
         return ObservedRun(
-            run_alias, tuple(self.observations), tuple(self.mapping), encode(config), terminal
+            run_alias,
+            tuple(self.observations),
+            tuple(self.mapping),
+            encode(config),
+            terminal,
+            self.case_sha256,
+            self.candidate_sha256,
         )
 
 
@@ -273,14 +283,20 @@ def actual_findings(run):
 
 def check_history(provider, repository, documents, run_id):
     """Cross strict history reader plus every persisted child stage must agree."""
-    from research_workbench.persistence.document_repository import history_result
-
     history = decode(repository.get_history(run_id).result_json)
     cross_result = next(r for r in provider.results if r.request.stage == "cross_document_reduce")
     require(
         [f["finding_id"] for f in history["findings"]]
         == [f.finding_id for f in cross_result.findings]
     )
+    check_child_history(provider, repository, documents, run_id)
+    return digest(history)
+
+
+def check_child_history(provider, repository, documents, run_id):
+    """Also usable after Cross rejection, when no final Cross result exists."""
+    from research_workbench.persistence.document_repository import history_result
+
     for member in repository.get_members(run_id):
         source = provider.case.sources[member.ordinal - 1]
         for stage in documents.get_stages(member.document_execution_id):
@@ -293,4 +309,3 @@ def check_history(provider, repository, documents, run_id):
             result = provider.results[index]
             ordinals = tuple(range(1, len(result.request.children) + 1))
             require(decode(stage.result_json) == decode(history_result(result, ordinals)))
-    return digest(history)

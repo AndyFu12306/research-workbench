@@ -1,0 +1,26 @@
+{
+  "version": "quality-assessment-v2",
+  "assessment_id": "Q15_correct_calibration_draft",
+  "revision": 2,
+  "candidate_id": "Q15_correct",
+  "rubric": "quality-rubric-v2",
+  "atomization": "quality-atomization-v2",
+  "claims": [],
+  "retentions": [],
+  "relations": [],
+  "atomized_findings": [],
+  "reviews": [],
+  "origin": "codex_draft",
+  "acceptance_judgments": [
+    {
+      "target_id": "acceptance/relevance",
+      "verdict": "pass",
+      "reason": "AI calibration draft: Both supplied sources contain no result relevant to method A. Source A is salinity and source B is hardness; all actual stages return no relevant findings."
+    },
+    {
+      "target_id": "acceptance/faithful_empty",
+      "verdict": "pass",
+      "reason": "AI calibration draft: Return no invented method A finding; empty does not mean ineffective. Source A is salinity and source B is hardness; all actual stages return no relevant findings."
+    }
+  ]
+}

@@ -64,6 +64,7 @@ def report(case, candidate, run, bound):
     events = error_events(assessment.claims)
     unresolved = (
         any(m["status"] == "provisional" for m in metrics.values())
+        or any(j.verdict in ("indeterminate", "unscored") for j in assessment.acceptance_judgments)
         or any(
             r.availability in ("indeterminate", "unscored")
             or r.outcome in ("indeterminate", "unscored")
@@ -91,6 +92,9 @@ def report(case, candidate, run, bound):
         "assessment_sha256": digest(assessment),
         "status": status,
         "review": review,
+        "acceptance": count(
+            tuple(Opportunity(j.target_id, j.verdict) for j in assessment.acceptance_judgments)
+        ),
         "model_quality": "not_tested",
         "semantic_origin": "annotation_driven",
         "annotation_origin": assessment.origin,

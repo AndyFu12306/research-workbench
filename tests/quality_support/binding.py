@@ -18,6 +18,7 @@ from .validation import (
 def make_binding(case, candidate, run):
     validate_case(case)
     validate_candidate(case, candidate)
+    require(run.case_sha256 == digest(case) and run.candidate_sha256 == digest(candidate))
     identifier(run.run_alias)
     require(
         run.terminal

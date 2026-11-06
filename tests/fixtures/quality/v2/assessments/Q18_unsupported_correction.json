@@ -1,0 +1,506 @@
+{
+  "version": "quality-assessment-v2",
+  "assessment_id": "Q18_unsupported_correction_calibration_draft",
+  "revision": 2,
+  "candidate_id": "Q18_unsupported_correction",
+  "rubric": "quality-rubric-v2",
+  "atomization": "quality-atomization-v2",
+  "claims": [
+    {
+      "claim_id": "A/map/1/f1/c1",
+      "stage": "A/map/1",
+      "finding": "A/map/1/f1",
+      "start": 0,
+      "end": 44,
+      "upstream_support": "contradicted",
+      "source_support": "contradicted",
+      "upstream_refs": [
+        "A/chunk/1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 44,
+          "sha256": "89f520e1bce9a0e93c7ca40b8baf251c240a115b8d7b8a9dbfb260e1dbe4ee69"
+        }
+      ],
+      "reason": "AI calibration draft proposition: Under condition X, the success rate was 90%. Direct inputs: A/chunk/1; upstream=contradicted; original evidence=contradicted. Evidence: Under condition X, the success rate was 60%.. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "opposes",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 44,
+              "sha256": "89f520e1bce9a0e93c7ca40b8baf251c240a115b8d7b8a9dbfb260e1dbe4ee69"
+            }
+          ]
+        }
+      ],
+      "severity": "severe",
+      "kind_correct": "pass",
+      "predecessor_claims": [],
+      "link": "root",
+      "critical": true
+    },
+    {
+      "claim_id": "A/document/f1/c1",
+      "stage": "A/document",
+      "finding": "A/document/f1",
+      "start": 0,
+      "end": 53,
+      "upstream_support": "contradicted",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/map/1/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 44,
+          "sha256": "89f520e1bce9a0e93c7ca40b8baf251c240a115b8d7b8a9dbfb260e1dbe4ee69"
+        }
+      ],
+      "reason": "AI calibration draft proposition: Under condition X, the reported success rate was 60%. Direct inputs: A/map/1/f1; upstream=contradicted; original evidence=supported. Evidence: Under condition X, the success rate was 60%.. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 44,
+              "sha256": "89f520e1bce9a0e93c7ca40b8baf251c240a115b8d7b8a9dbfb260e1dbe4ee69"
+            }
+          ]
+        }
+      ],
+      "severity": "severe",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "A/map/1/f1/c1"
+      ],
+      "link": "changed",
+      "critical": true
+    },
+    {
+      "claim_id": "B/map/1/f1/c1",
+      "stage": "B/map/1",
+      "finding": "B/map/1/f1",
+      "start": 0,
+      "end": 48,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/chunk/1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 47,
+          "sha256": "c26e6fa40120ce5b43d5c7cef4ebcd23efa32a5033f28d8bb7a0036f25362776"
+        }
+      ],
+      "reason": "AI calibration draft proposition: A separate pilot under condition Y reported 40%. Direct inputs: B/chunk/1; upstream=supported; original evidence=supported. Evidence: A separate pilot under condition Y reported 40%. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 47,
+              "sha256": "c26e6fa40120ce5b43d5c7cef4ebcd23efa32a5033f28d8bb7a0036f25362776"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [],
+      "link": "root",
+      "critical": true
+    },
+    {
+      "claim_id": "B/map/1/f2/c1",
+      "stage": "B/map/1",
+      "finding": "B/map/1/f2",
+      "start": 0,
+      "end": 41,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/chunk/1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 49,
+          "end": 70,
+          "sha256": "975450ca8032bac3a7acc2c8c994b3a626a5eee8bc6bada29d396d13ee2a9318"
+        }
+      ],
+      "reason": "AI calibration draft proposition: The condition Y pilot cannot establish X. Direct inputs: B/chunk/1; upstream=supported; original evidence=supported. Evidence: it cannot establish X. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 49,
+              "end": 70,
+              "sha256": "975450ca8032bac3a7acc2c8c994b3a626a5eee8bc6bada29d396d13ee2a9318"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [],
+      "link": "root",
+      "critical": true
+    },
+    {
+      "claim_id": "B/document/f1/c1",
+      "stage": "B/document",
+      "finding": "B/document/f1",
+      "start": 0,
+      "end": 48,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/map/1/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 47,
+          "sha256": "c26e6fa40120ce5b43d5c7cef4ebcd23efa32a5033f28d8bb7a0036f25362776"
+        }
+      ],
+      "reason": "AI calibration draft proposition: A separate pilot under condition Y reported 40%. Direct inputs: B/map/1/f1; upstream=supported; original evidence=supported. Evidence: A separate pilot under condition Y reported 40%. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 47,
+              "sha256": "c26e6fa40120ce5b43d5c7cef4ebcd23efa32a5033f28d8bb7a0036f25362776"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "B/map/1/f1/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "B/document/f2/c1",
+      "stage": "B/document",
+      "finding": "B/document/f2",
+      "start": 0,
+      "end": 41,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/map/1/f2"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 49,
+          "end": 70,
+          "sha256": "975450ca8032bac3a7acc2c8c994b3a626a5eee8bc6bada29d396d13ee2a9318"
+        }
+      ],
+      "reason": "AI calibration draft proposition: The condition Y pilot cannot establish X. Direct inputs: B/map/1/f2; upstream=supported; original evidence=supported. Evidence: it cannot establish X. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 49,
+              "end": 70,
+              "sha256": "975450ca8032bac3a7acc2c8c994b3a626a5eee8bc6bada29d396d13ee2a9318"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "B/map/1/f2/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "cross/f1/c1",
+      "stage": "cross",
+      "finding": "cross/f1",
+      "start": 0,
+      "end": 44,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/document/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 44,
+          "sha256": "89f520e1bce9a0e93c7ca40b8baf251c240a115b8d7b8a9dbfb260e1dbe4ee69"
+        }
+      ],
+      "reason": "AI calibration draft proposition: Under condition X, the success rate was 60%. Direct inputs: A/document/f1; upstream=supported; original evidence=supported. Evidence: Under condition X, the success rate was 60%.. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 44,
+              "sha256": "89f520e1bce9a0e93c7ca40b8baf251c240a115b8d7b8a9dbfb260e1dbe4ee69"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "A/document/f1/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "cross/f2/c1",
+      "stage": "cross",
+      "finding": "cross/f2",
+      "start": 0,
+      "end": 48,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/document/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 47,
+          "sha256": "c26e6fa40120ce5b43d5c7cef4ebcd23efa32a5033f28d8bb7a0036f25362776"
+        }
+      ],
+      "reason": "AI calibration draft proposition: A separate pilot under condition Y reported 40%. Direct inputs: B/document/f1; upstream=supported; original evidence=supported. Evidence: A separate pilot under condition Y reported 40%. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 47,
+              "sha256": "c26e6fa40120ce5b43d5c7cef4ebcd23efa32a5033f28d8bb7a0036f25362776"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "B/document/f1/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "cross/f3/c1",
+      "stage": "cross",
+      "finding": "cross/f3",
+      "start": 0,
+      "end": 41,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/document/f2"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 49,
+          "end": 70,
+          "sha256": "975450ca8032bac3a7acc2c8c994b3a626a5eee8bc6bada29d396d13ee2a9318"
+        }
+      ],
+      "reason": "AI calibration draft proposition: The condition Y pilot cannot establish X. Direct inputs: B/document/f2; upstream=supported; original evidence=supported. Evidence: it cannot establish X. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 49,
+              "end": 70,
+              "sha256": "975450ca8032bac3a7acc2c8c994b3a626a5eee8bc6bada29d396d13ee2a9318"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "B/document/f2/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    }
+  ],
+  "retentions": [
+    {
+      "fact_id": "F1",
+      "layer": "map_collection",
+      "availability": "explicit_complete",
+      "outcome": "distorted",
+      "input_refs": [
+        "A/chunk/1"
+      ],
+      "reason": "AI calibration draft F1: required proposition 'Under condition X, the success rate was 60%.' at map_collection. Actual direct input aliases: A/chunk/1. availability=explicit_complete; output=distorted. The output omits or changes this required proposition; a citation or related aggregate does not recover its meaning.",
+      "counter_information": "Keep condition 'condition X' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F1",
+      "layer": "document_reduce",
+      "availability": "insufficient",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/map/1/f1"
+      ],
+      "reason": "AI calibration draft F1: required proposition 'Under condition X, the success rate was 60%.' at document_reduce. Actual direct input aliases: A/map/1/f1. availability=insufficient; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'condition X' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F1",
+      "layer": "cross_document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/document/f1"
+      ],
+      "reason": "AI calibration draft F1: required proposition 'Under condition X, the success rate was 60%.' at cross_document_reduce. Actual direct input aliases: A/document/f1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'condition X' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F2",
+      "layer": "map_collection",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/chunk/1"
+      ],
+      "reason": "AI calibration draft F2: required proposition 'A separate pilot under condition Y reported 40%.' at map_collection. Actual direct input aliases: B/chunk/1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'condition Y' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F2",
+      "layer": "document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/map/1/f1"
+      ],
+      "reason": "AI calibration draft F2: required proposition 'A separate pilot under condition Y reported 40%.' at document_reduce. Actual direct input aliases: B/map/1/f1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'condition Y' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F2",
+      "layer": "cross_document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/document/f1"
+      ],
+      "reason": "AI calibration draft F2: required proposition 'A separate pilot under condition Y reported 40%.' at cross_document_reduce. Actual direct input aliases: B/document/f1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'condition Y' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F3",
+      "layer": "map_collection",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/chunk/1"
+      ],
+      "reason": "AI calibration draft F3: required proposition 'The condition Y pilot cannot establish X.' at map_collection. Actual direct input aliases: B/chunk/1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'conditions Y versus X' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F3",
+      "layer": "document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/map/1/f2"
+      ],
+      "reason": "AI calibration draft F3: required proposition 'The condition Y pilot cannot establish X.' at document_reduce. Actual direct input aliases: B/map/1/f2. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'conditions Y versus X' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F3",
+      "layer": "cross_document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/document/f2"
+      ],
+      "reason": "AI calibration draft F3: required proposition 'The condition Y pilot cannot establish X.' at cross_document_reduce. Actual direct input aliases: B/document/f2. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'conditions Y versus X' and all contrary evidence; no transfer between source identities."
+    }
+  ],
+  "relations": [
+    {
+      "relation_id": "R1",
+      "classification": "pass",
+      "conflict_recalled": "na",
+      "conflict_asserted": false,
+      "conflict_correct": "na"
+    }
+  ],
+  "atomized_findings": [
+    "A/map/1/f1",
+    "A/document/f1",
+    "B/map/1/f1",
+    "B/map/1/f2",
+    "B/document/f1",
+    "B/document/f2",
+    "cross/f1",
+    "cross/f2",
+    "cross/f3"
+  ],
+  "reviews": [],
+  "origin": "codex_draft",
+  "acceptance_judgments": []
+}

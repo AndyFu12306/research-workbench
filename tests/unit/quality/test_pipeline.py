@@ -4,7 +4,12 @@ import pytest
 from quality_support.binding import attach
 from quality_support.loading import ROOT, decode, load_assessment, load_candidate, load_case
 from quality_support.reporting import report
-from quality_support.scripted import ObservingProvider, SyntheticReader, check_history
+from quality_support.scripted import (
+    ObservingProvider,
+    SyntheticReader,
+    check_child_history,
+    check_history,
+)
 
 from research_workbench.analysis.chunking import ChunkingConfig
 from research_workbench.analysis.cross_document_pipeline import CrossBudget, CrossDocumentError
@@ -68,6 +73,13 @@ def test_real_fake_service_and_bound_report(database, projects, questions, links
                 for m in repo.get_members(parent.id)
             )
             assert all(o.stage != "cross" for o in provider.observations)
+            assert tuple(o.stage for o in provider.observations) == (
+                "A/map/1",
+                "A/document",
+                "B/map/1",
+                "B/document",
+            )
+            check_child_history(provider, repo, docs, parent.id)
     observed = provider.snapshot(f"{q}_{name}_run", candidate.expected)
     bound = attach(case, candidate, observed, load_assessment(case, candidate))
     result = report(case, candidate, observed, bound)

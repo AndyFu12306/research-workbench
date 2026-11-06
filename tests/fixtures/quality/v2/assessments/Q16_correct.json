@@ -1,0 +1,178 @@
+{
+  "version": "quality-assessment-v2",
+  "assessment_id": "Q16_correct_calibration_draft",
+  "revision": 2,
+  "candidate_id": "Q16_correct",
+  "rubric": "quality-rubric-v2",
+  "atomization": "quality-atomization-v2",
+  "claims": [
+    {
+      "claim_id": "B/map/1/f1/c1",
+      "stage": "B/map/1",
+      "finding": "B/map/1/f1",
+      "start": 0,
+      "end": 48,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/chunk/1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 48,
+          "sha256": "8c2c7bbd5b279acff7ab4dd36d6c5db8c9aa173e5d6046f5482575ab367262c8"
+        }
+      ],
+      "reason": "AI calibration draft proposition: Method A improved toy-task accuracy by 2 points. Direct inputs: B/chunk/1; upstream=supported; original evidence=supported. Evidence: Method A improved toy-task accuracy by 2 points.. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 48,
+              "sha256": "8c2c7bbd5b279acff7ab4dd36d6c5db8c9aa173e5d6046f5482575ab367262c8"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [],
+      "link": "root",
+      "critical": true
+    },
+    {
+      "claim_id": "B/document/f1/c1",
+      "stage": "B/document",
+      "finding": "B/document/f1",
+      "start": 0,
+      "end": 48,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/map/1/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 48,
+          "sha256": "8c2c7bbd5b279acff7ab4dd36d6c5db8c9aa173e5d6046f5482575ab367262c8"
+        }
+      ],
+      "reason": "AI calibration draft proposition: Method A improved toy-task accuracy by 2 points. Direct inputs: B/map/1/f1; upstream=supported; original evidence=supported. Evidence: Method A improved toy-task accuracy by 2 points.. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 48,
+              "sha256": "8c2c7bbd5b279acff7ab4dd36d6c5db8c9aa173e5d6046f5482575ab367262c8"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "B/map/1/f1/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "cross/f1/c1",
+      "stage": "cross",
+      "finding": "cross/f1",
+      "start": 0,
+      "end": 48,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/document/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 48,
+          "sha256": "8c2c7bbd5b279acff7ab4dd36d6c5db8c9aa173e5d6046f5482575ab367262c8"
+        }
+      ],
+      "reason": "AI calibration draft proposition: Method A improved toy-task accuracy by 2 points. Direct inputs: B/document/f1; upstream=supported; original evidence=supported. Evidence: Method A improved toy-task accuracy by 2 points.. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 48,
+              "sha256": "8c2c7bbd5b279acff7ab4dd36d6c5db8c9aa173e5d6046f5482575ab367262c8"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "B/document/f1/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    }
+  ],
+  "retentions": [
+    {
+      "fact_id": "F2",
+      "layer": "map_collection",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/chunk/1"
+      ],
+      "reason": "AI calibration draft F2: required proposition 'Method A improved toy-task accuracy by 2 points.' at map_collection. Actual direct input aliases: B/chunk/1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'toy-task' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F2",
+      "layer": "document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/map/1/f1"
+      ],
+      "reason": "AI calibration draft F2: required proposition 'Method A improved toy-task accuracy by 2 points.' at document_reduce. Actual direct input aliases: B/map/1/f1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'toy-task' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F2",
+      "layer": "cross_document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/document/f1"
+      ],
+      "reason": "AI calibration draft F2: required proposition 'Method A improved toy-task accuracy by 2 points.' at cross_document_reduce. Actual direct input aliases: B/document/f1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'toy-task' and all contrary evidence; no transfer between source identities."
+    }
+  ],
+  "relations": [],
+  "atomized_findings": [
+    "B/map/1/f1",
+    "B/document/f1",
+    "cross/f1"
+  ],
+  "reviews": [],
+  "origin": "codex_draft",
+  "acceptance_judgments": []
+}

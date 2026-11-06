@@ -1,0 +1,68 @@
+{
+  "version": "research-quality-benchmark-v2",
+  "case_id": "Q17",
+  "revision": 3,
+  "language": "zh",
+  "requirements_version": "quality-requirements-v2",
+  "question": {
+    "version": "quality-question-v1",
+    "title": "预检预算和动态Cross容量超限时应如何拒绝？",
+    "description": "预检零Provider调用；动态容量拒绝Cross零调用，保留已成功子执行历史；不将整体失败伪装为completed。不评价合成填充文本的科研语义，可省略其内容。 仅使用合成来源，不引入外部知识。"
+  },
+  "sources": [
+    {
+      "alias": "A",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0001"
+      ],
+      "text": "合成试验甲只用于预算边界测试。",
+      "sha256": "2f3c1af45a4ac52f97a46c35f67744cfb6953cd9f3a03638f01d6f979e1c1241"
+    },
+    {
+      "alias": "B",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0002"
+      ],
+      "text": "合成试验乙只用于容量拒绝测试。",
+      "sha256": "f92fb1b3d18f14545c4d8c2cb77a7c435bbf480bbdd7940b55f315d93d0db357"
+    }
+  ],
+  "facts": [],
+  "relations": [],
+  "max_chars": 8000,
+  "overlap_chars": 0,
+  "forbidden": [
+    "Do not present rejected execution as a completed synthesis."
+  ],
+  "acceptance_targets": [
+    {
+      "target_id": "acceptance/preflight_zero_calls",
+      "scenario": "preflight_rejected",
+      "criterion": "Budget preflight must reject before any provider call."
+    },
+    {
+      "target_id": "acceptance/preflight_no_completion",
+      "scenario": "preflight_rejected",
+      "criterion": "Do not present a completed synthesis or register a parent run."
+    },
+    {
+      "target_id": "acceptance/cross_zero_calls",
+      "scenario": "cross_rejected",
+      "criterion": "Reject dynamic Cross capacity before calling Cross."
+    },
+    {
+      "target_id": "acceptance/children_preserved",
+      "scenario": "cross_rejected",
+      "criterion": "Preserve both successful document histories."
+    },
+    {
+      "target_id": "acceptance/parent_failed",
+      "scenario": "cross_rejected",
+      "criterion": "Parent execution fails without presenting completed synthesis."
+    }
+  ]
+}

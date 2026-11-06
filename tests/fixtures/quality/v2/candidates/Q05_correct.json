@@ -1,0 +1,156 @@
+{
+  "version": "quality-candidate-v1",
+  "candidate_id": "Q05_correct",
+  "revision": 2,
+  "case_id": "Q05",
+  "stages": [
+    {
+      "alias": "A/map/1",
+      "findings": [
+        {
+          "alias": "A/map/1/f1",
+          "text": "研究甲准确率提高。",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "A/chunk/1"
+          ]
+        },
+        {
+          "alias": "A/map/1/f2",
+          "text": "研究甲仅测试一个数据集。",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "A/chunk/1"
+          ]
+        }
+      ]
+    },
+    {
+      "alias": "A/document",
+      "findings": [
+        {
+          "alias": "A/document/f1",
+          "text": "研究甲准确率提高。",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "A/map/1/f1"
+          ]
+        },
+        {
+          "alias": "A/document/f2",
+          "text": "研究甲仅测试一个数据集。",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "A/map/1/f2"
+          ]
+        }
+      ]
+    },
+    {
+      "alias": "B/map/1",
+      "findings": [
+        {
+          "alias": "B/map/1/f1",
+          "text": "研究乙延迟降低。",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "B/chunk/1"
+          ]
+        },
+        {
+          "alias": "B/map/1/f2",
+          "text": "研究乙未进行重复实验。",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "B/chunk/1"
+          ]
+        }
+      ]
+    },
+    {
+      "alias": "B/document",
+      "findings": [
+        {
+          "alias": "B/document/f1",
+          "text": "研究乙延迟降低。",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "B/map/1/f1"
+          ]
+        },
+        {
+          "alias": "B/document/f2",
+          "text": "研究乙未进行重复实验。",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "B/map/1/f2"
+          ]
+        }
+      ]
+    },
+    {
+      "alias": "cross",
+      "findings": [
+        {
+          "alias": "cross/f1",
+          "text": "研究甲准确率提高。",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "A/document/f1"
+          ]
+        },
+        {
+          "alias": "cross/f2",
+          "text": "研究乙延迟降低。",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "B/document/f1"
+          ]
+        },
+        {
+          "alias": "cross/f3",
+          "text": "研究甲仅测试一个数据集。",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "A/document/f2"
+          ]
+        },
+        {
+          "alias": "cross/f4",
+          "text": "研究乙未进行重复实验。",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "B/document/f2"
+          ]
+        },
+        {
+          "alias": "cross/f5",
+          "text": "结果不支持普遍有效的结论。",
+          "kind": "ai_inference",
+          "category": "finding",
+          "citations": [
+            "A/document/f1",
+            "A/document/f2",
+            "B/document/f1",
+            "B/document/f2"
+          ]
+        }
+      ]
+    }
+  ],
+  "expected": "completed",
+  "max_calls": 106,
+  "stage_input_limit": 24000
+}

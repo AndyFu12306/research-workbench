@@ -149,7 +149,8 @@ def review_status(case, assessment, *, mechanism=False):
     status = (
         "provisional" if missing or disputed else "simulation_complete" if mechanism else "reviewed"
     )
-    # Empty/expected rejection cases do not constitute a human semantic acceptance.
+    # Explicit acceptance targets cover relevance/rejection behavior separately
+    # from research semantics. A genuinely targetless case has no review to finish.
     if not targets:
         status = "not_applicable"
     return {

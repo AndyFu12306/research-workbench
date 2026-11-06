@@ -1,0 +1,108 @@
+{
+  "version": "research-quality-benchmark-v2",
+  "case_id": "Q03",
+  "revision": 3,
+  "language": "zh",
+  "requirements_version": "quality-requirements-v2",
+  "question": {
+    "version": "quality-question-v1",
+    "title": "两项研究是否发现方法A有显著改善？",
+    "description": "保留甲乙均未发现显著改善；可合并同向报告，不可写成已经证明无效或已经显著有效；不要求外部统计背景。 仅使用合成来源，不引入外部知识。 已要求的来源事实不得省略；与本问题无关的背景可省略。"
+  },
+  "sources": [
+    {
+      "alias": "A",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0001"
+      ],
+      "text": "研究甲未发现方法A有显著改善。",
+      "sha256": "11fff5de66b6ea6b926c85244c1c38a5b7d55c3a83d4f42aaf05efcfe17acd35"
+    },
+    {
+      "alias": "B",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0002"
+      ],
+      "text": "研究乙也未发现方法A有显著改善。",
+      "sha256": "49d0cb1dfaa892f46b2124b366b7d1bf277fbdd247dc3a512c25026cc162425d"
+    }
+  ],
+  "facts": [
+    {
+      "fact_id": "F1",
+      "proposition": "研究甲未发现方法A有显著改善。",
+      "subject": "方法A",
+      "method": "方法A",
+      "comparison": "",
+      "result": "研究甲未发现方法A有显著改善。",
+      "value_unit": "",
+      "polarity": "no_significant_improvement",
+      "conditions": "study A",
+      "uncertainty": "未发现显著改善不等于证明零效应。",
+      "evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 15,
+          "sha256": "11fff5de66b6ea6b926c85244c1c38a5b7d55c3a83d4f42aaf05efcfe17acd35"
+        }
+      ],
+      "critical": true,
+      "limitation": true,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    },
+    {
+      "fact_id": "F2",
+      "proposition": "研究乙也未发现方法A有显著改善。",
+      "subject": "方法A",
+      "method": "方法A",
+      "comparison": "",
+      "result": "研究乙也未发现方法A有显著改善。",
+      "value_unit": "",
+      "polarity": "no_significant_improvement",
+      "conditions": "study B",
+      "uncertainty": "未发现显著改善不等于证明零效应。",
+      "evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 16,
+          "sha256": "49d0cb1dfaa892f46b2124b366b7d1bf277fbdd247dc3a512c25026cc162425d"
+        }
+      ],
+      "critical": true,
+      "limitation": true,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "relation_id": "R1",
+      "facts": [
+        "F1",
+        "F2"
+      ],
+      "kind": "support",
+      "conditions": "保留甲乙均未发现显著改善；可合并同向报告，不可写成已经证明无效或已经显著有效；不要求外部统计背景。",
+      "expected": "两研究未发现显著改善，不能据此证明完全无效。"
+    }
+  ],
+  "max_chars": 8000,
+  "overlap_chars": 0,
+  "forbidden": [
+    "两研究均证明方法A有显著改善。"
+  ],
+  "acceptance_targets": []
+}

@@ -3,12 +3,12 @@
 from dataclasses import dataclass, field
 from typing import Literal
 
-BENCHMARK = "research-quality-benchmark-v1"
-RUBRIC = "quality-rubric-v1"
-REPORT = "quality-report-v1"
+BENCHMARK = "research-quality-benchmark-v2"
+RUBRIC = "quality-rubric-v2"
+REPORT = "quality-report-v2"
 BINDING = "quality-observation-binding-v1"
-ADAPTER = "quality-observer-v1"
-ATOMIZATION = "quality-atomization-v1"
+ADAPTER = "quality-observer-v2"
+ATOMIZATION = "quality-atomization-v2"
 
 Support = Literal[
     "supported", "partial", "unsupported", "contradicted", "indeterminate", "unscored"
@@ -82,6 +82,13 @@ class Relation:
 
 
 @dataclass(frozen=True, slots=True)
+class AcceptanceTarget:
+    target_id: str
+    scenario: Literal["completed", "preflight_rejected", "cross_rejected"]
+    criterion: str = field(repr=False)
+
+
+@dataclass(frozen=True, slots=True)
 class Case:
     version: str
     case_id: str
@@ -95,6 +102,7 @@ class Case:
     max_chars: int
     overlap_chars: int
     forbidden: tuple[str, ...] = field(repr=False)
+    acceptance_targets: tuple[AcceptanceTarget, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -184,6 +192,13 @@ class Review:
 
 
 @dataclass(frozen=True, slots=True)
+class AcceptanceJudgment:
+    target_id: str
+    verdict: Verdict
+    reason: str = field(repr=False)
+
+
+@dataclass(frozen=True, slots=True)
 class Assessment:
     version: str
     assessment_id: str
@@ -197,6 +212,7 @@ class Assessment:
     relations: tuple[RelationJudgment, ...]
     atomized_findings: tuple[str, ...]
     reviews: tuple[Review, ...]
+    acceptance_judgments: tuple[AcceptanceJudgment, ...]
 
 
 @dataclass(frozen=True, slots=True)

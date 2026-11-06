@@ -1,0 +1,749 @@
+{
+  "version": "quality-assessment-v2",
+  "assessment_id": "Q05_correct_calibration_draft",
+  "revision": 2,
+  "candidate_id": "Q05_correct",
+  "rubric": "quality-rubric-v2",
+  "atomization": "quality-atomization-v2",
+  "claims": [
+    {
+      "claim_id": "A/map/1/f1/c1",
+      "stage": "A/map/1",
+      "finding": "A/map/1/f1",
+      "start": 0,
+      "end": 9,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/chunk/1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 8,
+          "sha256": "a36f7e7cfc3584f01732e67167f2c8dcc0e37d5b1901b4ff79d1db33f2df5e83"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 研究甲准确率提高。 Direct inputs: A/chunk/1; upstream=supported; original evidence=supported. Evidence: 研究甲准确率提高. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 8,
+              "sha256": "a36f7e7cfc3584f01732e67167f2c8dcc0e37d5b1901b4ff79d1db33f2df5e83"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [],
+      "link": "root",
+      "critical": true
+    },
+    {
+      "claim_id": "A/map/1/f2/c1",
+      "stage": "A/map/1",
+      "finding": "A/map/1/f2",
+      "start": 0,
+      "end": 12,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/chunk/1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 10,
+          "end": 19,
+          "sha256": "b4a12566e4a3c75fc32aa108ee75f0d83b7b6a12ee51f8b73d6760e02155424b"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 研究甲仅测试一个数据集。 Direct inputs: A/chunk/1; upstream=supported; original evidence=supported. Evidence: 仅测试了一个数据集. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 10,
+              "end": 19,
+              "sha256": "b4a12566e4a3c75fc32aa108ee75f0d83b7b6a12ee51f8b73d6760e02155424b"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [],
+      "link": "root",
+      "critical": true
+    },
+    {
+      "claim_id": "A/document/f1/c1",
+      "stage": "A/document",
+      "finding": "A/document/f1",
+      "start": 0,
+      "end": 9,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/map/1/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 8,
+          "sha256": "a36f7e7cfc3584f01732e67167f2c8dcc0e37d5b1901b4ff79d1db33f2df5e83"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 研究甲准确率提高。 Direct inputs: A/map/1/f1; upstream=supported; original evidence=supported. Evidence: 研究甲准确率提高. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 8,
+              "sha256": "a36f7e7cfc3584f01732e67167f2c8dcc0e37d5b1901b4ff79d1db33f2df5e83"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "A/map/1/f1/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "A/document/f2/c1",
+      "stage": "A/document",
+      "finding": "A/document/f2",
+      "start": 0,
+      "end": 12,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/map/1/f2"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 10,
+          "end": 19,
+          "sha256": "b4a12566e4a3c75fc32aa108ee75f0d83b7b6a12ee51f8b73d6760e02155424b"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 研究甲仅测试一个数据集。 Direct inputs: A/map/1/f2; upstream=supported; original evidence=supported. Evidence: 仅测试了一个数据集. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 10,
+              "end": 19,
+              "sha256": "b4a12566e4a3c75fc32aa108ee75f0d83b7b6a12ee51f8b73d6760e02155424b"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "A/map/1/f2/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "B/map/1/f1/c1",
+      "stage": "B/map/1",
+      "finding": "B/map/1/f1",
+      "start": 0,
+      "end": 8,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/chunk/1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 7,
+          "sha256": "d20bfc2d5e9dd64876be959ab7665457392573f80b47b6977bded1cc8e3de008"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 研究乙延迟降低。 Direct inputs: B/chunk/1; upstream=supported; original evidence=supported. Evidence: 研究乙延迟降低. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 7,
+              "sha256": "d20bfc2d5e9dd64876be959ab7665457392573f80b47b6977bded1cc8e3de008"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [],
+      "link": "root",
+      "critical": true
+    },
+    {
+      "claim_id": "B/map/1/f2/c1",
+      "stage": "B/map/1",
+      "finding": "B/map/1/f2",
+      "start": 0,
+      "end": 11,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/chunk/1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 9,
+          "end": 16,
+          "sha256": "b8ee766a5b07860ee9cfdc84f7d2d66d4676b7845ac96244a887543e16865d1b"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 研究乙未进行重复实验。 Direct inputs: B/chunk/1; upstream=supported; original evidence=supported. Evidence: 未进行重复实验. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 9,
+              "end": 16,
+              "sha256": "b8ee766a5b07860ee9cfdc84f7d2d66d4676b7845ac96244a887543e16865d1b"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [],
+      "link": "root",
+      "critical": true
+    },
+    {
+      "claim_id": "B/document/f1/c1",
+      "stage": "B/document",
+      "finding": "B/document/f1",
+      "start": 0,
+      "end": 8,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/map/1/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 7,
+          "sha256": "d20bfc2d5e9dd64876be959ab7665457392573f80b47b6977bded1cc8e3de008"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 研究乙延迟降低。 Direct inputs: B/map/1/f1; upstream=supported; original evidence=supported. Evidence: 研究乙延迟降低. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 7,
+              "sha256": "d20bfc2d5e9dd64876be959ab7665457392573f80b47b6977bded1cc8e3de008"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "B/map/1/f1/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "B/document/f2/c1",
+      "stage": "B/document",
+      "finding": "B/document/f2",
+      "start": 0,
+      "end": 11,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/map/1/f2"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 9,
+          "end": 16,
+          "sha256": "b8ee766a5b07860ee9cfdc84f7d2d66d4676b7845ac96244a887543e16865d1b"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 研究乙未进行重复实验。 Direct inputs: B/map/1/f2; upstream=supported; original evidence=supported. Evidence: 未进行重复实验. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 9,
+              "end": 16,
+              "sha256": "b8ee766a5b07860ee9cfdc84f7d2d66d4676b7845ac96244a887543e16865d1b"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "B/map/1/f2/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "cross/f1/c1",
+      "stage": "cross",
+      "finding": "cross/f1",
+      "start": 0,
+      "end": 9,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/document/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 8,
+          "sha256": "a36f7e7cfc3584f01732e67167f2c8dcc0e37d5b1901b4ff79d1db33f2df5e83"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 研究甲准确率提高。 Direct inputs: A/document/f1; upstream=supported; original evidence=supported. Evidence: 研究甲准确率提高. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 8,
+              "sha256": "a36f7e7cfc3584f01732e67167f2c8dcc0e37d5b1901b4ff79d1db33f2df5e83"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "A/document/f1/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "cross/f2/c1",
+      "stage": "cross",
+      "finding": "cross/f2",
+      "start": 0,
+      "end": 8,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/document/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 7,
+          "sha256": "d20bfc2d5e9dd64876be959ab7665457392573f80b47b6977bded1cc8e3de008"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 研究乙延迟降低。 Direct inputs: B/document/f1; upstream=supported; original evidence=supported. Evidence: 研究乙延迟降低. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 7,
+              "sha256": "d20bfc2d5e9dd64876be959ab7665457392573f80b47b6977bded1cc8e3de008"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "B/document/f1/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "cross/f3/c1",
+      "stage": "cross",
+      "finding": "cross/f3",
+      "start": 0,
+      "end": 12,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/document/f2"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 10,
+          "end": 19,
+          "sha256": "b4a12566e4a3c75fc32aa108ee75f0d83b7b6a12ee51f8b73d6760e02155424b"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 研究甲仅测试一个数据集。 Direct inputs: A/document/f2; upstream=supported; original evidence=supported. Evidence: 仅测试了一个数据集. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 10,
+              "end": 19,
+              "sha256": "b4a12566e4a3c75fc32aa108ee75f0d83b7b6a12ee51f8b73d6760e02155424b"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "A/document/f2/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "cross/f4/c1",
+      "stage": "cross",
+      "finding": "cross/f4",
+      "start": 0,
+      "end": 11,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/document/f2"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 9,
+          "end": 16,
+          "sha256": "b8ee766a5b07860ee9cfdc84f7d2d66d4676b7845ac96244a887543e16865d1b"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 研究乙未进行重复实验。 Direct inputs: B/document/f2; upstream=supported; original evidence=supported. Evidence: 未进行重复实验. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 9,
+              "end": 16,
+              "sha256": "b8ee766a5b07860ee9cfdc84f7d2d66d4676b7845ac96244a887543e16865d1b"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "B/document/f2/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "cross/f5/c1",
+      "stage": "cross",
+      "finding": "cross/f5",
+      "start": 0,
+      "end": 13,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/document/f1",
+        "A/document/f2",
+        "B/document/f1",
+        "B/document/f2"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 8,
+          "sha256": "a36f7e7cfc3584f01732e67167f2c8dcc0e37d5b1901b4ff79d1db33f2df5e83"
+        },
+        {
+          "source": "A",
+          "start": 10,
+          "end": 19,
+          "sha256": "b4a12566e4a3c75fc32aa108ee75f0d83b7b6a12ee51f8b73d6760e02155424b"
+        },
+        {
+          "source": "B",
+          "start": 0,
+          "end": 7,
+          "sha256": "d20bfc2d5e9dd64876be959ab7665457392573f80b47b6977bded1cc8e3de008"
+        },
+        {
+          "source": "B",
+          "start": 9,
+          "end": 16,
+          "sha256": "b8ee766a5b07860ee9cfdc84f7d2d66d4676b7845ac96244a887543e16865d1b"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 结果不支持普遍有效的结论。 Direct inputs: A/document/f1, A/document/f2, B/document/f1, B/document/f2; upstream=supported; original evidence=supported. Evidence: 研究甲准确率提高 | 仅测试了一个数据集 | 研究乙延迟降低 | 未进行重复实验. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "conditional",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 8,
+              "sha256": "a36f7e7cfc3584f01732e67167f2c8dcc0e37d5b1901b4ff79d1db33f2df5e83"
+            },
+            {
+              "source": "A",
+              "start": 10,
+              "end": 19,
+              "sha256": "b4a12566e4a3c75fc32aa108ee75f0d83b7b6a12ee51f8b73d6760e02155424b"
+            }
+          ]
+        },
+        {
+          "source": "B",
+          "stance": "conditional",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 7,
+              "sha256": "d20bfc2d5e9dd64876be959ab7665457392573f80b47b6977bded1cc8e3de008"
+            },
+            {
+              "source": "B",
+              "start": 9,
+              "end": 16,
+              "sha256": "b8ee766a5b07860ee9cfdc84f7d2d66d4676b7845ac96244a887543e16865d1b"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "A/document/f1/c1",
+        "A/document/f2/c1",
+        "B/document/f1/c1",
+        "B/document/f2/c1"
+      ],
+      "link": "combined",
+      "critical": false
+    }
+  ],
+  "retentions": [
+    {
+      "fact_id": "F1",
+      "layer": "map_collection",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/chunk/1"
+      ],
+      "reason": "AI calibration draft F1: required proposition '研究甲准确率提高。' at map_collection. Actual direct input aliases: A/chunk/1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'study A' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F1",
+      "layer": "document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/map/1/f1"
+      ],
+      "reason": "AI calibration draft F1: required proposition '研究甲准确率提高。' at document_reduce. Actual direct input aliases: A/map/1/f1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'study A' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F1",
+      "layer": "cross_document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/document/f1"
+      ],
+      "reason": "AI calibration draft F1: required proposition '研究甲准确率提高。' at cross_document_reduce. Actual direct input aliases: A/document/f1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'study A' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F2",
+      "layer": "map_collection",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/chunk/1"
+      ],
+      "reason": "AI calibration draft F2: required proposition '研究乙延迟降低。' at map_collection. Actual direct input aliases: B/chunk/1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'study B' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F2",
+      "layer": "document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/map/1/f1"
+      ],
+      "reason": "AI calibration draft F2: required proposition '研究乙延迟降低。' at document_reduce. Actual direct input aliases: B/map/1/f1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'study B' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F2",
+      "layer": "cross_document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/document/f1"
+      ],
+      "reason": "AI calibration draft F2: required proposition '研究乙延迟降低。' at cross_document_reduce. Actual direct input aliases: B/document/f1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'study B' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F3",
+      "layer": "map_collection",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/chunk/1"
+      ],
+      "reason": "AI calibration draft F3: required proposition '研究甲仅测试一个数据集。' at map_collection. Actual direct input aliases: A/chunk/1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'one dataset' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F3",
+      "layer": "document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/map/1/f2"
+      ],
+      "reason": "AI calibration draft F3: required proposition '研究甲仅测试一个数据集。' at document_reduce. Actual direct input aliases: A/map/1/f2. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'one dataset' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F3",
+      "layer": "cross_document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/document/f2"
+      ],
+      "reason": "AI calibration draft F3: required proposition '研究甲仅测试一个数据集。' at cross_document_reduce. Actual direct input aliases: A/document/f2. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'one dataset' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F4",
+      "layer": "map_collection",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/chunk/1"
+      ],
+      "reason": "AI calibration draft F4: required proposition '研究乙未进行重复实验。' at map_collection. Actual direct input aliases: B/chunk/1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'study B' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F4",
+      "layer": "document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/map/1/f2"
+      ],
+      "reason": "AI calibration draft F4: required proposition '研究乙未进行重复实验。' at document_reduce. Actual direct input aliases: B/map/1/f2. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'study B' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F4",
+      "layer": "cross_document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/document/f2"
+      ],
+      "reason": "AI calibration draft F4: required proposition '研究乙未进行重复实验。' at cross_document_reduce. Actual direct input aliases: B/document/f2. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'study B' and all contrary evidence; no transfer between source identities."
+    }
+  ],
+  "relations": [],
+  "atomized_findings": [
+    "A/map/1/f1",
+    "A/map/1/f2",
+    "A/document/f1",
+    "A/document/f2",
+    "B/map/1/f1",
+    "B/map/1/f2",
+    "B/document/f1",
+    "B/document/f2",
+    "cross/f1",
+    "cross/f2",
+    "cross/f3",
+    "cross/f4",
+    "cross/f5"
+  ],
+  "reviews": [],
+  "origin": "codex_draft",
+  "acceptance_judgments": []
+}

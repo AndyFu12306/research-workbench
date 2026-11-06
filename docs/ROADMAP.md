@@ -1,8 +1,10 @@
 # 路线与阶段门槛
 
-> **当前授权（2026-11-06）**：Phase 4B.4 已完成（PR #20 / Issue #19，merge b716ad7）。当前仅在独立 Phase 4B.5a 分支/worktree按 [Issue #21](https://github.com/AndyFu12306/research-workbench/issues/21) 实施离线评估、测试和本地提交；禁止push/PR/merge及真实服务。下面的旧阶段授权/CI状态保留历史上下文。设计与复核边界见 [4B.5a设计](PHASE4B5A_DESIGN.md) 和 [基准规范](QUALITY_BENCHMARK.md)。
+> **当前校准授权（2026-11-06）**：从cd83a33继续，本地Benchmark Calibration实施、离线验证和必要本地提交；禁止Push、PR/Issue修改、Merge及真实服务。活动夹具为v2；原v1仅作缺陷历史。详见[校准记录](PHASE4B5A_CALIBRATION.md)。
 
-当前：**Phase 4B.4 — 有界跨文献综合与作用域历史**。Issue #19 v2 + v2.1已获用户正式Branch + Implementation授权；基线main 41b136113aaaa56a9801590f938fcc745a0e546d（PR #18 / Issue #17已完成）。分支codex/phase4b4-cross-document-synthesis，独立worktree C:/Projects/research-workbench-phase4b4。本轮只实现、离线验证和本地提交；不创建PR、不合并、不关闭Issue、不进入4B.5，全部旧分支/worktree保留。真实API及旧Level B仍NOT TESTED。
+> **此前实施授权（历史）**：Phase 4B.4 已完成（PR #20 / Issue #19，merge b716ad7）。当前仅在独立 Phase 4B.5a 分支/worktree按 [Issue #21](https://github.com/AndyFu12306/research-workbench/issues/21) 实施离线评估、测试和本地提交；禁止push/PR/merge及真实服务。下面的旧阶段授权/CI状态保留历史上下文。设计与复核边界见 [4B.5a设计](PHASE4B5A_DESIGN.md) 和 [基准规范](QUALITY_BENCHMARK.md)。
+
+历史实施状态：**Phase 4B.4 — 有界跨文献综合与作用域历史**。Issue #19 v2 + v2.1已获用户正式Branch + Implementation授权；基线main 41b136113aaaa56a9801590f938fcc745a0e546d（PR #18 / Issue #17已完成）。分支codex/phase4b4-cross-document-synthesis，独立worktree C:/Projects/research-workbench-phase4b4。本轮只实现、离线验证和本地提交；不创建PR、不合并、不关闭Issue、不进入4B.5，全部旧分支/worktree保留。真实API及旧Level B仍NOT TESTED。
 
 | Phase | 内容 | 状态 |
 | --- | --- | --- |
@@ -16,8 +18,9 @@
 | 4B.1 | 确定性 chunking / 有界 Map 输入计划 | PR #14 已合并；Issue #13 Completed |
 | 4B.2 | 阶段契约 / 局部引用 / 单次 StageProvider | PR #16 已合并；Issue #15 Completed；真实 API 未测 |
 | 4B.3 | 单文献顺序 Map / 单次 Reduce / 阶段历史 | PR #18 已合并；Issue #17 Completed |
-| 4B.4 | 有界跨文献编排和作用域历史 | 当前授权实施；Issue #19；不创建PR |
-| 4B.5 | 受控质量和真实验收 | 未授权 |
+| 4B.4 | 有界跨文献编排和作用域历史 | 已完成；PR #20已合并 |
+| 4B.5a | 离线评估与基准校准 | 当前仅本地校准；PR #22保持Draft，Issue #21保持Open |
+| 4B.5b/c/d | 真实StageProvider / Zotero / 文献外发验收 | 未授权 |
 | 后续 | Basic UI | 未开始，需另行授权 |
 | 后续 | Inbox / Claim + Evidence / Knowledge Graph / Memory / Automation | 延后 |
 

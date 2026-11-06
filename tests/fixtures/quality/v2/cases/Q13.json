@@ -1,0 +1,131 @@
+{
+  "version": "research-quality-benchmark-v2",
+  "case_id": "Q13",
+  "revision": 3,
+  "language": "zh",
+  "requirements_version": "quality-requirements-v2",
+  "question": {
+    "version": "quality-question-v1",
+    "title": "试验T与试验U各报告什么，证据边界是什么？",
+    "description": "保留试验T成人准确率50%升至60%、儿童未测试，以及试验U独立延迟观察；允许同一T跨Chunk组合，不混合T/U，不推断儿童结果；填充空格为可省略背景。 仅使用合成来源，不引入外部知识。"
+  },
+  "sources": [
+    {
+      "alias": "A",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0001"
+      ],
+      "text": "试验T：准确率由50%升至60%。                                               试验T：上述提升仅见于成年人；儿童未接受测试。",
+      "sha256": "db319541449239ac228952c25fedf66041923dca3ab2a073ae36c33633fe52e0"
+    },
+    {
+      "alias": "B",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0002"
+      ],
+      "text": "试验U：仅报告独立的延迟观察。",
+      "sha256": "39df77e4948073871ec5061b1d04f9363972685093454dce06c321ab47cc4faf"
+    }
+  ],
+  "facts": [
+    {
+      "fact_id": "F1",
+      "proposition": "试验T：仅成年人准确率由50%升至60%。",
+      "subject": "试验T",
+      "method": "",
+      "comparison": "",
+      "result": "试验T：仅成年人准确率由50%升至60%。",
+      "value_unit": "50% -> 60%",
+      "polarity": "increase_adults_only",
+      "conditions": "adults only; trial T",
+      "uncertainty": "T未测试儿童；U的延迟观察不能补足T的准确率或人群前提。",
+      "evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 17,
+          "sha256": "c15909062da2974459b60f319d15dd7c405b663ace1ba4e0ead9e46dc96ecbde"
+        },
+        {
+          "source": "A",
+          "start": 64,
+          "end": 78,
+          "sha256": "04085e6ae462f7d1a04ae0a358856ecc2d312d8ab41046c5c905f6167ba7e44c"
+        }
+      ],
+      "critical": true,
+      "limitation": true,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    },
+    {
+      "fact_id": "F2",
+      "proposition": "试验U：仅报告独立的延迟观察。",
+      "subject": "试验U",
+      "method": "",
+      "comparison": "",
+      "result": "试验U：仅报告独立的延迟观察。",
+      "value_unit": "",
+      "polarity": "latency_observation",
+      "conditions": "separate trial U latency observation",
+      "uncertainty": "T未测试儿童；U的延迟观察不能补足T的准确率或人群前提。",
+      "evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 15,
+          "sha256": "39df77e4948073871ec5061b1d04f9363972685093454dce06c321ab47cc4faf"
+        }
+      ],
+      "critical": false,
+      "limitation": false,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    },
+    {
+      "fact_id": "F3",
+      "proposition": "试验T儿童未测试。",
+      "subject": "试验T",
+      "method": "",
+      "comparison": "",
+      "result": "试验T儿童未测试。",
+      "value_unit": "",
+      "polarity": "children_not_tested",
+      "conditions": "trial T",
+      "uncertainty": "T未测试儿童；U的延迟观察不能补足T的准确率或人群前提。",
+      "evidence": [
+        {
+          "source": "A",
+          "start": 79,
+          "end": 86,
+          "sha256": "f31642b57a492beae9f7159e1f0df889195fd58e41bc082b5b679f68b8df7a17"
+        }
+      ],
+      "critical": true,
+      "limitation": true,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    }
+  ],
+  "relations": [],
+  "max_chars": 64,
+  "overlap_chars": 0,
+  "forbidden": [
+    "试验T所有年龄的准确率均由50%升至60%。",
+    "试验U证实了试验T的准确率结果。"
+  ],
+  "acceptance_targets": []
+}

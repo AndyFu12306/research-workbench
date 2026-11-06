@@ -59,7 +59,7 @@ def test_old_scoring_rejected_after_each_change(change):
     if change == "candidate":
         candidate = replace(candidate, candidate_id="other")
     if change == "revision":
-        candidate = replace(candidate, revision=2)
+        candidate = replace(candidate, revision=candidate.revision + 1)
     if change == "run":
         run = replace(run, run_alias="another_run")
     if change in ("raw", "input", "projection"):

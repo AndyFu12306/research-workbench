@@ -1,0 +1,135 @@
+{
+  "version": "research-quality-benchmark-v2",
+  "case_id": "Q14",
+  "revision": 3,
+  "language": "en",
+  "requirements_version": "quality-requirements-v2",
+  "question": {
+    "version": "quality-question-v1",
+    "title": "Do the two accounts independently replicate experiment E?",
+    "description": "Retain experiment E 2 point gain, the second report retelling E and no independent replication. Compact wording is allowed; omit narrative background. Do not count reports as experiments or invent a more specific unit. Use synthetic sources only; no external knowledge."
+  },
+  "sources": [
+    {
+      "alias": "A",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0001"
+      ],
+      "text": "Experiment E observed a 2 point gain; this is one experiment.",
+      "sha256": "ffebb6447a22c407e1459f0924f2b1b9d076670ce6ee2238c5c12c9422717dfc"
+    },
+    {
+      "alias": "B",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0002"
+      ],
+      "text": "This report retells experiment E, not an independent replication.",
+      "sha256": "a82ee4a64c41ec5b6832906d56a9036f2e736fbab9cdef659ec44ac78685e2ff"
+    }
+  ],
+  "facts": [
+    {
+      "fact_id": "F1",
+      "proposition": "Experiment E observed a 2 point gain.",
+      "subject": "experiment E",
+      "method": "",
+      "comparison": "",
+      "result": "Experiment E observed a 2 point gain.",
+      "value_unit": "2 point gain",
+      "polarity": "increase",
+      "conditions": "experiment E",
+      "uncertainty": "Retelling does not add independent replication; the point unit is not further specified.",
+      "evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 36,
+          "sha256": "3573d2b71df1fa4f703baa52a22c6ce8d4949561c609f92de80abdcdd1ad314f"
+        }
+      ],
+      "critical": true,
+      "limitation": false,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    },
+    {
+      "fact_id": "F2",
+      "proposition": "The second report retells experiment E.",
+      "subject": "retelling of E",
+      "method": "",
+      "comparison": "",
+      "result": "The second report retells experiment E.",
+      "value_unit": "",
+      "polarity": "retelling",
+      "conditions": "experiment E",
+      "uncertainty": "Retelling does not add independent replication; the point unit is not further specified.",
+      "evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 32,
+          "sha256": "96043cfb8dc0c7b474a5e581af92f12d258d80ffaefcf794738a167ef7005b14"
+        }
+      ],
+      "critical": false,
+      "limitation": false,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    },
+    {
+      "fact_id": "F3",
+      "proposition": "The second report is not an independent replication.",
+      "subject": "retelling of E",
+      "method": "",
+      "comparison": "",
+      "result": "The second report is not an independent replication.",
+      "value_unit": "",
+      "polarity": "not_independent_replication",
+      "conditions": "experiment E",
+      "uncertainty": "Retelling does not add independent replication; the point unit is not further specified.",
+      "evidence": [
+        {
+          "source": "B",
+          "start": 34,
+          "end": 64,
+          "sha256": "cc3a75228f607754a7c835da9d1856bb9dabaf7e150b132142b156977411e300"
+        }
+      ],
+      "critical": true,
+      "limitation": true,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "relation_id": "R1",
+      "facts": [
+        "F1",
+        "F2"
+      ],
+      "kind": "same_experiment",
+      "conditions": "Retain experiment E 2 point gain, the second report retelling E and no independent replication. Compact wording is allowed; omit narrative background. Do not count reports as experiments or invent a more specific unit.",
+      "expected": "Both accounts describe the same experiment, not independent replications."
+    }
+  ],
+  "max_chars": 8000,
+  "overlap_chars": 0,
+  "forbidden": [
+    "Two independent replications confirm the result."
+  ],
+  "acceptance_targets": []
+}

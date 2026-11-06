@@ -1,0 +1,143 @@
+{
+  "version": "research-quality-benchmark-v2",
+  "mode": "synthetic_reference",
+  "cases": [
+    {
+      "case_id": "Q01",
+      "candidates": [
+        "correct",
+        "wrong",
+        "paraphrase"
+      ]
+    },
+    {
+      "case_id": "Q02",
+      "candidates": [
+        "correct",
+        "wrong",
+        "paraphrase"
+      ]
+    },
+    {
+      "case_id": "Q03",
+      "candidates": [
+        "correct",
+        "wrong"
+      ]
+    },
+    {
+      "case_id": "Q04",
+      "candidates": [
+        "correct",
+        "wrong"
+      ]
+    },
+    {
+      "case_id": "Q05",
+      "candidates": [
+        "correct",
+        "wrong"
+      ]
+    },
+    {
+      "case_id": "Q06",
+      "candidates": [
+        "correct",
+        "wrong"
+      ]
+    },
+    {
+      "case_id": "Q07",
+      "candidates": [
+        "correct",
+        "wrong"
+      ]
+    },
+    {
+      "case_id": "Q08",
+      "candidates": [
+        "correct",
+        "wrong"
+      ]
+    },
+    {
+      "case_id": "Q09",
+      "candidates": [
+        "correct",
+        "wrong"
+      ]
+    },
+    {
+      "case_id": "Q10",
+      "candidates": [
+        "correct",
+        "wrong"
+      ]
+    },
+    {
+      "case_id": "Q11",
+      "candidates": [
+        "correct",
+        "wrong"
+      ]
+    },
+    {
+      "case_id": "Q12",
+      "candidates": [
+        "correct",
+        "wrong"
+      ]
+    },
+    {
+      "case_id": "Q13",
+      "candidates": [
+        "correct",
+        "wrong",
+        "paraphrase",
+        "missing_value",
+        "missing_condition",
+        "ambiguous",
+        "document_loss"
+      ]
+    },
+    {
+      "case_id": "Q14",
+      "candidates": [
+        "correct",
+        "wrong"
+      ]
+    },
+    {
+      "case_id": "Q15",
+      "candidates": [
+        "correct",
+        "wrong"
+      ]
+    },
+    {
+      "case_id": "Q16",
+      "candidates": [
+        "correct",
+        "wrong"
+      ]
+    },
+    {
+      "case_id": "Q17",
+      "candidates": [
+        "preflight",
+        "capacity"
+      ]
+    },
+    {
+      "case_id": "Q18",
+      "candidates": [
+        "correct",
+        "wrong",
+        "paraphrase",
+        "new_distortion",
+        "unsupported_correction"
+      ]
+    }
+  ],
+  "review_status": "pending_independent_human_review"
+}

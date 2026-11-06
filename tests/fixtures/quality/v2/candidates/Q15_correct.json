@@ -1,0 +1,31 @@
+{
+  "version": "quality-candidate-v1",
+  "candidate_id": "Q15_correct",
+  "revision": 2,
+  "case_id": "Q15",
+  "stages": [
+    {
+      "alias": "A/map/1",
+      "findings": []
+    },
+    {
+      "alias": "A/document",
+      "findings": []
+    },
+    {
+      "alias": "B/map/1",
+      "findings": []
+    },
+    {
+      "alias": "B/document",
+      "findings": []
+    },
+    {
+      "alias": "cross",
+      "findings": []
+    }
+  ],
+  "expected": "completed",
+  "max_calls": 106,
+  "stage_input_limit": 24000
+}

@@ -9,7 +9,7 @@ from typing import Literal, get_args, get_origin, get_type_hints
 
 from .contracts import BENCHMARK, Assessment, Candidate, Case, Manifest, QualityError, require
 
-ROOT = Path(__file__).resolve().parents[1] / "fixtures" / "quality" / "v1"
+ROOT = Path(__file__).resolve().parents[1] / "fixtures" / "quality" / "v2"
 
 
 def canonical(value):
