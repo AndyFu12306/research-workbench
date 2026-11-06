@@ -18,7 +18,12 @@ def error_events(claims):
         if uncertain:
             kind = "unresolved"
         elif c.upstream_support == "supported" and c.source_support != "supported":
-            kind = "inherited_error" if inherited and c.link == "faithful" else "unresolved"
+            # A faithful transmission or a legitimate combination that still
+            # carries a confirmed predecessor root inherits that established
+            # error; combination alone is not an unresolved attribution when
+            # the direct upstream inputs support the claim.
+            inherited_link = c.link in ("faithful", "combined")
+            kind = "inherited_error" if inherited and inherited_link else "unresolved"
         elif c.upstream_support != "supported":
             kind = (
                 "first_distortion"
