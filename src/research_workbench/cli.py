@@ -24,6 +24,7 @@ from research_workbench.analysis.stage_contracts import (
     StageBudgetError,
 )
 from research_workbench.analysis.stage_validation import validate_budget
+from research_workbench.application.checkpoints import inspect_execution
 from research_workbench.application.cross_document_analysis import CrossDocumentAnalysisService
 from research_workbench.application.source_links import QuestionSourceService
 from research_workbench.integrations.ai.stages import (
@@ -274,6 +275,24 @@ def configured_stage_budget(output_tokens, context_tokens, input_units=512_000):
     return budget
 
 
+def show_failure(database, execution_id):
+    """Automatic diagnostics contain no source keys, titles, findings or response IDs."""
+    repo = CrossDocumentRepository(database)
+    run = repo.get(execution_id)
+    display(f"执行 ID={execution_id} 状态={run.status if run else 'unknown'}")
+    calls = repo.get_call_usage(execution_id)
+    display(
+        f"completed={sum(c.status == 'completed' for c in calls)} "
+        f"not_started={sum(c.call_outcome == 'not_started' for c in calls)}"
+    )
+    for call in calls:
+        if call.status in ("failed", "interrupted"):
+            display(
+                f"{call.scope}/{call.ordinal} {call.stage}: {call.error_code} "
+                f"tokens={call.input_tokens}/{call.output_tokens}"
+            )
+
+
 def run_workflow(
     database,
     *,
@@ -370,7 +389,7 @@ def run_workflow(
                 # This question was just created; its only run is this attempt.
                 runs = CrossDocumentRepository(database).list_by_question(question.id)
                 if runs:
-                    show_run(database, runs[0].id)
+                    show_failure(database, runs[0].id)
                 raise
             show_run(database, run.id)
     finally:
@@ -425,6 +444,10 @@ def main(argv=None):
     history.add_argument("--question", type=int, required=True)
     show = commands.add_parser("show", help="离线查看执行结果、来源和用量")
     show.add_argument("execution_id", type=int)
+    inspect = commands.add_parser(
+        "inspect", help="离线检查安全诊断/检查点条件，不读Zotero、不调用AI"
+    )
+    inspect.add_argument("execution_id", type=int)
     args = parser.parse_args(argv)
     try:
         path = database_path(args.database)
@@ -473,6 +496,28 @@ def main(argv=None):
                     cross_reduce_budget=cross_reduce_budget,
                     max_estimated_units=args.max_estimated_units,
                 )
+            elif args.command == "inspect":
+                result = inspect_execution(database, args.execution_id)
+                display(
+                    f"completed={result.completed} failed={result.failed} "
+                    f"not_started={result.not_started}"
+                )
+                repo = CrossDocumentRepository(database)
+                for call in repo.get_call_usage(args.execution_id):
+                    if call.status in ("failed", "interrupted"):
+                        display(f"{call.scope}/{call.ordinal} {call.stage}: {call.error_code}")
+                display(
+                    f"失败候选已保存={result.raw_failed_candidate_saved}；细分类别已保存={result.diagnostic_available}"
+                )
+                if result.failed and not result.diagnostic_available:
+                    display("旧 invalid_output 无法追溯具体类别；不会猜测Citation或Finding错误。")
+                display(
+                    "checkpoint_resume_available=False；现有历史投影不是完整的可执行续跑检查点。"
+                )
+                display("离线结果重建需重验来源/版本/预算/模型/全部Finding ID；不能直接发起续跑。")
+                display(
+                    "最小后续机制：保存成功规范生成JSON与绑定hash，新执行记录复用来源及零新增调用，重新预览并SEND。"
+                )
             elif args.command == "history":
                 runs = CrossDocumentRepository(database).list_by_question(args.question)
                 if not runs:
@@ -498,6 +543,8 @@ def main(argv=None):
         code = getattr(exc, "code", None)
         if code in ERRORS:
             display(f"执行失败：{code} / {ERRORS[code]}")
+            for name, value in getattr(exc, "counts", ()):
+                display(f"{name}={value}")
         elif code in PROVIDER_FAILURE_MESSAGES:
             display(f"AI 失败：{code} / {PROVIDER_FAILURE_MESSAGES[code]}")
         else:

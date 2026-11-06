@@ -19,54 +19,79 @@ from .stage_contracts import (
     StageError,
     StageFinding,
     StageRequest,
+    StageValidationError,
     ValidatedStageResult,
     stage_schema,
 )
 
 
-def _require(condition):
+def _require(condition, code="invalid_output_source_binding", *, counts=()):
     if not condition:
-        raise StageError()
+        raise StageValidationError(code, counts=counts)
 
 
-def _text(value, limit):
-    _require(type(value) is str and 1 <= len(value) <= limit and bool(value.strip()))
-    _require(not any("\ud800" <= char <= "\udfff" for char in value))
+def _text(value, limit, code="invalid_output_source_binding"):
+    _require(type(value) is str and 1 <= len(value) <= limit and bool(value.strip()), code)
+    _require(not any("\ud800" <= char <= "\udfff" for char in value), code)
     return value
 
 
 def _unique(pairs):
     result = {}
     for key, value in pairs:
-        _require(key not in result)
+        _require(key not in result, "invalid_output_json")
         result[key] = value
     return result
 
 
 def _constant(_value):
-    raise StageError()
+    raise StageValidationError("invalid_output_json")
 
 
 def _parse(raw):
-    _text(raw, MAX_OUTPUT_CHARS)
-    data = json.loads(raw, object_pairs_hook=_unique, parse_constant=_constant)
-    _require(type(data) is dict and set(data) == {"status", "findings"})
+    _text(raw, MAX_OUTPUT_CHARS, "invalid_output_json")
+    try:
+        data = json.loads(raw, object_pairs_hook=_unique, parse_constant=_constant)
+    except (json.JSONDecodeError, RecursionError):
+        raise StageValidationError("invalid_output_json") from None
+    _require(type(data) is dict and set(data) == {"status", "findings"}, "invalid_output_structure")
     status, findings = data["status"], data["findings"]
-    _require(type(status) is str and status in ("findings", "no_relevant_findings"))
-    _require(type(findings) is list and len(findings) <= MAX_FINDINGS)
-    _require(bool(findings) == (status == "findings"))
+    _require(
+        type(status) is str and status in ("findings", "no_relevant_findings"),
+        "invalid_output_structure",
+    )
+    _require(type(findings) is list, "invalid_output_finding_structure")
+    count = (("finding_count", len(findings)),)
+    _require(len(findings) <= MAX_FINDINGS, "invalid_output_finding_count", counts=count)
+    _require(bool(findings) == (status == "findings"), "invalid_output_finding_count", counts=count)
     for finding in findings:
         _require(
-            type(finding) is dict and set(finding) == {"text", "kind", "category", "citations"}
+            type(finding) is dict and set(finding) == {"text", "kind", "category", "citations"},
+            "invalid_output_finding_structure",
         )
-        _text(finding["text"], 2000)
-        _require(type(finding["kind"]) is str and finding["kind"] in KINDS)
-        _require(type(finding["category"]) is str and finding["category"] in CATEGORIES)
+        _text(finding["text"], 2000, "invalid_output_finding_field")
+        _require(
+            type(finding["kind"]) is str and finding["kind"] in KINDS,
+            "invalid_output_finding_field",
+        )
+        _require(
+            type(finding["category"]) is str and finding["category"] in CATEGORIES,
+            "invalid_output_finding_field",
+        )
         refs = finding["citations"]
-        _require(type(refs) is list and 1 <= len(refs) <= MAX_CITATIONS)
+        _require(type(refs) is list, "invalid_output_citation_format")
+        _require(
+            1 <= len(refs) <= MAX_CITATIONS,
+            "invalid_output_citation_format",
+            counts=(("citation_count", len(refs)),),
+        )
         for ref in refs:
-            _text(ref, 64)
-        _require(len(set(refs)) == len(refs))
+            _text(ref, 64, "invalid_output_citation_format")
+        _require(
+            len(set(refs)) == len(refs),
+            "invalid_output_citation_format",
+            counts=(("citation_count", len(refs)),),
+        )
     return data
 
 
@@ -102,7 +127,10 @@ class _Traversal:
                         type(chunk) is ChunkReference and type(chunk.identity) is SourceIdentity
                     )
                     _require(type(chunk.start) is int and type(chunk.end) is int)
-            _require(result.status == expected.status and result.findings == expected.findings)
+            _require(
+                result.status == expected.status and result.findings == expected.findings,
+                "invalid_output_result_integrity",
+            )
             return payload, binding
         finally:
             self.active.remove(id(result))
@@ -219,7 +247,7 @@ def _build(request, raw, local, binding):
     for ordinal, item in enumerate(data["findings"]):
         chunks = {}
         for citation in item["citations"]:
-            _require(citation in local)
+            _require(citation in local, "invalid_output_citation_unknown")
             for chunk in local[citation]:
                 # Canonical union, never an evidence count. Overlap remains explicit in offsets.
                 if chunk.chunk_id in chunks:
@@ -253,9 +281,21 @@ def validate_stage_output(request: StageRequest, raw: str) -> ValidatedStageResu
     """Assign IDs only after full validation; recursively recheck all Reduce children."""
     try:
         _, local, binding = _Traversal().inputs(request)
-        return _build(request, raw, local, binding)
+    except StageValidationError as exc:
+        code = (
+            "invalid_output_source_binding"
+            if exc.code == "invalid_output_source_binding"
+            else "invalid_output_result_integrity"
+        )
+        raise StageValidationError(code) from None
     except (ValueError, TypeError, KeyError, AttributeError, RecursionError):
-        raise StageError() from None
+        raise StageValidationError("invalid_output_source_binding") from None
+    try:
+        return _build(request, raw, local, binding)
+    except StageValidationError as exc:
+        raise StageValidationError(exc.code, counts=exc.counts) from None
+    except (ValueError, TypeError, KeyError, AttributeError, RecursionError):
+        raise StageValidationError("invalid_output_structure") from None
 
 
 def source_coverage(finding: StageFinding) -> tuple[tuple[str, tuple[tuple[int, int], ...]], ...]:

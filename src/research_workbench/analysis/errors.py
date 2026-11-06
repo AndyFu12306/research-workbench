@@ -95,8 +95,23 @@ class AnalysisPersistenceError(AnalysisError):
     message = "Analysis persistence failed; check the Workbench database."
 
 
+VALIDATION_FAILURE_MESSAGES = {
+    "invalid_output_json": "Output JSON is invalid, duplicated or non-standard.",
+    "invalid_output_structure": "Output top-level fields or status are invalid.",
+    "invalid_output_finding_count": "Finding count or empty-result status is invalid.",
+    "invalid_output_finding_structure": "Finding fields or field types are invalid.",
+    "invalid_output_finding_field": "Finding text, kind or category violates the contract.",
+    "invalid_output_citation_format": "Citation list, count, type or uniqueness is invalid.",
+    "invalid_output_citation_unknown": "Citation does not name a permitted local input.",
+    "invalid_output_source_binding": "Stage input or source fingerprint binding is invalid.",
+    "invalid_output_result_integrity": "A validated child result failed replay integrity checks.",
+    "invalid_output_persistence_binding": "Stage result does not match its persisted binding.",
+}
+
+
 FAILURE_MESSAGES = {
     **PROVIDER_FAILURE_MESSAGES,
+    **VALIDATION_FAILURE_MESSAGES,
     "provider_failed": AnalysisProviderError.message,
     "invalid_output": AnalysisOutputValidationError.message,
     "analysis_failed": AnalysisError.message,

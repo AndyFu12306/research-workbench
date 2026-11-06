@@ -6,6 +6,7 @@ from decimal import Decimal, DecimalException, Inexact, Rounded, localcontext
 
 from .chunking import SourceDocument, fingerprint
 from .document_pipeline import PreparedDocument, Pricing, RequestEstimate
+from .errors import VALIDATION_FAILURE_MESSAGES
 from .stage_contracts import CONTRACT_VERSIONS, StageBudget, StageRequest, ValidatedStageResult
 from .stage_validation import validate_budget, validate_stage_output
 
@@ -13,6 +14,7 @@ PIPELINE_VERSION = "cross-document-pipeline-v1"
 HISTORY_VERSION = "cross-document-history-v1"
 QUESTION_VERSION = "document-question-json-v1"
 ERRORS = {
+    **VALIDATION_FAILURE_MESSAGES,
     "invalid_plan": "Cross-document plan or ordered binding is invalid.",
     "budget_exceeded": "Cross-document fixed allowance exceeded.",
     "source_unavailable": "Selected linked fulltext is unavailable.",
@@ -30,8 +32,13 @@ ERRORS = {
 
 
 class CrossDocumentError(ValueError):
-    def __init__(self, code="invalid_plan"):
+    def __init__(self, code="invalid_plan", *, counts=()):
         self.code = code if code in ERRORS else "invalid_plan"
+        self.counts = tuple(
+            (k, v)
+            for k, v in counts
+            if k in ("finding_count", "citation_count") and type(v) is int and 0 <= v <= 1_000_000
+        )
         super().__init__(ERRORS[self.code])
 
 

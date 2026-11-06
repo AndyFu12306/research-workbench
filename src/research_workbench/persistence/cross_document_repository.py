@@ -791,3 +791,21 @@ class CrossDocumentRepository:
                 )
                 for scope, r in values
             )
+
+    def has_failed_candidate(self, run_id):
+        """Boolean projection only; do not retrieve failed candidate text."""
+        with self._database._session() as session:
+            self._row(session, _identifier(run_id))
+            ids = [m.document_execution_id for m in self._members(session, run_id)]
+            document_values = session.execute(
+                select(stages.c.result_json.is_not(None)).where(
+                    stages.c.execution_id.in_(ids), stages.c.status.in_(("failed", "interrupted"))
+                )
+            ).scalars()
+            cross_values = session.execute(
+                select(cross_stages.c.result_json.is_not(None)).where(
+                    cross_stages.c.run_id == run_id,
+                    cross_stages.c.status.in_(("failed", "interrupted")),
+                )
+            ).scalars()
+            return any(document_values) or any(cross_values)

@@ -5,10 +5,13 @@
 保留 PR #22 和全部既有结果。下方阶段授权描述为历史范围，本次用户授权覆盖其中的旧限制。
 实现两篇文献的本机选择、Project/Question/来源关联、全文预检、外发预览和终端确认，
 复用 DeepSeekStageProvider 完成 Map → Document Reduce → Cross Reduce，并离线查看历史。
-用户真实运行报告：Execution=3第一篇5次Map成功，Document Reduce明确因max_output_tokens失败。
+最新Execution=4：第一篇Map/Document Reduce及第二篇前3次Map成功，第4次Map收到完整响应后
+invalid_output。只读核对确认9个成功阶段、1个失败、7个未开始，失败候选和细分类别未保存，
+不能追溯断言具体违约原因。本轮增加安全分类诊断与`inspect`离线检查，尚不提供付费断点续跑。
+旧投影仅在全部ID/来源/版本/预算等可无损重验时可离线重建；复用谱系与独立计费状态仍缺失。
 CLI现默认Map输出8192、Document Reduce输出32768、Cross Reduce输出32768 tokens，分别可配；
 输入512k、context 1M、整体8M操作单位保留，阶段预留、费用与持久化绑定同步更新。
-Execution=1/2/3均保留，不自动恢复或重试；操作估算与模型真实token容量分开显示。
+Execution=1/2/3/4均保留，不自动恢复或重试；操作估算与模型真实token容量分开显示。
 三层流水线尚未真实完整成功。故障修复只做离线验证，保留原失败执行；
 [PowerShell 运行及修复指南](docs/CLI_QUICKSTART.md)。
 

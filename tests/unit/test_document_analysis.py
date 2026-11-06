@@ -204,8 +204,9 @@ def test_map_failure_preserves_prior_success_and_never_reduces(setup_pipeline, c
 def test_invalid_map_output_not_persisted_but_known_usage_is_preserved(setup_pipeline):
     s = setup_pipeline
     s.provider.invalid_at = 2
-    with pytest.raises(DocumentAnalysisError, match="validation"):
+    with pytest.raises(DocumentAnalysisError) as error:
         execute(s)
+    assert error.value.code == "invalid_output_structure"
     run = s.repo.list_by_question(s.question.id)[0]
     bad = s.repo.get_stages(run.id)[1]
     assert bad.status == "failed" and bad.result_json is None
@@ -537,7 +538,11 @@ def test_reduce_rejects_foreign_labels_and_forged_runtime_results(
     monkeypatch.setattr(DocumentAnalysisRepository, "complete_stage", mutate)
     with pytest.raises(DocumentAnalysisError) as exc:
         execute(s)
-    assert exc.value.code == "invalid_output"
+    assert exc.value.code == (
+        "invalid_output_citation_unknown"
+        if damage in ("foreign_chunk", "foreign_finding")
+        else "invalid_output"
+    )
     run = s.repo.list_by_question(s.question.id)[0]
     assert run.status == "failed" and s.repo.get_stages(run.id)[-1].result_json is None
 
@@ -602,7 +607,9 @@ def test_reduce_failure_preserves_all_maps_and_no_final_result(setup_pipeline, m
     monkeypatch.setattr(s.provider, "generate_stage", fail_reduce)
     with pytest.raises(DocumentAnalysisError) as exc:
         execute(s)
-    assert exc.value.code == ("provider_refusal" if point == "provider" else "invalid_output")
+    assert exc.value.code == (
+        "provider_refusal" if point == "provider" else "invalid_output_finding_count"
+    )
     run = s.repo.list_by_question(s.question.id)[0]
     history = s.repo.get_stages(run.id)
     assert run.status == "failed" and history[-1].result_json is None

@@ -1,5 +1,20 @@
 # 系统架构
 
+校验诊断（2026-11-06）：StageValidationError只携带固定code与白名单整数计数；区分JSON、
+根结构、Finding数量/结构/字段、Citation格式/局部标签、来源绑定及子结果完整性。Cross/Document
+服务保留类别到既有error_code字段；持久化绑定校验与PersistenceError分开，不把所有已返回异常
+归为同一个invalid_output。原始失败候选仍不落库，未知异常仍使用泛化安全码，不推断具体类别。
+自动失败展示只列匿名阶段位置、固定类别和计数/usage，不展示来源key、生成文本、response ID。
+inspect只读Workbench状态与布尔投影，不调用Zotero或AI，也不尝试修复历史。
+
+检查点评估：既有history_result保存生成字段/引用投影，没有完整规范输出JSON；Finding ID却绑定
+规范输出字节顺序。replay_stage_projection仅在当前冻结来源、Question、版本、模型、StageBudget、
+执行绑定、请求hash、全部ID及完整投影均重验一致时返回内存结果，可供既有Reduce校验复用。
+属性顺序信息不足、内容/问题变更或任何ID/引用不一致时拒绝，不重分配ID以冒充旧结果。
+此原语不是完整续跑：当前无跨执行reuse来源/零新增调用状态，不伪造response_received或零usage。
+最小后续检查点需保存已验证规范生成JSON与绑定hash，再为新执行显式记录复用谱系、分别记账，
+只对剩余请求重新预检并SEND。本轮没有迁移或真实续跑，旧执行不可变。
+
 分阶段输出（2026-11-06）：CLI分别构造Map/Document Reduce/Cross Reduce的StageBudget，
 默认输出8192/32768/32768。Planner与Map请求只使用Map预算；DocumentAnalysisService的
 reduce_stage_budget用于文献Reduce；PreparedCross保存两级Reduce预算并按阶段选择。

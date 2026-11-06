@@ -23,6 +23,7 @@ from research_workbench.analysis.stage_contracts import (
     StageBudget,
     StageBudgetError,
     StageRequest,
+    StageValidationError,
 )
 from research_workbench.analysis.stage_validation import validate_stage_output
 from research_workbench.integrations.zotero.errors import ZoteroError
@@ -310,7 +311,7 @@ class CrossDocumentAnalysisService:
                 pass
             code = (
                 exc.code
-                if isinstance(exc, CrossDocumentError)
+                if isinstance(exc, (CrossDocumentError, StageValidationError))
                 or (
                     isinstance(exc, AnalysisProviderFailure)
                     and exc.code in ("provider_incomplete", "provider_context_length")
@@ -335,7 +336,13 @@ class CrossDocumentAnalysisService:
             if unknown:
                 code = "interrupted"
             elif response_received and code == "provider_failed":
-                code = "invalid_output"
+                from research_workbench.analysis.document_pipeline import DocumentAnalysisError
+
+                code = (
+                    "invalid_output_persistence_binding"
+                    if isinstance(exc, DocumentAnalysisError)
+                    else "invalid_output"
+                )
             self._abort(
                 handle,
                 code,
@@ -352,7 +359,9 @@ class CrossDocumentAnalysisService:
                     "provider_empty_json",
                 ),
             )
-            raise CrossDocumentError(code) from None
+            raise CrossDocumentError(
+                code, counts=exc.counts if isinstance(exc, StageValidationError) else ()
+            ) from None
 
     def _abort(
         self,

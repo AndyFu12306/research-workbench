@@ -5,6 +5,7 @@ from typing import Protocol
 
 from .chunking import ChunkingConfig, SourceDocument, SourceIdentity, TextChunk
 from .contracts import ProviderResult
+from .errors import VALIDATION_FAILURE_MESSAGES
 
 STAGES = ("map", "document_reduce", "cross_document_reduce")
 CONTRACT_VERSIONS = {stage: f"{stage.replace('_', '-')}-schema-v1" for stage in STAGES}
@@ -32,6 +33,19 @@ class StageError(ValueError):
 class StageCapabilityError(StageError):
     def __init__(self):
         ValueError.__init__(self, "Unsupported stage or contract version.")
+
+
+class StageValidationError(StageError):
+    """Fixed categories/counts only: never retain output, input, labels or SDK objects."""
+
+    def __init__(self, code="invalid_output_source_binding", *, counts=()):
+        self.code = code if code in VALIDATION_FAILURE_MESSAGES else "invalid_output_source_binding"
+        self.counts = tuple(
+            (k, v)
+            for k, v in counts
+            if k in ("finding_count", "citation_count") and type(v) is int and 0 <= v <= 1_000_000
+        )
+        ValueError.__init__(self, VALIDATION_FAILURE_MESSAGES[self.code])
 
 
 class StageBudgetError(StageError):

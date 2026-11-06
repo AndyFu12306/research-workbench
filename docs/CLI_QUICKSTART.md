@@ -1,5 +1,56 @@
 # 两篇文献的首次真实运行
 
+**最新：Execution=4诊断与离线检查（2026-11-06）**
+
+本轮按用户请求，以只读方式核对执行4的状态/用量及失败结果存在性，没有读取文献全文、
+失败模型候选、Prompt或Key，没有修改真实研究对象。9个成功阶段、1个失败、7个未开始；
+第二篇第4次Map为invalid_output，2454/1657 tokens已保存，失败候选为空，旧记录没有细分类别。
+因此无法从历史确认这次是非法Citation、Finding违约还是绑定失败；不把猜测当作故障根因。
+第一篇Reduce成功并实际输出8271 tokens，不能归因于此前8192输出额度或24k输入限制。
+
+现在可直接离线执行（不需要Zotero、Key或SEND，不发生付费请求）：
+
+```powershell
+Set-Location C:\Projects\research-workbench-cli
+$env:PYTHONUTF8 = '1'
+uv sync --frozen --extra dev
+uv run --frozen research-workbench inspect 4
+```
+
+应显示completed=9、failed=1、not_started=7，匿名位置document-2/4 map，
+失败候选已保存=False、细分类别已保存=False、checkpoint_resume_available=False。
+inspect不验证Zotero当前文件、问题内容或源指纹是否变化，不能把这个计数检查当作安全续跑证明。
+
+新执行若再遇校验失败，会保存并显示以下固定类别；旧执行4仍保持原invalid_output：
+
+| 类别（`invalid_output_`前缀） | 含义 |
+| --- | --- |
+| json / structure | 非法/重复/非标准JSON，或根字段/状态违约 |
+| finding_count / finding_structure / finding_field | Finding数量、字段集合/类型或文本/kind/category违约 |
+| citation_format / citation_unknown | Citation列表/数量/唯一性违约，或不是当前合法输入标签 |
+| source_binding / result_integrity | 输入来源绑定或已校验子结果重放完整性失败 |
+| persistence_binding | 返回结果与已登记历史/请求绑定不一致 |
+
+真实SQL/存储故障仍为persistence_failed，未知原因仍保留泛化安全码，不能凭完整响应和非零usage
+认定Schema正确。自动失败诊断只显示匿名位置、固定类别和计数/usage；不输出返回文本、标签值、
+来源key、全文、Prompt、reasoning、Key或traceback。没有自动修补、截断、删除Finding或重试。
+
+**当前没有可执行的断点续跑命令。** 既有成功历史只存结果/引用投影，未保留全部规范JSON顺序，
+而Finding ID受规范输出字节影响。离线原语可以在当前冻结输入、版本、预算、模型、请求hash、
+执行绑定、全部Finding ID和投影完全重验一致时复用结果，但并非所有旧记录都能无损重建。
+尚未对执行4进行这种来源重验；现有状态也不能独立表达复用来源与零新增调用，不能伪造新响应。
+
+最小可行检查点方案是：成功事务保存已校验规范生成JSON及绑定hash（不保存SDK原始响应或原文）；
+新执行显式引用旧成功阶段，区分复用与新请求/新增费用；核对当前Question、完整源指纹、预算、
+模型、Prompt/Contract版本和全部引用完整性后，只为剩余调用预检并重新要求SEND。
+不要为“恢复”直接运行run：它仍会完整创建新执行，重复请求已成功阶段。先独立核验本轮诊断。
+
+本轮定向验证 **349 passed**；新增13项覆盖安全分类、非法Citation/Finding、完整响应后校验失败的
+usage保留与失败即停、匿名诊断、成功检查点条件式复用、源内容/Question/模型/预算/版本/历史绑定
+变化拒绝、规范JSON顺序丢失拒绝与历史不可变。最后补强匿名显示断言后，新测试13项单独复跑通过。
+Ruff check/format（99文件）、CLI help与真实执行4的只读inspect通过。未运行完整pytest，
+未访问真实Zotero/付费API，未对真实执行4进行源内容重验或续跑。
+
 **最新：分阶段输出额度（2026-11-06，覆盖下方历史统一输出示例）**
 
 Execution=3 / Question=3的用户记录已经确认：第一篇5次Map成功，第6次Document Reduce

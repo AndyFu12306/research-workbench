@@ -28,6 +28,7 @@ from research_workbench.analysis.stage_contracts import (
     StageBudgetError,
     StageError,
     StageRequest,
+    StageValidationError,
     stage_instructions,
     stage_schema,
 )
@@ -262,6 +263,8 @@ class DocumentAnalysisService:
                     if stage == "document_reduce"
                     else "execution_budget_exceeded"
                 )
+            elif isinstance(exc, StageValidationError):
+                code = exc.code
             elif isinstance(exc, StageError):
                 code = "invalid_output"
             elif isinstance(exc, (DocumentAnalysisError, AnalysisError)):
