@@ -1,0 +1,107 @@
+{
+  "version": "research-quality-benchmark-v1",
+  "case_id": "Q03",
+  "revision": 2,
+  "language": "zh",
+  "requirements_version": "quality-requirements-v1",
+  "question": {
+    "version": "quality-question-v1",
+    "title": "方法A的研究结果、条件和限制是什么？",
+    "description": "Q15/Q16: evaluate method A only. Synthetic evaluation; no external knowledge."
+  },
+  "sources": [
+    {
+      "alias": "A",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0001"
+      ],
+      "text": "研究甲未发现方法A有显著改善。",
+      "sha256": "11fff5de66b6ea6b926c85244c1c38a5b7d55c3a83d4f42aaf05efcfe17acd35"
+    },
+    {
+      "alias": "B",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0002"
+      ],
+      "text": "研究乙也未发现方法A有显著改善。",
+      "sha256": "49d0cb1dfaa892f46b2124b366b7d1bf277fbdd247dc3a512c25026cc162425d"
+    }
+  ],
+  "facts": [
+    {
+      "fact_id": "F1",
+      "proposition": "研究甲未发现方法A有显著改善。",
+      "subject": "synthetic A",
+      "method": "method A",
+      "comparison": "",
+      "result": "significant improvement",
+      "value_unit": "",
+      "polarity": "not detected",
+      "conditions": "study A",
+      "uncertainty": "Absence of significance does not prove no effect.",
+      "evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 15,
+          "sha256": "11fff5de66b6ea6b926c85244c1c38a5b7d55c3a83d4f42aaf05efcfe17acd35"
+        }
+      ],
+      "critical": true,
+      "limitation": true,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    },
+    {
+      "fact_id": "F2",
+      "proposition": "研究乙也未发现方法A有显著改善。",
+      "subject": "synthetic B",
+      "method": "method A",
+      "comparison": "",
+      "result": "significant improvement",
+      "value_unit": "",
+      "polarity": "not detected",
+      "conditions": "study B",
+      "uncertainty": "Absence of significance does not prove no effect.",
+      "evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 16,
+          "sha256": "49d0cb1dfaa892f46b2124b366b7d1bf277fbdd247dc3a512c25026cc162425d"
+        }
+      ],
+      "critical": true,
+      "limitation": true,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "relation_id": "R1",
+      "facts": [
+        "F1",
+        "F2"
+      ],
+      "kind": "support",
+      "conditions": "Preserve the explicitly stated settings and source identities.",
+      "expected": "两研究未发现显著改善，不能据此证明完全无效。"
+    }
+  ],
+  "max_chars": 8000,
+  "overlap_chars": 0,
+  "forbidden": [
+    "两研究均证明方法A有显著改善。"
+  ]
+}

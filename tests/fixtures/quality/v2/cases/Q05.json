@@ -1,0 +1,151 @@
+{
+  "version": "research-quality-benchmark-v2",
+  "case_id": "Q05",
+  "revision": 3,
+  "language": "zh",
+  "requirements_version": "quality-requirements-v2",
+  "question": {
+    "version": "quality-question-v1",
+    "title": "甲乙研究的结果及各自限制是什么？",
+    "description": "保留甲准确率提高、仅一个数据集，以及乙延迟降低、未重复实验；可紧凑并列，不省略限制，不推断普遍有效。 仅使用合成来源，不引入外部知识。 已要求的来源事实不得省略；与本问题无关的背景可省略。"
+  },
+  "sources": [
+    {
+      "alias": "A",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0001"
+      ],
+      "text": "研究甲准确率提高，但仅测试了一个数据集。",
+      "sha256": "b05aa95de1a7bf9216dbd35f59a956c52bf64c1dec7a714711739a008e2f097a"
+    },
+    {
+      "alias": "B",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0002"
+      ],
+      "text": "研究乙延迟降低，但未进行重复实验。",
+      "sha256": "fca54cd7f112441be4179256de4a08061147f04d1ba08a7566cfb219c705910e"
+    }
+  ],
+  "facts": [
+    {
+      "fact_id": "F1",
+      "proposition": "研究甲准确率提高。",
+      "subject": "研究甲",
+      "method": "",
+      "comparison": "",
+      "result": "研究甲准确率提高。",
+      "value_unit": "",
+      "polarity": "increase",
+      "conditions": "study A",
+      "uncertainty": "单数据集或未重复的结果不能建立普遍适用性或重复性。",
+      "evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 8,
+          "sha256": "a36f7e7cfc3584f01732e67167f2c8dcc0e37d5b1901b4ff79d1db33f2df5e83"
+        }
+      ],
+      "critical": true,
+      "limitation": false,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    },
+    {
+      "fact_id": "F2",
+      "proposition": "研究乙延迟降低。",
+      "subject": "研究乙",
+      "method": "",
+      "comparison": "",
+      "result": "研究乙延迟降低。",
+      "value_unit": "",
+      "polarity": "decrease",
+      "conditions": "study B",
+      "uncertainty": "单数据集或未重复的结果不能建立普遍适用性或重复性。",
+      "evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 7,
+          "sha256": "d20bfc2d5e9dd64876be959ab7665457392573f80b47b6977bded1cc8e3de008"
+        }
+      ],
+      "critical": true,
+      "limitation": false,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    },
+    {
+      "fact_id": "F3",
+      "proposition": "研究甲仅测试一个数据集。",
+      "subject": "研究甲",
+      "method": "",
+      "comparison": "",
+      "result": "研究甲仅测试一个数据集。",
+      "value_unit": "1 dataset",
+      "polarity": "limited_dataset",
+      "conditions": "one dataset",
+      "uncertainty": "单数据集或未重复的结果不能建立普遍适用性或重复性。",
+      "evidence": [
+        {
+          "source": "A",
+          "start": 10,
+          "end": 19,
+          "sha256": "b4a12566e4a3c75fc32aa108ee75f0d83b7b6a12ee51f8b73d6760e02155424b"
+        }
+      ],
+      "critical": true,
+      "limitation": true,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    },
+    {
+      "fact_id": "F4",
+      "proposition": "研究乙未进行重复实验。",
+      "subject": "研究乙",
+      "method": "",
+      "comparison": "",
+      "result": "研究乙未进行重复实验。",
+      "value_unit": "",
+      "polarity": "not_repeated",
+      "conditions": "study B",
+      "uncertainty": "单数据集或未重复的结果不能建立普遍适用性或重复性。",
+      "evidence": [
+        {
+          "source": "B",
+          "start": 9,
+          "end": 16,
+          "sha256": "b8ee766a5b07860ee9cfdc84f7d2d66d4676b7845ac96244a887543e16865d1b"
+        }
+      ],
+      "critical": true,
+      "limitation": true,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    }
+  ],
+  "relations": [],
+  "max_chars": 8000,
+  "overlap_chars": 0,
+  "forbidden": [
+    "研究结果充分证明该方法普遍有效。"
+  ],
+  "acceptance_targets": []
+}

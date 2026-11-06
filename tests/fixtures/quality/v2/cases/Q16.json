@@ -1,0 +1,70 @@
+{
+  "version": "research-quality-benchmark-v2",
+  "case_id": "Q16",
+  "revision": 3,
+  "language": "en",
+  "requirements_version": "quality-requirements-v2",
+  "question": {
+    "version": "quality-question-v1",
+    "title": "Which source reports a method A toy-task accuracy result?",
+    "description": "Retain source B toy-task accuracy improvement of 2 points. Source A rock hardness is irrelevant background and may be omitted without citation. Do not claim two independent reports or broader applicability. Use synthetic sources only; no external knowledge."
+  },
+  "sources": [
+    {
+      "alias": "A",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0001"
+      ],
+      "text": "This source discusses rock hardness, unrelated to method A.",
+      "sha256": "2a2360af2280662f7a697e41898a5c5be3310e1148b13f39f2a5a06feab49579"
+    },
+    {
+      "alias": "B",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0002"
+      ],
+      "text": "Method A improved toy-task accuracy by 2 points.",
+      "sha256": "8c2c7bbd5b279acff7ab4dd36d6c5db8c9aa173e5d6046f5482575ab367262c8"
+    }
+  ],
+  "facts": [
+    {
+      "fact_id": "F2",
+      "proposition": "Method A improved toy-task accuracy by 2 points.",
+      "subject": "method A",
+      "method": "method A",
+      "comparison": "",
+      "result": "Method A improved toy-task accuracy by 2 points.",
+      "value_unit": "2 points",
+      "polarity": "improved",
+      "conditions": "toy-task",
+      "uncertainty": "Only source B establishes the toy-task result; broader applicability is not established.",
+      "evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 48,
+          "sha256": "8c2c7bbd5b279acff7ab4dd36d6c5db8c9aa173e5d6046f5482575ab367262c8"
+        }
+      ],
+      "critical": true,
+      "limitation": false,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    }
+  ],
+  "relations": [],
+  "max_chars": 8000,
+  "overlap_chars": 0,
+  "forbidden": [
+    "Both sources independently report a 2 point gain."
+  ],
+  "acceptance_targets": []
+}

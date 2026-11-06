@@ -1,0 +1,585 @@
+{
+  "version": "quality-assessment-v2",
+  "assessment_id": "Q12_wrong_calibration_draft",
+  "revision": 2,
+  "candidate_id": "Q12_wrong",
+  "rubric": "quality-rubric-v2",
+  "atomization": "quality-atomization-v2",
+  "claims": [
+    {
+      "claim_id": "A/map/1/f1/c1",
+      "stage": "A/map/1",
+      "finding": "A/map/1/f1",
+      "start": 0,
+      "end": 26,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/chunk/1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 30,
+          "sha256": "38717d25daa383eb1c26321fb41ea378c69af0e88de5915c6631268ce541c43d"
+        }
+      ],
+      "reason": "AI calibration draft proposition: Study A measured accuracy. Direct inputs: A/chunk/1; upstream=supported; original evidence=supported. Evidence: Study A measured accuracy only. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 30,
+              "sha256": "38717d25daa383eb1c26321fb41ea378c69af0e88de5915c6631268ce541c43d"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [],
+      "link": "root",
+      "critical": false
+    },
+    {
+      "claim_id": "A/map/1/f2/c1",
+      "stage": "A/map/1",
+      "finding": "A/map/1/f2",
+      "start": 0,
+      "end": 30,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/chunk/1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 37,
+          "end": 54,
+          "sha256": "bfac84e1c10c0a575dd202039a9eb705355e082a2eaeb421c32940fb1e76d90d"
+        }
+      ],
+      "reason": "AI calibration draft proposition: Study A had no energy measure. Direct inputs: A/chunk/1; upstream=supported; original evidence=supported. Evidence: no energy measure. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 37,
+              "end": 54,
+              "sha256": "bfac84e1c10c0a575dd202039a9eb705355e082a2eaeb421c32940fb1e76d90d"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [],
+      "link": "root",
+      "critical": true
+    },
+    {
+      "claim_id": "A/document/f1/c1",
+      "stage": "A/document",
+      "finding": "A/document/f1",
+      "start": 0,
+      "end": 26,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/map/1/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 30,
+          "sha256": "38717d25daa383eb1c26321fb41ea378c69af0e88de5915c6631268ce541c43d"
+        }
+      ],
+      "reason": "AI calibration draft proposition: Study A measured accuracy. Direct inputs: A/map/1/f1; upstream=supported; original evidence=supported. Evidence: Study A measured accuracy only. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 30,
+              "sha256": "38717d25daa383eb1c26321fb41ea378c69af0e88de5915c6631268ce541c43d"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "A/map/1/f1/c1"
+      ],
+      "link": "faithful",
+      "critical": false
+    },
+    {
+      "claim_id": "A/document/f2/c1",
+      "stage": "A/document",
+      "finding": "A/document/f2",
+      "start": 0,
+      "end": 30,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/map/1/f2"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 37,
+          "end": 54,
+          "sha256": "bfac84e1c10c0a575dd202039a9eb705355e082a2eaeb421c32940fb1e76d90d"
+        }
+      ],
+      "reason": "AI calibration draft proposition: Study A had no energy measure. Direct inputs: A/map/1/f2; upstream=supported; original evidence=supported. Evidence: no energy measure. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 37,
+              "end": 54,
+              "sha256": "bfac84e1c10c0a575dd202039a9eb705355e082a2eaeb421c32940fb1e76d90d"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "A/map/1/f2/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "B/map/1/f1/c1",
+      "stage": "B/map/1",
+      "finding": "B/map/1/f1",
+      "start": 0,
+      "end": 24,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/chunk/1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 28,
+          "sha256": "a9b8dddd5c9190be66b0c47a5d3a9787b4a7bb8b5306ab5067960b985f953b9f"
+        }
+      ],
+      "reason": "AI calibration draft proposition: Study B measured energy. Direct inputs: B/chunk/1; upstream=supported; original evidence=supported. Evidence: Study B measured energy only. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 28,
+              "sha256": "a9b8dddd5c9190be66b0c47a5d3a9787b4a7bb8b5306ab5067960b985f953b9f"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [],
+      "link": "root",
+      "critical": false
+    },
+    {
+      "claim_id": "B/map/1/f2/c1",
+      "stage": "B/map/1",
+      "finding": "B/map/1/f2",
+      "start": 0,
+      "end": 32,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/chunk/1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 35,
+          "end": 54,
+          "sha256": "bd393841f9fcaae56a6080371c3ca1c1778d84a5ac7f17af64f9660704f3233d"
+        }
+      ],
+      "reason": "AI calibration draft proposition: Study B had no accuracy measure. Direct inputs: B/chunk/1; upstream=supported; original evidence=supported. Evidence: no accuracy measure. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 35,
+              "end": 54,
+              "sha256": "bd393841f9fcaae56a6080371c3ca1c1778d84a5ac7f17af64f9660704f3233d"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [],
+      "link": "root",
+      "critical": true
+    },
+    {
+      "claim_id": "B/document/f1/c1",
+      "stage": "B/document",
+      "finding": "B/document/f1",
+      "start": 0,
+      "end": 24,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/map/1/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 28,
+          "sha256": "a9b8dddd5c9190be66b0c47a5d3a9787b4a7bb8b5306ab5067960b985f953b9f"
+        }
+      ],
+      "reason": "AI calibration draft proposition: Study B measured energy. Direct inputs: B/map/1/f1; upstream=supported; original evidence=supported. Evidence: Study B measured energy only. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 28,
+              "sha256": "a9b8dddd5c9190be66b0c47a5d3a9787b4a7bb8b5306ab5067960b985f953b9f"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "B/map/1/f1/c1"
+      ],
+      "link": "faithful",
+      "critical": false
+    },
+    {
+      "claim_id": "B/document/f2/c1",
+      "stage": "B/document",
+      "finding": "B/document/f2",
+      "start": 0,
+      "end": 32,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/map/1/f2"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 35,
+          "end": 54,
+          "sha256": "bd393841f9fcaae56a6080371c3ca1c1778d84a5ac7f17af64f9660704f3233d"
+        }
+      ],
+      "reason": "AI calibration draft proposition: Study B had no accuracy measure. Direct inputs: B/map/1/f2; upstream=supported; original evidence=supported. Evidence: no accuracy measure. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 35,
+              "end": 54,
+              "sha256": "bd393841f9fcaae56a6080371c3ca1c1778d84a5ac7f17af64f9660704f3233d"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "B/map/1/f2/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "cross/f1/c1",
+      "stage": "cross",
+      "finding": "cross/f1",
+      "start": 0,
+      "end": 44,
+      "upstream_support": "unsupported",
+      "source_support": "unsupported",
+      "upstream_refs": [
+        "A/document/f1",
+        "A/document/f2",
+        "B/document/f1",
+        "B/document/f2"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 30,
+          "sha256": "38717d25daa383eb1c26321fb41ea378c69af0e88de5915c6631268ce541c43d"
+        },
+        {
+          "source": "A",
+          "start": 37,
+          "end": 54,
+          "sha256": "bfac84e1c10c0a575dd202039a9eb705355e082a2eaeb421c32940fb1e76d90d"
+        },
+        {
+          "source": "B",
+          "start": 0,
+          "end": 28,
+          "sha256": "a9b8dddd5c9190be66b0c47a5d3a9787b4a7bb8b5306ab5067960b985f953b9f"
+        },
+        {
+          "source": "B",
+          "start": 35,
+          "end": 54,
+          "sha256": "bd393841f9fcaae56a6080371c3ca1c1778d84a5ac7f17af64f9660704f3233d"
+        }
+      ],
+      "reason": "AI calibration draft proposition: Study A is unconditionally superior overall. Direct inputs: A/document/f1, A/document/f2, B/document/f1, B/document/f2; upstream=unsupported; original evidence=unsupported. Evidence: Study A measured accuracy only | no energy measure | Study B measured energy only | no accuracy measure. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "conditional",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 30,
+              "sha256": "38717d25daa383eb1c26321fb41ea378c69af0e88de5915c6631268ce541c43d"
+            },
+            {
+              "source": "A",
+              "start": 37,
+              "end": 54,
+              "sha256": "bfac84e1c10c0a575dd202039a9eb705355e082a2eaeb421c32940fb1e76d90d"
+            }
+          ]
+        },
+        {
+          "source": "B",
+          "stance": "conditional",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 28,
+              "sha256": "a9b8dddd5c9190be66b0c47a5d3a9787b4a7bb8b5306ab5067960b985f953b9f"
+            },
+            {
+              "source": "B",
+              "start": 35,
+              "end": 54,
+              "sha256": "bd393841f9fcaae56a6080371c3ca1c1778d84a5ac7f17af64f9660704f3233d"
+            }
+          ]
+        }
+      ],
+      "severity": "severe",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "A/document/f1/c1",
+        "A/document/f2/c1",
+        "B/document/f1/c1",
+        "B/document/f2/c1"
+      ],
+      "link": "changed",
+      "critical": true
+    }
+  ],
+  "retentions": [
+    {
+      "fact_id": "F1",
+      "layer": "map_collection",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/chunk/1"
+      ],
+      "reason": "AI calibration draft F1: required proposition 'Study A measured accuracy.' at map_collection. Actual direct input aliases: A/chunk/1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'study A' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F1",
+      "layer": "document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/map/1/f1"
+      ],
+      "reason": "AI calibration draft F1: required proposition 'Study A measured accuracy.' at document_reduce. Actual direct input aliases: A/map/1/f1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'study A' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F1",
+      "layer": "cross_document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "absent",
+      "input_refs": [
+        "A/document/f1"
+      ],
+      "reason": "AI calibration draft F1: required proposition 'Study A measured accuracy.' at cross_document_reduce. Actual direct input aliases: A/document/f1. availability=explicit_complete; output=absent. The output omits or changes this required proposition; a citation or related aggregate does not recover its meaning.",
+      "counter_information": "Keep condition 'study A' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F2",
+      "layer": "map_collection",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/chunk/1"
+      ],
+      "reason": "AI calibration draft F2: required proposition 'Study B measured energy.' at map_collection. Actual direct input aliases: B/chunk/1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'study B' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F2",
+      "layer": "document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/map/1/f1"
+      ],
+      "reason": "AI calibration draft F2: required proposition 'Study B measured energy.' at document_reduce. Actual direct input aliases: B/map/1/f1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'study B' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F2",
+      "layer": "cross_document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "absent",
+      "input_refs": [
+        "B/document/f1"
+      ],
+      "reason": "AI calibration draft F2: required proposition 'Study B measured energy.' at cross_document_reduce. Actual direct input aliases: B/document/f1. availability=explicit_complete; output=absent. The output omits or changes this required proposition; a citation or related aggregate does not recover its meaning.",
+      "counter_information": "Keep condition 'study B' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F3",
+      "layer": "map_collection",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/chunk/1"
+      ],
+      "reason": "AI calibration draft F3: required proposition 'Study A had no energy measure.' at map_collection. Actual direct input aliases: A/chunk/1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'study A' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F3",
+      "layer": "document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/map/1/f2"
+      ],
+      "reason": "AI calibration draft F3: required proposition 'Study A had no energy measure.' at document_reduce. Actual direct input aliases: A/map/1/f2. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'study A' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F3",
+      "layer": "cross_document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "absent",
+      "input_refs": [
+        "A/document/f2"
+      ],
+      "reason": "AI calibration draft F3: required proposition 'Study A had no energy measure.' at cross_document_reduce. Actual direct input aliases: A/document/f2. availability=explicit_complete; output=absent. The output omits or changes this required proposition; a citation or related aggregate does not recover its meaning.",
+      "counter_information": "Keep condition 'study A' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F4",
+      "layer": "map_collection",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/chunk/1"
+      ],
+      "reason": "AI calibration draft F4: required proposition 'Study B had no accuracy measure.' at map_collection. Actual direct input aliases: B/chunk/1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'study B' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F4",
+      "layer": "document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/map/1/f2"
+      ],
+      "reason": "AI calibration draft F4: required proposition 'Study B had no accuracy measure.' at document_reduce. Actual direct input aliases: B/map/1/f2. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'study B' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F4",
+      "layer": "cross_document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "absent",
+      "input_refs": [
+        "B/document/f2"
+      ],
+      "reason": "AI calibration draft F4: required proposition 'Study B had no accuracy measure.' at cross_document_reduce. Actual direct input aliases: B/document/f2. availability=explicit_complete; output=absent. The output omits or changes this required proposition; a citation or related aggregate does not recover its meaning.",
+      "counter_information": "Keep condition 'study B' and all contrary evidence; no transfer between source identities."
+    }
+  ],
+  "relations": [
+    {
+      "relation_id": "R1",
+      "classification": "fail",
+      "conflict_recalled": "na",
+      "conflict_asserted": false,
+      "conflict_correct": "na"
+    }
+  ],
+  "atomized_findings": [
+    "A/map/1/f1",
+    "A/map/1/f2",
+    "A/document/f1",
+    "A/document/f2",
+    "B/map/1/f1",
+    "B/map/1/f2",
+    "B/document/f1",
+    "B/document/f2",
+    "cross/f1"
+  ],
+  "reviews": [],
+  "origin": "codex_draft",
+  "acceptance_judgments": []
+}

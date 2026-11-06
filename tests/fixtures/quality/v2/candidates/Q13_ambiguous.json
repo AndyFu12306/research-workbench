@@ -1,0 +1,124 @@
+{
+  "version": "quality-candidate-v1",
+  "candidate_id": "Q13_ambiguous",
+  "revision": 2,
+  "case_id": "Q13",
+  "stages": [
+    {
+      "alias": "A/map/1",
+      "findings": [
+        {
+          "alias": "A/map/1/f1",
+          "text": "试验T：准确率由50%升至60%。",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "A/chunk/1"
+          ]
+        }
+      ]
+    },
+    {
+      "alias": "A/map/2",
+      "findings": [
+        {
+          "alias": "A/map/2/f1",
+          "text": "另一未指明试验的提升仅见于成年人。",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "A/chunk/2"
+          ]
+        }
+      ]
+    },
+    {
+      "alias": "A/document",
+      "findings": [
+        {
+          "alias": "A/document/f1",
+          "text": "试验T：仅成年人准确率由50%升至60%。",
+          "kind": "ai_inference",
+          "category": "finding",
+          "citations": [
+            "A/map/1/f1",
+            "A/map/2/f1"
+          ]
+        },
+        {
+          "alias": "A/document/f2",
+          "text": "试验T儿童未测试。",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "A/map/1/f1",
+            "A/map/2/f1"
+          ]
+        }
+      ]
+    },
+    {
+      "alias": "B/map/1",
+      "findings": [
+        {
+          "alias": "B/map/1/f1",
+          "text": "试验U：仅报告独立的延迟观察。",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "B/chunk/1"
+          ]
+        }
+      ]
+    },
+    {
+      "alias": "B/document",
+      "findings": [
+        {
+          "alias": "B/document/f1",
+          "text": "试验U：仅报告独立的延迟观察。",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "B/map/1/f1"
+          ]
+        }
+      ]
+    },
+    {
+      "alias": "cross",
+      "findings": [
+        {
+          "alias": "cross/f1",
+          "text": "试验T：仅成年人准确率由50%升至60%。",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "A/document/f1"
+          ]
+        },
+        {
+          "alias": "cross/f2",
+          "text": "试验U：仅报告独立的延迟观察。",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "B/document/f1"
+          ]
+        },
+        {
+          "alias": "cross/f3",
+          "text": "试验T儿童未测试。",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "A/document/f2"
+          ]
+        }
+      ]
+    }
+  ],
+  "expected": "completed",
+  "max_calls": 106,
+  "stage_input_limit": 24000
+}

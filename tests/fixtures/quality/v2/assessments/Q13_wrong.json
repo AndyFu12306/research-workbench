@@ -1,0 +1,630 @@
+{
+  "version": "quality-assessment-v2",
+  "assessment_id": "Q13_wrong_calibration_draft",
+  "revision": 2,
+  "candidate_id": "Q13_wrong",
+  "rubric": "quality-rubric-v2",
+  "atomization": "quality-atomization-v2",
+  "claims": [
+    {
+      "claim_id": "A/map/1/f1/c1",
+      "stage": "A/map/1",
+      "finding": "A/map/1/f1",
+      "start": 0,
+      "end": 17,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/chunk/1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 17,
+          "sha256": "c15909062da2974459b60f319d15dd7c405b663ace1ba4e0ead9e46dc96ecbde"
+        },
+        {
+          "source": "A",
+          "start": 64,
+          "end": 78,
+          "sha256": "04085e6ae462f7d1a04ae0a358856ecc2d312d8ab41046c5c905f6167ba7e44c"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 试验T：准确率由50%升至60%。 Direct inputs: A/chunk/1; upstream=supported; original evidence=supported. Evidence: 试验T：准确率由50%升至60%。 | 试验T：上述提升仅见于成年人. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 17,
+              "sha256": "c15909062da2974459b60f319d15dd7c405b663ace1ba4e0ead9e46dc96ecbde"
+            },
+            {
+              "source": "A",
+              "start": 64,
+              "end": 78,
+              "sha256": "04085e6ae462f7d1a04ae0a358856ecc2d312d8ab41046c5c905f6167ba7e44c"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [],
+      "link": "root",
+      "critical": true
+    },
+    {
+      "claim_id": "A/map/2/f1/c1",
+      "stage": "A/map/2",
+      "finding": "A/map/2/f1",
+      "start": 0,
+      "end": 14,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/chunk/2"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 17,
+          "sha256": "c15909062da2974459b60f319d15dd7c405b663ace1ba4e0ead9e46dc96ecbde"
+        },
+        {
+          "source": "A",
+          "start": 64,
+          "end": 78,
+          "sha256": "04085e6ae462f7d1a04ae0a358856ecc2d312d8ab41046c5c905f6167ba7e44c"
+        },
+        {
+          "source": "A",
+          "start": 79,
+          "end": 86,
+          "sha256": "f31642b57a492beae9f7159e1f0df889195fd58e41bc082b5b679f68b8df7a17"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 试验T：上述提升仅见于成年人；儿童未接受测试。 Direct inputs: A/chunk/2; upstream=supported; original evidence=supported. Evidence: 试验T：准确率由50%升至60%。 | 试验T：上述提升仅见于成年人 | 儿童未接受测试. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources. This atom covers only: 试验T：上述提升仅见于成年人.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 17,
+              "sha256": "c15909062da2974459b60f319d15dd7c405b663ace1ba4e0ead9e46dc96ecbde"
+            },
+            {
+              "source": "A",
+              "start": 64,
+              "end": 78,
+              "sha256": "04085e6ae462f7d1a04ae0a358856ecc2d312d8ab41046c5c905f6167ba7e44c"
+            },
+            {
+              "source": "A",
+              "start": 79,
+              "end": 86,
+              "sha256": "f31642b57a492beae9f7159e1f0df889195fd58e41bc082b5b679f68b8df7a17"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [],
+      "link": "root",
+      "critical": true
+    },
+    {
+      "claim_id": "A/map/2/f1/c2",
+      "stage": "A/map/2",
+      "finding": "A/map/2/f1",
+      "start": 15,
+      "end": 22,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/chunk/2"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 17,
+          "sha256": "c15909062da2974459b60f319d15dd7c405b663ace1ba4e0ead9e46dc96ecbde"
+        },
+        {
+          "source": "A",
+          "start": 64,
+          "end": 78,
+          "sha256": "04085e6ae462f7d1a04ae0a358856ecc2d312d8ab41046c5c905f6167ba7e44c"
+        },
+        {
+          "source": "A",
+          "start": 79,
+          "end": 86,
+          "sha256": "f31642b57a492beae9f7159e1f0df889195fd58e41bc082b5b679f68b8df7a17"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 试验T：上述提升仅见于成年人；儿童未接受测试。 Direct inputs: A/chunk/2; upstream=supported; original evidence=supported. Evidence: 试验T：准确率由50%升至60%。 | 试验T：上述提升仅见于成年人 | 儿童未接受测试. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources. This atom covers only: 儿童未接受测试.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 17,
+              "sha256": "c15909062da2974459b60f319d15dd7c405b663ace1ba4e0ead9e46dc96ecbde"
+            },
+            {
+              "source": "A",
+              "start": 64,
+              "end": 78,
+              "sha256": "04085e6ae462f7d1a04ae0a358856ecc2d312d8ab41046c5c905f6167ba7e44c"
+            },
+            {
+              "source": "A",
+              "start": 79,
+              "end": 86,
+              "sha256": "f31642b57a492beae9f7159e1f0df889195fd58e41bc082b5b679f68b8df7a17"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [],
+      "link": "root",
+      "critical": true
+    },
+    {
+      "claim_id": "A/document/f1/c1",
+      "stage": "A/document",
+      "finding": "A/document/f1",
+      "start": 0,
+      "end": 21,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/map/1/f1",
+        "A/map/2/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 17,
+          "sha256": "c15909062da2974459b60f319d15dd7c405b663ace1ba4e0ead9e46dc96ecbde"
+        },
+        {
+          "source": "A",
+          "start": 64,
+          "end": 78,
+          "sha256": "04085e6ae462f7d1a04ae0a358856ecc2d312d8ab41046c5c905f6167ba7e44c"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 试验T：仅成年人准确率由50%升至60%。 Direct inputs: A/map/1/f1, A/map/2/f1; upstream=supported; original evidence=supported. Evidence: 试验T：准确率由50%升至60%。 | 试验T：上述提升仅见于成年人. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 17,
+              "sha256": "c15909062da2974459b60f319d15dd7c405b663ace1ba4e0ead9e46dc96ecbde"
+            },
+            {
+              "source": "A",
+              "start": 64,
+              "end": 78,
+              "sha256": "04085e6ae462f7d1a04ae0a358856ecc2d312d8ab41046c5c905f6167ba7e44c"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "A/map/1/f1/c1",
+        "A/map/2/f1/c1",
+        "A/map/2/f1/c2"
+      ],
+      "link": "combined",
+      "critical": true
+    },
+    {
+      "claim_id": "A/document/f2/c1",
+      "stage": "A/document",
+      "finding": "A/document/f2",
+      "start": 0,
+      "end": 9,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/map/1/f1",
+        "A/map/2/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 79,
+          "end": 86,
+          "sha256": "f31642b57a492beae9f7159e1f0df889195fd58e41bc082b5b679f68b8df7a17"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 试验T儿童未测试。 Direct inputs: A/map/1/f1, A/map/2/f1; upstream=supported; original evidence=supported. Evidence: 儿童未接受测试. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 79,
+              "end": 86,
+              "sha256": "f31642b57a492beae9f7159e1f0df889195fd58e41bc082b5b679f68b8df7a17"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "A/map/1/f1/c1",
+        "A/map/2/f1/c1",
+        "A/map/2/f1/c2"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "B/map/1/f1/c1",
+      "stage": "B/map/1",
+      "finding": "B/map/1/f1",
+      "start": 0,
+      "end": 15,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/chunk/1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 15,
+          "sha256": "39df77e4948073871ec5061b1d04f9363972685093454dce06c321ab47cc4faf"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 试验U：仅报告独立的延迟观察。 Direct inputs: B/chunk/1; upstream=supported; original evidence=supported. Evidence: 试验U：仅报告独立的延迟观察。. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 15,
+              "sha256": "39df77e4948073871ec5061b1d04f9363972685093454dce06c321ab47cc4faf"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [],
+      "link": "root",
+      "critical": false
+    },
+    {
+      "claim_id": "B/document/f1/c1",
+      "stage": "B/document",
+      "finding": "B/document/f1",
+      "start": 0,
+      "end": 15,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/map/1/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 15,
+          "sha256": "39df77e4948073871ec5061b1d04f9363972685093454dce06c321ab47cc4faf"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 试验U：仅报告独立的延迟观察。 Direct inputs: B/map/1/f1; upstream=supported; original evidence=supported. Evidence: 试验U：仅报告独立的延迟观察。. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 15,
+              "sha256": "39df77e4948073871ec5061b1d04f9363972685093454dce06c321ab47cc4faf"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "B/map/1/f1/c1"
+      ],
+      "link": "faithful",
+      "critical": false
+    },
+    {
+      "claim_id": "cross/f1/c1",
+      "stage": "cross",
+      "finding": "cross/f1",
+      "start": 0,
+      "end": 22,
+      "upstream_support": "unsupported",
+      "source_support": "unsupported",
+      "upstream_refs": [
+        "A/document/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 17,
+          "sha256": "c15909062da2974459b60f319d15dd7c405b663ace1ba4e0ead9e46dc96ecbde"
+        },
+        {
+          "source": "A",
+          "start": 64,
+          "end": 78,
+          "sha256": "04085e6ae462f7d1a04ae0a358856ecc2d312d8ab41046c5c905f6167ba7e44c"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 试验T所有年龄的准确率均由50%升至60%。 Direct inputs: A/document/f1; upstream=unsupported; original evidence=unsupported. Evidence: 试验T：准确率由50%升至60%。 | 试验T：上述提升仅见于成年人. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "conditional",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 17,
+              "sha256": "c15909062da2974459b60f319d15dd7c405b663ace1ba4e0ead9e46dc96ecbde"
+            },
+            {
+              "source": "A",
+              "start": 64,
+              "end": 78,
+              "sha256": "04085e6ae462f7d1a04ae0a358856ecc2d312d8ab41046c5c905f6167ba7e44c"
+            }
+          ]
+        }
+      ],
+      "severity": "severe",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "A/document/f1/c1"
+      ],
+      "link": "changed",
+      "critical": true
+    },
+    {
+      "claim_id": "cross/f2/c1",
+      "stage": "cross",
+      "finding": "cross/f2",
+      "start": 0,
+      "end": 15,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/document/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 15,
+          "sha256": "39df77e4948073871ec5061b1d04f9363972685093454dce06c321ab47cc4faf"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 试验U：仅报告独立的延迟观察。 Direct inputs: B/document/f1; upstream=supported; original evidence=supported. Evidence: 试验U：仅报告独立的延迟观察。. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 15,
+              "sha256": "39df77e4948073871ec5061b1d04f9363972685093454dce06c321ab47cc4faf"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "B/document/f1/c1"
+      ],
+      "link": "faithful",
+      "critical": false
+    },
+    {
+      "claim_id": "cross/f3/c1",
+      "stage": "cross",
+      "finding": "cross/f3",
+      "start": 0,
+      "end": 9,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/document/f2"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 79,
+          "end": 86,
+          "sha256": "f31642b57a492beae9f7159e1f0df889195fd58e41bc082b5b679f68b8df7a17"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 试验T儿童未测试。 Direct inputs: A/document/f2; upstream=supported; original evidence=supported. Evidence: 儿童未接受测试. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 79,
+              "end": 86,
+              "sha256": "f31642b57a492beae9f7159e1f0df889195fd58e41bc082b5b679f68b8df7a17"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "A/document/f2/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    }
+  ],
+  "retentions": [
+    {
+      "fact_id": "F1",
+      "layer": "map_collection",
+      "availability": "collectively_sufficient",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/chunk/1",
+        "A/chunk/2"
+      ],
+      "reason": "AI calibration draft F1: required proposition '试验T：仅成年人准确率由50%升至60%。' at map_collection. Actual direct input aliases: A/chunk/1, A/chunk/2. availability=collectively_sufficient; output=preserved. T value and adult restriction must refer to the same trial; neither U nor an ambiguous trial can fill the missing premise.",
+      "counter_information": "Keep condition 'adults only; trial T' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F1",
+      "layer": "document_reduce",
+      "availability": "collectively_sufficient",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/map/1/f1",
+        "A/map/2/f1"
+      ],
+      "reason": "AI calibration draft F1: required proposition '试验T：仅成年人准确率由50%升至60%。' at document_reduce. Actual direct input aliases: A/map/1/f1, A/map/2/f1. availability=collectively_sufficient; output=preserved. T value and adult restriction must refer to the same trial; neither U nor an ambiguous trial can fill the missing premise.",
+      "counter_information": "Keep condition 'adults only; trial T' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F1",
+      "layer": "cross_document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "distorted",
+      "input_refs": [
+        "A/document/f1"
+      ],
+      "reason": "AI calibration draft F1: required proposition '试验T：仅成年人准确率由50%升至60%。' at cross_document_reduce. Actual direct input aliases: A/document/f1. availability=explicit_complete; output=distorted. T value and adult restriction must refer to the same trial; neither U nor an ambiguous trial can fill the missing premise.",
+      "counter_information": "Keep condition 'adults only; trial T' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F2",
+      "layer": "map_collection",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/chunk/1"
+      ],
+      "reason": "AI calibration draft F2: required proposition '试验U：仅报告独立的延迟观察。' at map_collection. Actual direct input aliases: B/chunk/1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'separate trial U latency observation' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F2",
+      "layer": "document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/map/1/f1"
+      ],
+      "reason": "AI calibration draft F2: required proposition '试验U：仅报告独立的延迟观察。' at document_reduce. Actual direct input aliases: B/map/1/f1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'separate trial U latency observation' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F2",
+      "layer": "cross_document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/document/f1"
+      ],
+      "reason": "AI calibration draft F2: required proposition '试验U：仅报告独立的延迟观察。' at cross_document_reduce. Actual direct input aliases: B/document/f1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'separate trial U latency observation' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F3",
+      "layer": "map_collection",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/chunk/2"
+      ],
+      "reason": "AI calibration draft F3: required proposition '试验T儿童未测试。' at map_collection. Actual direct input aliases: A/chunk/2. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'trial T' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F3",
+      "layer": "document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/map/2/f1"
+      ],
+      "reason": "AI calibration draft F3: required proposition '试验T儿童未测试。' at document_reduce. Actual direct input aliases: A/map/2/f1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'trial T' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F3",
+      "layer": "cross_document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/document/f2"
+      ],
+      "reason": "AI calibration draft F3: required proposition '试验T儿童未测试。' at cross_document_reduce. Actual direct input aliases: A/document/f2. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'trial T' and all contrary evidence; no transfer between source identities."
+    }
+  ],
+  "relations": [],
+  "atomized_findings": [
+    "A/map/1/f1",
+    "A/map/2/f1",
+    "A/document/f1",
+    "A/document/f2",
+    "B/map/1/f1",
+    "B/document/f1",
+    "cross/f1",
+    "cross/f2",
+    "cross/f3"
+  ],
+  "reviews": [],
+  "origin": "codex_draft",
+  "acceptance_judgments": []
+}

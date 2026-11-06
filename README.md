@@ -1,6 +1,14 @@
 # Personal Research Workbench
 
-**2026-11-06 当前状态：后端 CLI 稳定基线待独立 PR 审查，尚未合并。** 从远程 main `b716ad7` 建立独立
+> **2026-11-06 当前项目状态**：后端 CLI 稳定基线已通过 PR #23（Merge commit `a75f64b`）合并到 main；
+> PR #22（Phase 4B.5a 离线质量基准）仍为 Draft/Open，本分支已合并最新 main 更新基线，尚未合并、未关闭 Issue #21；
+> 4B.5b/c/d（真实 StageProvider / Zotero / 文献外发验收）未授权。
+
+> **4B.5a 校准授权（2026-11-06，历史阶段）**：从 cd83a33 继续，本地 Benchmark Calibration 实施、离线验证和必要本地提交；禁止 Push、PR/Issue 修改、Merge 及真实服务。活动夹具为 v2；原 v1 仅作缺陷历史。详见[校准记录](docs/PHASE4B5A_CALIBRATION.md)。
+
+> **此前实施授权（历史）**：Phase 4B.4 已完成（PR #20 / Issue #19，merge b716ad7）。Phase 4B.5a 仅在独立分支/worktree 按 [Issue #21](https://github.com/AndyFu12306/research-workbench/issues/21) 实施离线评估、测试和本地提交；下面的旧阶段授权/CI 状态保留历史上下文。设计与复核边界见 [4B.5a 设计](docs/PHASE4B5A_DESIGN.md) 和 [基准规范](docs/QUALITY_BENCHMARK.md)。
+
+**2026-11-06 当前状态：后端 CLI 稳定基线已通过 PR #23（merge `a75f64b`）合并到 main。** 从远程 main `b716ad7` 建立独立
 `codex/minimal-research-cli` / `C:/Projects/research-workbench-cli`，暂停 Phase 4B.5a 额外人工及多模型复核，
 保留 PR #22 和全部既有结果。下方阶段授权描述为历史范围，本次用户授权覆盖其中的旧限制。
 实现两篇文献的本机选择、Project/Question/来源关联、全文预检、外发预览和终端确认，
@@ -27,7 +35,7 @@ Execution=1/2/3/4均保留，不自动恢复或重试；操作估算与模型真
 
 > 以下旧阶段段落保留各自实现/验收时的范围；当前状态以本页开头为准，不将历史 NOT TESTED 记录当作 Execution 7 的当前状态。
 
-当前开发 **Phase 4B.4：有界跨文献综合与作用域历史**，[Issue #19](https://github.com/AndyFu12306/research-workbench/issues/19)，设计 v2 + v2.1，基线 `41b136113aaaa56a9801590f938fcc745a0e546d`（PR #18 已合并）。独立分支 `codex/phase4b4-cross-document-synthesis` / worktree `C:/Projects/research-workbench-phase4b4`；本轮只允许实现、离线验证和本地提交，不创建 PR、不合并、不关闭 Issue、不进入 4B.5。全部旧分支/worktree 保留。真实 StageProvider API、Zotero Level B 仍 NOT TESTED。
+历史实施状态 **Phase 4B.4：有界跨文献综合与作用域历史**，[Issue #19](https://github.com/AndyFu12306/research-workbench/issues/19)，设计 v2 + v2.1，基线 `41b136113aaaa56a9801590f938fcc745a0e546d`（PR #18 已合并）。独立分支 `codex/phase4b4-cross-document-synthesis` / worktree `C:/Projects/research-workbench-phase4b4`；本轮只允许实现、离线验证和本地提交，不创建 PR、不合并、不关闭 Issue、不进入 4B.5。全部旧分支/worktree 保留。真实 StageProvider API、Zotero Level B 仍 NOT TESTED。
 
 ## 环境与安装
 

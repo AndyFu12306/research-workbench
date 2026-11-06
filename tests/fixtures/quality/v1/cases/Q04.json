@@ -1,0 +1,107 @@
+{
+  "version": "research-quality-benchmark-v1",
+  "case_id": "Q04",
+  "revision": 2,
+  "language": "en",
+  "requirements_version": "quality-requirements-v1",
+  "question": {
+    "version": "quality-question-v1",
+    "title": "What findings, conditions and limitations are supported?",
+    "description": "Q15/Q16: evaluate method A only. Synthetic evaluation; no external knowledge."
+  },
+  "sources": [
+    {
+      "alias": "A",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0001"
+      ],
+      "text": "Study A reported accuracy; mortality was not reported.",
+      "sha256": "73e28980d022273a9a6b8798f827c1a8f746286d5a773cdc70162676da85105b"
+    },
+    {
+      "alias": "B",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0002"
+      ],
+      "text": "Study B reported latency; mortality was not reported.",
+      "sha256": "5748204ab5aacda75bdc9f4e859651cb645dccc44fa04568df1032dbd0260738"
+    }
+  ],
+  "facts": [
+    {
+      "fact_id": "F1",
+      "proposition": "Study A reported accuracy; mortality was not reported.",
+      "subject": "synthetic A",
+      "method": "",
+      "comparison": "",
+      "result": "mortality",
+      "value_unit": "",
+      "polarity": "not reported",
+      "conditions": "study A",
+      "uncertainty": "Event counts are unknown.",
+      "evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 54,
+          "sha256": "73e28980d022273a9a6b8798f827c1a8f746286d5a773cdc70162676da85105b"
+        }
+      ],
+      "critical": true,
+      "limitation": true,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    },
+    {
+      "fact_id": "F2",
+      "proposition": "Study B reported latency; mortality was not reported.",
+      "subject": "synthetic B",
+      "method": "",
+      "comparison": "",
+      "result": "mortality",
+      "value_unit": "",
+      "polarity": "not reported",
+      "conditions": "study B",
+      "uncertainty": "Event counts are unknown.",
+      "evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 53,
+          "sha256": "5748204ab5aacda75bdc9f4e859651cb645dccc44fa04568df1032dbd0260738"
+        }
+      ],
+      "critical": true,
+      "limitation": true,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "relation_id": "R1",
+      "facts": [
+        "F1",
+        "F2"
+      ],
+      "kind": "support",
+      "conditions": "Preserve the explicitly stated settings and source identities.",
+      "expected": "Mortality was not reported by either study."
+    }
+  ],
+  "max_chars": 8000,
+  "overlap_chars": 0,
+  "forbidden": [
+    "Both studies reported zero deaths."
+  ]
+}

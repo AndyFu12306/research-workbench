@@ -1,0 +1,107 @@
+{
+  "version": "research-quality-benchmark-v1",
+  "case_id": "Q06",
+  "revision": 2,
+  "language": "en",
+  "requirements_version": "quality-requirements-v1",
+  "question": {
+    "version": "quality-question-v1",
+    "title": "What findings, conditions and limitations are supported?",
+    "description": "Q15/Q16: evaluate method A only. Synthetic evaluation; no external knowledge."
+  },
+  "sources": [
+    {
+      "alias": "A",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0001"
+      ],
+      "text": "Experiments 1 and 2 showed improvement.",
+      "sha256": "605f997db391618ccdb2cc5efc8d794b8b5df7f06ed2b1ab01090e76c484ff1d"
+    },
+    {
+      "alias": "B",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0002"
+      ],
+      "text": "Experiment 3 showed a decrease under the same protocol.",
+      "sha256": "e390a2dad993d43821c2444fbf46c0dbdd1778a0d59648677af4a8116714aa4c"
+    }
+  ],
+  "facts": [
+    {
+      "fact_id": "F1",
+      "proposition": "Experiments 1 and 2 showed improvement.",
+      "subject": "synthetic A",
+      "method": "method A",
+      "comparison": "",
+      "result": "performance direction",
+      "value_unit": "2 experiments",
+      "polarity": "improved",
+      "conditions": "same protocol",
+      "uncertainty": "Do not discard the contrary experiment.",
+      "evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 39,
+          "sha256": "605f997db391618ccdb2cc5efc8d794b8b5df7f06ed2b1ab01090e76c484ff1d"
+        }
+      ],
+      "critical": true,
+      "limitation": false,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    },
+    {
+      "fact_id": "F2",
+      "proposition": "Experiment 3 showed a decrease under the same protocol.",
+      "subject": "synthetic B",
+      "method": "method A",
+      "comparison": "",
+      "result": "performance direction",
+      "value_unit": "1 experiment",
+      "polarity": "decreased",
+      "conditions": "same protocol",
+      "uncertainty": "Do not discard the contrary experiment.",
+      "evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 55,
+          "sha256": "e390a2dad993d43821c2444fbf46c0dbdd1778a0d59648677af4a8116714aa4c"
+        }
+      ],
+      "critical": true,
+      "limitation": false,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "relation_id": "R1",
+      "facts": [
+        "F1",
+        "F2"
+      ],
+      "kind": "conditional",
+      "conditions": "Preserve the explicitly stated settings and source identities.",
+      "expected": "Two experiments improved and one decreased."
+    }
+  ],
+  "max_chars": 8000,
+  "overlap_chars": 0,
+  "forbidden": [
+    "All three experiments improved."
+  ]
+}

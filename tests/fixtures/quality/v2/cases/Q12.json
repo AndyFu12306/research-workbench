@@ -1,0 +1,164 @@
+{
+  "version": "research-quality-benchmark-v2",
+  "case_id": "Q12",
+  "revision": 3,
+  "language": "en",
+  "requirements_version": "quality-requirements-v2",
+  "question": {
+    "version": "quality-question-v1",
+    "title": "Can accuracy and energy studies support an overall ranking?",
+    "description": "Retain A measured accuracy but no energy, B measured energy but no accuracy, and absence of a common utility scale. Omit unrelated background. Do not infer unconditional superiority. Use synthetic sources only; no external knowledge."
+  },
+  "sources": [
+    {
+      "alias": "A",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0001"
+      ],
+      "text": "Study A measured accuracy only, with no energy measure.",
+      "sha256": "7a013b22c17c856e90c0e3741c1200548abad38c99ac71d8c51ecd04857a93b7"
+    },
+    {
+      "alias": "B",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0002"
+      ],
+      "text": "Study B measured energy only, with no accuracy measure.",
+      "sha256": "d320ca3e9f05e9a1efbf90077e1c27203bb56f89f72df32f6695d026889decb6"
+    }
+  ],
+  "facts": [
+    {
+      "fact_id": "F1",
+      "proposition": "Study A measured accuracy.",
+      "subject": "Study A",
+      "method": "",
+      "comparison": "",
+      "result": "Study A measured accuracy.",
+      "value_unit": "",
+      "polarity": "measured",
+      "conditions": "study A",
+      "uncertainty": "The supplied measures do not establish a common utility scale.",
+      "evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 30,
+          "sha256": "38717d25daa383eb1c26321fb41ea378c69af0e88de5915c6631268ce541c43d"
+        }
+      ],
+      "critical": false,
+      "limitation": false,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    },
+    {
+      "fact_id": "F2",
+      "proposition": "Study B measured energy.",
+      "subject": "Study B",
+      "method": "",
+      "comparison": "",
+      "result": "Study B measured energy.",
+      "value_unit": "",
+      "polarity": "measured",
+      "conditions": "study B",
+      "uncertainty": "The supplied measures do not establish a common utility scale.",
+      "evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 28,
+          "sha256": "a9b8dddd5c9190be66b0c47a5d3a9787b4a7bb8b5306ab5067960b985f953b9f"
+        }
+      ],
+      "critical": false,
+      "limitation": false,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    },
+    {
+      "fact_id": "F3",
+      "proposition": "Study A had no energy measure.",
+      "subject": "Study A",
+      "method": "",
+      "comparison": "",
+      "result": "Study A had no energy measure.",
+      "value_unit": "",
+      "polarity": "not_measured",
+      "conditions": "study A",
+      "uncertainty": "The supplied measures do not establish a common utility scale.",
+      "evidence": [
+        {
+          "source": "A",
+          "start": 37,
+          "end": 54,
+          "sha256": "bfac84e1c10c0a575dd202039a9eb705355e082a2eaeb421c32940fb1e76d90d"
+        }
+      ],
+      "critical": true,
+      "limitation": true,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    },
+    {
+      "fact_id": "F4",
+      "proposition": "Study B had no accuracy measure.",
+      "subject": "Study B",
+      "method": "",
+      "comparison": "",
+      "result": "Study B had no accuracy measure.",
+      "value_unit": "",
+      "polarity": "not_measured",
+      "conditions": "study B",
+      "uncertainty": "The supplied measures do not establish a common utility scale.",
+      "evidence": [
+        {
+          "source": "B",
+          "start": 35,
+          "end": 54,
+          "sha256": "bd393841f9fcaae56a6080371c3ca1c1778d84a5ac7f17af64f9660704f3233d"
+        }
+      ],
+      "critical": true,
+      "limitation": true,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "relation_id": "R1",
+      "facts": [
+        "F1",
+        "F2",
+        "F3",
+        "F4"
+      ],
+      "kind": "incomparable",
+      "conditions": "Retain A measured accuracy but no energy, B measured energy but no accuracy, and absence of a common utility scale. Omit unrelated background. Do not infer unconditional superiority.",
+      "expected": "No overall ranking follows without a common utility scale."
+    }
+  ],
+  "max_chars": 8000,
+  "overlap_chars": 0,
+  "forbidden": [
+    "Study A is unconditionally superior overall."
+  ],
+  "acceptance_targets": []
+}

@@ -1,0 +1,108 @@
+{
+  "version": "research-quality-benchmark-v2",
+  "case_id": "Q04",
+  "revision": 3,
+  "language": "en",
+  "requirements_version": "quality-requirements-v2",
+  "question": {
+    "version": "quality-question-v1",
+    "title": "Was mortality reported in either study?",
+    "description": "Retain that both studies did not report mortality. Accuracy and latency background may be omitted. Unknown event counts must not become zero deaths. Use synthetic sources only; no external knowledge."
+  },
+  "sources": [
+    {
+      "alias": "A",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0001"
+      ],
+      "text": "Study A reported accuracy; mortality was not reported.",
+      "sha256": "73e28980d022273a9a6b8798f827c1a8f746286d5a773cdc70162676da85105b"
+    },
+    {
+      "alias": "B",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0002"
+      ],
+      "text": "Study B reported latency; mortality was not reported.",
+      "sha256": "5748204ab5aacda75bdc9f4e859651cb645dccc44fa04568df1032dbd0260738"
+    }
+  ],
+  "facts": [
+    {
+      "fact_id": "F1",
+      "proposition": "Study A did not report mortality.",
+      "subject": "Study A",
+      "method": "",
+      "comparison": "",
+      "result": "Study A did not report mortality.",
+      "value_unit": "",
+      "polarity": "not_reported",
+      "conditions": "study A",
+      "uncertainty": "Mortality event counts remain unknown from the supplied reports.",
+      "evidence": [
+        {
+          "source": "A",
+          "start": 27,
+          "end": 54,
+          "sha256": "270a76e75f99f86d3359d2283bf600be406bdf050ff4108c3fd181f50f356454"
+        }
+      ],
+      "critical": true,
+      "limitation": true,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    },
+    {
+      "fact_id": "F2",
+      "proposition": "Study B did not report mortality.",
+      "subject": "Study B",
+      "method": "",
+      "comparison": "",
+      "result": "Study B did not report mortality.",
+      "value_unit": "",
+      "polarity": "not_reported",
+      "conditions": "study B",
+      "uncertainty": "Mortality event counts remain unknown from the supplied reports.",
+      "evidence": [
+        {
+          "source": "B",
+          "start": 26,
+          "end": 53,
+          "sha256": "270a76e75f99f86d3359d2283bf600be406bdf050ff4108c3fd181f50f356454"
+        }
+      ],
+      "critical": true,
+      "limitation": true,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "relation_id": "R1",
+      "facts": [
+        "F1",
+        "F2"
+      ],
+      "kind": "support",
+      "conditions": "Retain that both studies did not report mortality. Accuracy and latency background may be omitted. Unknown event counts must not become zero deaths.",
+      "expected": "Mortality was not reported by either study."
+    }
+  ],
+  "max_chars": 8000,
+  "overlap_chars": 0,
+  "forbidden": [
+    "Both studies reported zero deaths."
+  ],
+  "acceptance_targets": []
+}

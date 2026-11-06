@@ -1,0 +1,107 @@
+{
+  "version": "research-quality-benchmark-v1",
+  "case_id": "Q13",
+  "revision": 2,
+  "language": "zh",
+  "requirements_version": "quality-requirements-v1",
+  "question": {
+    "version": "quality-question-v1",
+    "title": "方法A的研究结果、条件和限制是什么？",
+    "description": "Q15/Q16: evaluate method A only. Synthetic evaluation; no external knowledge."
+  },
+  "sources": [
+    {
+      "alias": "A",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0001"
+      ],
+      "text": "试验T：准确率由50%升至60%。                                               试验T：上述提升仅见于成年人；儿童未接受测试。",
+      "sha256": "db319541449239ac228952c25fedf66041923dca3ab2a073ae36c33633fe52e0"
+    },
+    {
+      "alias": "B",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0002"
+      ],
+      "text": "试验U：仅报告独立的延迟观察。",
+      "sha256": "39df77e4948073871ec5061b1d04f9363972685093454dce06c321ab47cc4faf"
+    }
+  ],
+  "facts": [
+    {
+      "fact_id": "F1",
+      "proposition": "试验T：准确率由50%升至60%。                                               试验T：上述提升仅见于成年人；儿童未接受测试。",
+      "subject": "synthetic trial T",
+      "method": "trial T",
+      "comparison": "",
+      "result": "conditional accuracy / separate latency observation",
+      "value_unit": "50% to 60%",
+      "polarity": "improved",
+      "conditions": "adults only; children untested",
+      "uncertainty": "No result for children and no cross-trial inference.",
+      "evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 87,
+          "sha256": "db319541449239ac228952c25fedf66041923dca3ab2a073ae36c33633fe52e0"
+        }
+      ],
+      "critical": true,
+      "limitation": true,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    },
+    {
+      "fact_id": "F2",
+      "proposition": "试验U：仅报告独立的延迟观察。",
+      "subject": "synthetic B",
+      "method": "trial U",
+      "comparison": "",
+      "result": "conditional accuracy / separate latency observation",
+      "value_unit": "",
+      "polarity": "no quantitative result stated",
+      "conditions": "separate latency observation",
+      "uncertainty": "No result for children and no cross-trial inference.",
+      "evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 15,
+          "sha256": "39df77e4948073871ec5061b1d04f9363972685093454dce06c321ab47cc4faf"
+        }
+      ],
+      "critical": true,
+      "limitation": true,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "relation_id": "R1",
+      "facts": [
+        "F1",
+        "F2"
+      ],
+      "kind": "conditional",
+      "conditions": "Preserve the explicitly stated settings and source identities.",
+      "expected": "试验T成年人准确率由50%升至60%；儿童效果未知。"
+    }
+  ],
+  "max_chars": 64,
+  "overlap_chars": 0,
+  "forbidden": [
+    "试验T所有年龄的准确率均由50%升至60%。"
+  ]
+}

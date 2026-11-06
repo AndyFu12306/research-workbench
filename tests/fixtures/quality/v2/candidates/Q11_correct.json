@@ -1,0 +1,100 @@
+{
+  "version": "quality-candidate-v1",
+  "candidate_id": "Q11_correct",
+  "revision": 2,
+  "case_id": "Q11",
+  "stages": [
+    {
+      "alias": "A/map/1",
+      "findings": [
+        {
+          "alias": "A/map/1/f1",
+          "text": "方法A在成人样本中改善结果。",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "A/chunk/1"
+          ]
+        }
+      ]
+    },
+    {
+      "alias": "A/document",
+      "findings": [
+        {
+          "alias": "A/document/f1",
+          "text": "方法A在成人样本中改善结果。",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "A/map/1/f1"
+          ]
+        }
+      ]
+    },
+    {
+      "alias": "B/map/1",
+      "findings": [
+        {
+          "alias": "B/map/1/f1",
+          "text": "方法A在儿童样本中未改善结果。",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "B/chunk/1"
+          ]
+        }
+      ]
+    },
+    {
+      "alias": "B/document",
+      "findings": [
+        {
+          "alias": "B/document/f1",
+          "text": "方法A在儿童样本中未改善结果。",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "B/map/1/f1"
+          ]
+        }
+      ]
+    },
+    {
+      "alias": "cross",
+      "findings": [
+        {
+          "alias": "cross/f1",
+          "text": "方法A在成人样本中改善结果。",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "A/document/f1"
+          ]
+        },
+        {
+          "alias": "cross/f2",
+          "text": "方法A在儿童样本中未改善结果。",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "B/document/f1"
+          ]
+        },
+        {
+          "alias": "cross/f3",
+          "text": "人群条件不同，不能直接称为同人群矛盾。",
+          "kind": "ai_inference",
+          "category": "finding",
+          "citations": [
+            "A/document/f1",
+            "B/document/f1"
+          ]
+        }
+      ]
+    }
+  ],
+  "expected": "completed",
+  "max_calls": 106,
+  "stage_input_limit": 24000
+}

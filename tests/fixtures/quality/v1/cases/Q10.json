@@ -1,0 +1,107 @@
+{
+  "version": "research-quality-benchmark-v1",
+  "case_id": "Q10",
+  "revision": 2,
+  "language": "en",
+  "requirements_version": "quality-requirements-v1",
+  "question": {
+    "version": "quality-question-v1",
+    "title": "What findings, conditions and limitations are supported?",
+    "description": "Q15/Q16: evaluate method A only. Synthetic evaluation; no external knowledge."
+  },
+  "sources": [
+    {
+      "alias": "A",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0001"
+      ],
+      "text": "Under setting X, method A outperformed method B.",
+      "sha256": "34d791d6a2341a58d3df508a4f58295236f2360667343c857e4aeb41238b1051"
+    },
+    {
+      "alias": "B",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0002"
+      ],
+      "text": "Under setting X, method A underperformed method B.",
+      "sha256": "4aff81ea10be938c6c1398a9ae33f557c7dfb1caea29742435ceebf82d634c5b"
+    }
+  ],
+  "facts": [
+    {
+      "fact_id": "F1",
+      "proposition": "Under setting X, method A outperformed method B.",
+      "subject": "synthetic A",
+      "method": "method A versus B",
+      "comparison": "versus the explicitly stated comparator",
+      "result": "relative performance",
+      "value_unit": "",
+      "polarity": "A better",
+      "conditions": "setting X",
+      "uncertainty": "Conflicting reports; neither adjudicated.",
+      "evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 48,
+          "sha256": "34d791d6a2341a58d3df508a4f58295236f2360667343c857e4aeb41238b1051"
+        }
+      ],
+      "critical": true,
+      "limitation": false,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    },
+    {
+      "fact_id": "F2",
+      "proposition": "Under setting X, method A underperformed method B.",
+      "subject": "synthetic B",
+      "method": "method A versus B",
+      "comparison": "versus the explicitly stated comparator",
+      "result": "relative performance",
+      "value_unit": "",
+      "polarity": "A worse",
+      "conditions": "setting X",
+      "uncertainty": "Conflicting reports; neither adjudicated.",
+      "evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 50,
+          "sha256": "4aff81ea10be938c6c1398a9ae33f557c7dfb1caea29742435ceebf82d634c5b"
+        }
+      ],
+      "critical": true,
+      "limitation": false,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "relation_id": "R1",
+      "facts": [
+        "F1",
+        "F2"
+      ],
+      "kind": "conflict",
+      "conditions": "Preserve the explicitly stated settings and source identities.",
+      "expected": "The studies directly conflict under setting X; neither is adjudicated here."
+    }
+  ],
+  "max_chars": 8000,
+  "overlap_chars": 0,
+  "forbidden": [
+    "Both studies agree that A outperforms B under X."
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "version": "research-quality-benchmark-v2",
+  "case_id": "Q15",
+  "revision": 3,
+  "language": "zh",
+  "requirements_version": "quality-requirements-v2",
+  "question": {
+    "version": "quality-question-v1",
+    "title": "两篇合成来源是否包含方法A的相关研究结果？",
+    "description": "仅评价方法A；海水盐度、矿石硬度是可省略背景；两篇均无相关结果时合法空结果，不虚构发现，也不将空结果解释为方法无效。 仅使用合成来源，不引入外部知识。"
+  },
+  "sources": [
+    {
+      "alias": "A",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0001"
+      ],
+      "text": "合成文章甲只介绍海水盐度。",
+      "sha256": "0c39aeeab779e5e9d0a35c657e60b3cec78ff1bedbe146647d8482281031bb00"
+    },
+    {
+      "alias": "B",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0002"
+      ],
+      "text": "合成文章乙只介绍矿石硬度。",
+      "sha256": "0b7d3b92add0d404e36cc11a292202200a5d11932787910f4cbddd482fc289f6"
+    }
+  ],
+  "facts": [],
+  "relations": [],
+  "max_chars": 8000,
+  "overlap_chars": 0,
+  "forbidden": [
+    "方法A使准确率提高90%。"
+  ],
+  "acceptance_targets": [
+    {
+      "target_id": "acceptance/relevance",
+      "scenario": "completed",
+      "criterion": "Both supplied sources contain no result relevant to method A."
+    },
+    {
+      "target_id": "acceptance/faithful_empty",
+      "scenario": "completed",
+      "criterion": "Return no invented method A finding; empty does not mean ineffective."
+    }
+  ]
+}

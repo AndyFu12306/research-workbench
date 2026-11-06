@@ -1,0 +1,757 @@
+{
+  "version": "quality-assessment-v2",
+  "assessment_id": "Q07_correct_calibration_draft",
+  "revision": 2,
+  "candidate_id": "Q07_correct",
+  "rubric": "quality-rubric-v2",
+  "atomization": "quality-atomization-v2",
+  "claims": [
+    {
+      "claim_id": "A/map/1/f1/c1",
+      "stage": "A/map/1",
+      "finding": "A/map/1/f1",
+      "start": 0,
+      "end": 12,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/chunk/1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 11,
+          "sha256": "988215f0942583726482ae9c5e3d03e1c09e1e662b77ce86fd8073f95e2760b4"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 研究甲只纳入健康成年人。 Direct inputs: A/chunk/1; upstream=supported; original evidence=supported. Evidence: 研究甲只纳入健康成年人. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 11,
+              "sha256": "988215f0942583726482ae9c5e3d03e1c09e1e662b77ce86fd8073f95e2760b4"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [],
+      "link": "root",
+      "critical": true
+    },
+    {
+      "claim_id": "A/map/1/f2/c1",
+      "stage": "A/map/1",
+      "finding": "A/map/1/f2",
+      "start": 0,
+      "end": 9,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/chunk/1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 12,
+          "end": 17,
+          "sha256": "d38aef193e0513eb39166bb95b5985b9615df3b23cce547a284c8080937d4533"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 研究甲排除了儿童。 Direct inputs: A/chunk/1; upstream=supported; original evidence=supported. Evidence: 排除了儿童. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 12,
+              "end": 17,
+              "sha256": "d38aef193e0513eb39166bb95b5985b9615df3b23cce547a284c8080937d4533"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [],
+      "link": "root",
+      "critical": false
+    },
+    {
+      "claim_id": "A/document/f1/c1",
+      "stage": "A/document",
+      "finding": "A/document/f1",
+      "start": 0,
+      "end": 12,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/map/1/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 11,
+          "sha256": "988215f0942583726482ae9c5e3d03e1c09e1e662b77ce86fd8073f95e2760b4"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 研究甲只纳入健康成年人。 Direct inputs: A/map/1/f1; upstream=supported; original evidence=supported. Evidence: 研究甲只纳入健康成年人. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 11,
+              "sha256": "988215f0942583726482ae9c5e3d03e1c09e1e662b77ce86fd8073f95e2760b4"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "A/map/1/f1/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "A/document/f2/c1",
+      "stage": "A/document",
+      "finding": "A/document/f2",
+      "start": 0,
+      "end": 9,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/map/1/f2"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 12,
+          "end": 17,
+          "sha256": "d38aef193e0513eb39166bb95b5985b9615df3b23cce547a284c8080937d4533"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 研究甲排除了儿童。 Direct inputs: A/map/1/f2; upstream=supported; original evidence=supported. Evidence: 排除了儿童. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 12,
+              "end": 17,
+              "sha256": "d38aef193e0513eb39166bb95b5985b9615df3b23cce547a284c8080937d4533"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "A/map/1/f2/c1"
+      ],
+      "link": "faithful",
+      "critical": false
+    },
+    {
+      "claim_id": "B/map/1/f1/c1",
+      "stage": "B/map/1",
+      "finding": "B/map/1/f1",
+      "start": 0,
+      "end": 11,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/chunk/1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 10,
+          "sha256": "3f7036208cd644f635083412becf5d221c8d0e6e4cd796ec6510645fb03dfd85"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 研究乙仅研究健康成人。 Direct inputs: B/chunk/1; upstream=supported; original evidence=supported. Evidence: 研究乙仅研究健康成人. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 10,
+              "sha256": "3f7036208cd644f635083412becf5d221c8d0e6e4cd796ec6510645fb03dfd85"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [],
+      "link": "root",
+      "critical": true
+    },
+    {
+      "claim_id": "B/map/1/f2/c1",
+      "stage": "B/map/1",
+      "finding": "B/map/1/f2",
+      "start": 0,
+      "end": 11,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/chunk/1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 11,
+          "end": 18,
+          "sha256": "9387bada88f65dc6fb6724b1be6f130a73ae300b3601323d92c6fd83352fdfb9"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 研究乙儿童适用性未知。 Direct inputs: B/chunk/1; upstream=supported; original evidence=supported. Evidence: 儿童适用性未知. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 11,
+              "end": 18,
+              "sha256": "9387bada88f65dc6fb6724b1be6f130a73ae300b3601323d92c6fd83352fdfb9"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [],
+      "link": "root",
+      "critical": true
+    },
+    {
+      "claim_id": "B/document/f1/c1",
+      "stage": "B/document",
+      "finding": "B/document/f1",
+      "start": 0,
+      "end": 11,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/map/1/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 10,
+          "sha256": "3f7036208cd644f635083412becf5d221c8d0e6e4cd796ec6510645fb03dfd85"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 研究乙仅研究健康成人。 Direct inputs: B/map/1/f1; upstream=supported; original evidence=supported. Evidence: 研究乙仅研究健康成人. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 10,
+              "sha256": "3f7036208cd644f635083412becf5d221c8d0e6e4cd796ec6510645fb03dfd85"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "B/map/1/f1/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "B/document/f2/c1",
+      "stage": "B/document",
+      "finding": "B/document/f2",
+      "start": 0,
+      "end": 11,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/map/1/f2"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 11,
+          "end": 18,
+          "sha256": "9387bada88f65dc6fb6724b1be6f130a73ae300b3601323d92c6fd83352fdfb9"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 研究乙儿童适用性未知。 Direct inputs: B/map/1/f2; upstream=supported; original evidence=supported. Evidence: 儿童适用性未知. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 11,
+              "end": 18,
+              "sha256": "9387bada88f65dc6fb6724b1be6f130a73ae300b3601323d92c6fd83352fdfb9"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "B/map/1/f2/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "cross/f1/c1",
+      "stage": "cross",
+      "finding": "cross/f1",
+      "start": 0,
+      "end": 12,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/document/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 11,
+          "sha256": "988215f0942583726482ae9c5e3d03e1c09e1e662b77ce86fd8073f95e2760b4"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 研究甲只纳入健康成年人。 Direct inputs: A/document/f1; upstream=supported; original evidence=supported. Evidence: 研究甲只纳入健康成年人. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 11,
+              "sha256": "988215f0942583726482ae9c5e3d03e1c09e1e662b77ce86fd8073f95e2760b4"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "A/document/f1/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "cross/f2/c1",
+      "stage": "cross",
+      "finding": "cross/f2",
+      "start": 0,
+      "end": 11,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/document/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 10,
+          "sha256": "3f7036208cd644f635083412becf5d221c8d0e6e4cd796ec6510645fb03dfd85"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 研究乙仅研究健康成人。 Direct inputs: B/document/f1; upstream=supported; original evidence=supported. Evidence: 研究乙仅研究健康成人. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 10,
+              "sha256": "3f7036208cd644f635083412becf5d221c8d0e6e4cd796ec6510645fb03dfd85"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "B/document/f1/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "cross/f3/c1",
+      "stage": "cross",
+      "finding": "cross/f3",
+      "start": 0,
+      "end": 9,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/document/f2"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 12,
+          "end": 17,
+          "sha256": "d38aef193e0513eb39166bb95b5985b9615df3b23cce547a284c8080937d4533"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 研究甲排除了儿童。 Direct inputs: A/document/f2; upstream=supported; original evidence=supported. Evidence: 排除了儿童. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 12,
+              "end": 17,
+              "sha256": "d38aef193e0513eb39166bb95b5985b9615df3b23cce547a284c8080937d4533"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "A/document/f2/c1"
+      ],
+      "link": "faithful",
+      "critical": false
+    },
+    {
+      "claim_id": "cross/f4/c1",
+      "stage": "cross",
+      "finding": "cross/f4",
+      "start": 0,
+      "end": 11,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/document/f2"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 11,
+          "end": 18,
+          "sha256": "9387bada88f65dc6fb6724b1be6f130a73ae300b3601323d92c6fd83352fdfb9"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 研究乙儿童适用性未知。 Direct inputs: B/document/f2; upstream=supported; original evidence=supported. Evidence: 儿童适用性未知. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 11,
+              "end": 18,
+              "sha256": "9387bada88f65dc6fb6724b1be6f130a73ae300b3601323d92c6fd83352fdfb9"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "B/document/f2/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "cross/f5/c1",
+      "stage": "cross",
+      "finding": "cross/f5",
+      "start": 0,
+      "end": 19,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/document/f1",
+        "A/document/f2",
+        "B/document/f1",
+        "B/document/f2"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 11,
+          "sha256": "988215f0942583726482ae9c5e3d03e1c09e1e662b77ce86fd8073f95e2760b4"
+        },
+        {
+          "source": "A",
+          "start": 12,
+          "end": 17,
+          "sha256": "d38aef193e0513eb39166bb95b5985b9615df3b23cce547a284c8080937d4533"
+        },
+        {
+          "source": "B",
+          "start": 0,
+          "end": 10,
+          "sha256": "3f7036208cd644f635083412becf5d221c8d0e6e4cd796ec6510645fb03dfd85"
+        },
+        {
+          "source": "B",
+          "start": 11,
+          "end": 18,
+          "sha256": "9387bada88f65dc6fb6724b1be6f130a73ae300b3601323d92c6fd83352fdfb9"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 儿童适用性不能由健康成人范围直接推出。 Direct inputs: A/document/f1, A/document/f2, B/document/f1, B/document/f2; upstream=supported; original evidence=supported. Evidence: 研究甲只纳入健康成年人 | 排除了儿童 | 研究乙仅研究健康成人 | 儿童适用性未知. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "conditional",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 11,
+              "sha256": "988215f0942583726482ae9c5e3d03e1c09e1e662b77ce86fd8073f95e2760b4"
+            },
+            {
+              "source": "A",
+              "start": 12,
+              "end": 17,
+              "sha256": "d38aef193e0513eb39166bb95b5985b9615df3b23cce547a284c8080937d4533"
+            }
+          ]
+        },
+        {
+          "source": "B",
+          "stance": "conditional",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 10,
+              "sha256": "3f7036208cd644f635083412becf5d221c8d0e6e4cd796ec6510645fb03dfd85"
+            },
+            {
+              "source": "B",
+              "start": 11,
+              "end": 18,
+              "sha256": "9387bada88f65dc6fb6724b1be6f130a73ae300b3601323d92c6fd83352fdfb9"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "A/document/f1/c1",
+        "A/document/f2/c1",
+        "B/document/f1/c1",
+        "B/document/f2/c1"
+      ],
+      "link": "combined",
+      "critical": false
+    }
+  ],
+  "retentions": [
+    {
+      "fact_id": "F1",
+      "layer": "map_collection",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/chunk/1"
+      ],
+      "reason": "AI calibration draft F1: required proposition '研究甲只纳入健康成年人。' at map_collection. Actual direct input aliases: A/chunk/1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'healthy adults only' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F1",
+      "layer": "document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/map/1/f1"
+      ],
+      "reason": "AI calibration draft F1: required proposition '研究甲只纳入健康成年人。' at document_reduce. Actual direct input aliases: A/map/1/f1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'healthy adults only' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F1",
+      "layer": "cross_document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/document/f1"
+      ],
+      "reason": "AI calibration draft F1: required proposition '研究甲只纳入健康成年人。' at cross_document_reduce. Actual direct input aliases: A/document/f1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'healthy adults only' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F2",
+      "layer": "map_collection",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/chunk/1"
+      ],
+      "reason": "AI calibration draft F2: required proposition '研究乙仅研究健康成人。' at map_collection. Actual direct input aliases: B/chunk/1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'healthy adults only' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F2",
+      "layer": "document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/map/1/f1"
+      ],
+      "reason": "AI calibration draft F2: required proposition '研究乙仅研究健康成人。' at document_reduce. Actual direct input aliases: B/map/1/f1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'healthy adults only' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F2",
+      "layer": "cross_document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/document/f1"
+      ],
+      "reason": "AI calibration draft F2: required proposition '研究乙仅研究健康成人。' at cross_document_reduce. Actual direct input aliases: B/document/f1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'healthy adults only' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F3",
+      "layer": "map_collection",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/chunk/1"
+      ],
+      "reason": "AI calibration draft F3: required proposition '研究甲排除了儿童。' at map_collection. Actual direct input aliases: A/chunk/1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'study A' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F3",
+      "layer": "document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/map/1/f2"
+      ],
+      "reason": "AI calibration draft F3: required proposition '研究甲排除了儿童。' at document_reduce. Actual direct input aliases: A/map/1/f2. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'study A' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F3",
+      "layer": "cross_document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/document/f2"
+      ],
+      "reason": "AI calibration draft F3: required proposition '研究甲排除了儿童。' at cross_document_reduce. Actual direct input aliases: A/document/f2. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'study A' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F4",
+      "layer": "map_collection",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/chunk/1"
+      ],
+      "reason": "AI calibration draft F4: required proposition '研究乙儿童适用性未知。' at map_collection. Actual direct input aliases: B/chunk/1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'study B' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F4",
+      "layer": "document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/map/1/f2"
+      ],
+      "reason": "AI calibration draft F4: required proposition '研究乙儿童适用性未知。' at document_reduce. Actual direct input aliases: B/map/1/f2. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'study B' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F4",
+      "layer": "cross_document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/document/f2"
+      ],
+      "reason": "AI calibration draft F4: required proposition '研究乙儿童适用性未知。' at cross_document_reduce. Actual direct input aliases: B/document/f2. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'study B' and all contrary evidence; no transfer between source identities."
+    }
+  ],
+  "relations": [
+    {
+      "relation_id": "R1",
+      "classification": "pass",
+      "conflict_recalled": "na",
+      "conflict_asserted": false,
+      "conflict_correct": "na"
+    }
+  ],
+  "atomized_findings": [
+    "A/map/1/f1",
+    "A/map/1/f2",
+    "A/document/f1",
+    "A/document/f2",
+    "B/map/1/f1",
+    "B/map/1/f2",
+    "B/document/f1",
+    "B/document/f2",
+    "cross/f1",
+    "cross/f2",
+    "cross/f3",
+    "cross/f4",
+    "cross/f5"
+  ],
+  "reviews": [],
+  "origin": "codex_draft",
+  "acceptance_judgments": []
+}

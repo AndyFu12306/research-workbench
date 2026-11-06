@@ -1,0 +1,259 @@
+{
+  "version": "quality-assessment-v2",
+  "assessment_id": "Q15_wrong_calibration_draft",
+  "revision": 2,
+  "candidate_id": "Q15_wrong",
+  "rubric": "quality-rubric-v2",
+  "atomization": "quality-atomization-v2",
+  "claims": [
+    {
+      "claim_id": "A/map/1/f1/c1",
+      "stage": "A/map/1",
+      "finding": "A/map/1/f1",
+      "start": 0,
+      "end": 13,
+      "upstream_support": "unsupported",
+      "source_support": "unsupported",
+      "upstream_refs": [
+        "A/chunk/1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 13,
+          "sha256": "0c39aeeab779e5e9d0a35c657e60b3cec78ff1bedbe146647d8482281031bb00"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 方法A使准确率提高90%。 Direct inputs: A/chunk/1; upstream=unsupported; original evidence=unsupported. Evidence: 合成文章甲只介绍海水盐度。. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "irrelevant",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 13,
+              "sha256": "0c39aeeab779e5e9d0a35c657e60b3cec78ff1bedbe146647d8482281031bb00"
+            }
+          ]
+        }
+      ],
+      "severity": "severe",
+      "kind_correct": "pass",
+      "predecessor_claims": [],
+      "link": "root",
+      "critical": true
+    },
+    {
+      "claim_id": "A/document/f1/c1",
+      "stage": "A/document",
+      "finding": "A/document/f1",
+      "start": 0,
+      "end": 13,
+      "upstream_support": "supported",
+      "source_support": "unsupported",
+      "upstream_refs": [
+        "A/map/1/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 13,
+          "sha256": "0c39aeeab779e5e9d0a35c657e60b3cec78ff1bedbe146647d8482281031bb00"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 方法A使准确率提高90%。 Direct inputs: A/map/1/f1; upstream=supported; original evidence=unsupported. Evidence: 合成文章甲只介绍海水盐度。. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "irrelevant",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 13,
+              "sha256": "0c39aeeab779e5e9d0a35c657e60b3cec78ff1bedbe146647d8482281031bb00"
+            }
+          ]
+        }
+      ],
+      "severity": "severe",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "A/map/1/f1/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "B/map/1/f1/c1",
+      "stage": "B/map/1",
+      "finding": "B/map/1/f1",
+      "start": 0,
+      "end": 13,
+      "upstream_support": "unsupported",
+      "source_support": "unsupported",
+      "upstream_refs": [
+        "B/chunk/1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 13,
+          "sha256": "0b7d3b92add0d404e36cc11a292202200a5d11932787910f4cbddd482fc289f6"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 方法A使准确率提高90%。 Direct inputs: B/chunk/1; upstream=unsupported; original evidence=unsupported. Evidence: 合成文章乙只介绍矿石硬度。. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "irrelevant",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 13,
+              "sha256": "0b7d3b92add0d404e36cc11a292202200a5d11932787910f4cbddd482fc289f6"
+            }
+          ]
+        }
+      ],
+      "severity": "severe",
+      "kind_correct": "pass",
+      "predecessor_claims": [],
+      "link": "root",
+      "critical": true
+    },
+    {
+      "claim_id": "B/document/f1/c1",
+      "stage": "B/document",
+      "finding": "B/document/f1",
+      "start": 0,
+      "end": 13,
+      "upstream_support": "supported",
+      "source_support": "unsupported",
+      "upstream_refs": [
+        "B/map/1/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 13,
+          "sha256": "0b7d3b92add0d404e36cc11a292202200a5d11932787910f4cbddd482fc289f6"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 方法A使准确率提高90%。 Direct inputs: B/map/1/f1; upstream=supported; original evidence=unsupported. Evidence: 合成文章乙只介绍矿石硬度。. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "irrelevant",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 13,
+              "sha256": "0b7d3b92add0d404e36cc11a292202200a5d11932787910f4cbddd482fc289f6"
+            }
+          ]
+        }
+      ],
+      "severity": "severe",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "B/map/1/f1/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "cross/f1/c1",
+      "stage": "cross",
+      "finding": "cross/f1",
+      "start": 0,
+      "end": 13,
+      "upstream_support": "supported",
+      "source_support": "unsupported",
+      "upstream_refs": [
+        "A/document/f1",
+        "B/document/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 13,
+          "sha256": "0c39aeeab779e5e9d0a35c657e60b3cec78ff1bedbe146647d8482281031bb00"
+        },
+        {
+          "source": "B",
+          "start": 0,
+          "end": 13,
+          "sha256": "0b7d3b92add0d404e36cc11a292202200a5d11932787910f4cbddd482fc289f6"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 方法A使准确率提高90%。 Direct inputs: A/document/f1, B/document/f1; upstream=supported; original evidence=unsupported. Evidence: 合成文章甲只介绍海水盐度。 | 合成文章乙只介绍矿石硬度。. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "irrelevant",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 13,
+              "sha256": "0c39aeeab779e5e9d0a35c657e60b3cec78ff1bedbe146647d8482281031bb00"
+            }
+          ]
+        },
+        {
+          "source": "B",
+          "stance": "irrelevant",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 13,
+              "sha256": "0b7d3b92add0d404e36cc11a292202200a5d11932787910f4cbddd482fc289f6"
+            }
+          ]
+        }
+      ],
+      "severity": "severe",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "A/document/f1/c1",
+        "B/document/f1/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    }
+  ],
+  "retentions": [],
+  "relations": [],
+  "atomized_findings": [
+    "A/map/1/f1",
+    "A/document/f1",
+    "B/map/1/f1",
+    "B/document/f1",
+    "cross/f1"
+  ],
+  "reviews": [],
+  "origin": "codex_draft",
+  "acceptance_judgments": [
+    {
+      "target_id": "acceptance/relevance",
+      "verdict": "pass",
+      "reason": "AI calibration draft: Both supplied sources contain no result relevant to method A. Source A is salinity and source B is hardness; this candidate invents method A findings."
+    },
+    {
+      "target_id": "acceptance/faithful_empty",
+      "verdict": "fail",
+      "reason": "AI calibration draft: Return no invented method A finding; empty does not mean ineffective. Source A is salinity and source B is hardness; this candidate invents method A findings."
+    }
+  ]
+}

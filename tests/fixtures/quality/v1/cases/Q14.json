@@ -1,0 +1,107 @@
+{
+  "version": "research-quality-benchmark-v1",
+  "case_id": "Q14",
+  "revision": 2,
+  "language": "en",
+  "requirements_version": "quality-requirements-v1",
+  "question": {
+    "version": "quality-question-v1",
+    "title": "What findings, conditions and limitations are supported?",
+    "description": "Q15/Q16: evaluate method A only. Synthetic evaluation; no external knowledge."
+  },
+  "sources": [
+    {
+      "alias": "A",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0001"
+      ],
+      "text": "Experiment E observed a 2 point gain; this is one experiment.",
+      "sha256": "ffebb6447a22c407e1459f0924f2b1b9d076670ce6ee2238c5c12c9422717dfc"
+    },
+    {
+      "alias": "B",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0002"
+      ],
+      "text": "This report retells experiment E, not an independent replication.",
+      "sha256": "a82ee4a64c41ec5b6832906d56a9036f2e736fbab9cdef659ec44ac78685e2ff"
+    }
+  ],
+  "facts": [
+    {
+      "fact_id": "F1",
+      "proposition": "Experiment E observed a 2 point gain; this is one experiment.",
+      "subject": "synthetic A",
+      "method": "experiment E",
+      "comparison": "",
+      "result": "experiment independence",
+      "value_unit": "2 points",
+      "polarity": "observed gain",
+      "conditions": "one experiment",
+      "uncertainty": "Duplicate accounts do not establish replication.",
+      "evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 61,
+          "sha256": "ffebb6447a22c407e1459f0924f2b1b9d076670ce6ee2238c5c12c9422717dfc"
+        }
+      ],
+      "critical": true,
+      "limitation": false,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    },
+    {
+      "fact_id": "F2",
+      "proposition": "This report retells experiment E, not an independent replication.",
+      "subject": "synthetic B",
+      "method": "experiment E",
+      "comparison": "",
+      "result": "experiment independence",
+      "value_unit": "one retelling",
+      "polarity": "not an independent replication",
+      "conditions": "same experiment retold",
+      "uncertainty": "Duplicate accounts do not establish replication.",
+      "evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 65,
+          "sha256": "a82ee4a64c41ec5b6832906d56a9036f2e736fbab9cdef659ec44ac78685e2ff"
+        }
+      ],
+      "critical": true,
+      "limitation": false,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "relation_id": "R1",
+      "facts": [
+        "F1",
+        "F2"
+      ],
+      "kind": "same_experiment",
+      "conditions": "Preserve the explicitly stated settings and source identities.",
+      "expected": "Both accounts describe the same experiment, not independent replications."
+    }
+  ],
+  "max_chars": 8000,
+  "overlap_chars": 0,
+  "forbidden": [
+    "Two independent replications confirm the result."
+  ]
+}

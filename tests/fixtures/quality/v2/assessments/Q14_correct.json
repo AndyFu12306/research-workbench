@@ -1,0 +1,583 @@
+{
+  "version": "quality-assessment-v2",
+  "assessment_id": "Q14_correct_calibration_draft",
+  "revision": 2,
+  "candidate_id": "Q14_correct",
+  "rubric": "quality-rubric-v2",
+  "atomization": "quality-atomization-v2",
+  "claims": [
+    {
+      "claim_id": "A/map/1/f1/c1",
+      "stage": "A/map/1",
+      "finding": "A/map/1/f1",
+      "start": 0,
+      "end": 37,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/chunk/1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 36,
+          "sha256": "3573d2b71df1fa4f703baa52a22c6ce8d4949561c609f92de80abdcdd1ad314f"
+        }
+      ],
+      "reason": "AI calibration draft proposition: Experiment E observed a 2 point gain. Direct inputs: A/chunk/1; upstream=supported; original evidence=supported. Evidence: Experiment E observed a 2 point gain. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 36,
+              "sha256": "3573d2b71df1fa4f703baa52a22c6ce8d4949561c609f92de80abdcdd1ad314f"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [],
+      "link": "root",
+      "critical": true
+    },
+    {
+      "claim_id": "A/document/f1/c1",
+      "stage": "A/document",
+      "finding": "A/document/f1",
+      "start": 0,
+      "end": 37,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/map/1/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 36,
+          "sha256": "3573d2b71df1fa4f703baa52a22c6ce8d4949561c609f92de80abdcdd1ad314f"
+        }
+      ],
+      "reason": "AI calibration draft proposition: Experiment E observed a 2 point gain. Direct inputs: A/map/1/f1; upstream=supported; original evidence=supported. Evidence: Experiment E observed a 2 point gain. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 36,
+              "sha256": "3573d2b71df1fa4f703baa52a22c6ce8d4949561c609f92de80abdcdd1ad314f"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "A/map/1/f1/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "B/map/1/f1/c1",
+      "stage": "B/map/1",
+      "finding": "B/map/1/f1",
+      "start": 0,
+      "end": 39,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/chunk/1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 32,
+          "sha256": "96043cfb8dc0c7b474a5e581af92f12d258d80ffaefcf794738a167ef7005b14"
+        }
+      ],
+      "reason": "AI calibration draft proposition: The second report retells experiment E. Direct inputs: B/chunk/1; upstream=supported; original evidence=supported. Evidence: This report retells experiment E. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 32,
+              "sha256": "96043cfb8dc0c7b474a5e581af92f12d258d80ffaefcf794738a167ef7005b14"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [],
+      "link": "root",
+      "critical": false
+    },
+    {
+      "claim_id": "B/map/1/f2/c1",
+      "stage": "B/map/1",
+      "finding": "B/map/1/f2",
+      "start": 0,
+      "end": 52,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/chunk/1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 34,
+          "end": 64,
+          "sha256": "cc3a75228f607754a7c835da9d1856bb9dabaf7e150b132142b156977411e300"
+        }
+      ],
+      "reason": "AI calibration draft proposition: The second report is not an independent replication. Direct inputs: B/chunk/1; upstream=supported; original evidence=supported. Evidence: not an independent replication. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 34,
+              "end": 64,
+              "sha256": "cc3a75228f607754a7c835da9d1856bb9dabaf7e150b132142b156977411e300"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [],
+      "link": "root",
+      "critical": true
+    },
+    {
+      "claim_id": "B/document/f1/c1",
+      "stage": "B/document",
+      "finding": "B/document/f1",
+      "start": 0,
+      "end": 39,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/map/1/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 32,
+          "sha256": "96043cfb8dc0c7b474a5e581af92f12d258d80ffaefcf794738a167ef7005b14"
+        }
+      ],
+      "reason": "AI calibration draft proposition: The second report retells experiment E. Direct inputs: B/map/1/f1; upstream=supported; original evidence=supported. Evidence: This report retells experiment E. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 32,
+              "sha256": "96043cfb8dc0c7b474a5e581af92f12d258d80ffaefcf794738a167ef7005b14"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "B/map/1/f1/c1"
+      ],
+      "link": "faithful",
+      "critical": false
+    },
+    {
+      "claim_id": "B/document/f2/c1",
+      "stage": "B/document",
+      "finding": "B/document/f2",
+      "start": 0,
+      "end": 52,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/map/1/f2"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 34,
+          "end": 64,
+          "sha256": "cc3a75228f607754a7c835da9d1856bb9dabaf7e150b132142b156977411e300"
+        }
+      ],
+      "reason": "AI calibration draft proposition: The second report is not an independent replication. Direct inputs: B/map/1/f2; upstream=supported; original evidence=supported. Evidence: not an independent replication. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 34,
+              "end": 64,
+              "sha256": "cc3a75228f607754a7c835da9d1856bb9dabaf7e150b132142b156977411e300"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "B/map/1/f2/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "cross/f1/c1",
+      "stage": "cross",
+      "finding": "cross/f1",
+      "start": 0,
+      "end": 37,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/document/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 36,
+          "sha256": "3573d2b71df1fa4f703baa52a22c6ce8d4949561c609f92de80abdcdd1ad314f"
+        }
+      ],
+      "reason": "AI calibration draft proposition: Experiment E observed a 2 point gain. Direct inputs: A/document/f1; upstream=supported; original evidence=supported. Evidence: Experiment E observed a 2 point gain. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 36,
+              "sha256": "3573d2b71df1fa4f703baa52a22c6ce8d4949561c609f92de80abdcdd1ad314f"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "A/document/f1/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "cross/f2/c1",
+      "stage": "cross",
+      "finding": "cross/f2",
+      "start": 0,
+      "end": 39,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/document/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 32,
+          "sha256": "96043cfb8dc0c7b474a5e581af92f12d258d80ffaefcf794738a167ef7005b14"
+        }
+      ],
+      "reason": "AI calibration draft proposition: The second report retells experiment E. Direct inputs: B/document/f1; upstream=supported; original evidence=supported. Evidence: This report retells experiment E. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 32,
+              "sha256": "96043cfb8dc0c7b474a5e581af92f12d258d80ffaefcf794738a167ef7005b14"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "B/document/f1/c1"
+      ],
+      "link": "faithful",
+      "critical": false
+    },
+    {
+      "claim_id": "cross/f3/c1",
+      "stage": "cross",
+      "finding": "cross/f3",
+      "start": 0,
+      "end": 52,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/document/f2"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 34,
+          "end": 64,
+          "sha256": "cc3a75228f607754a7c835da9d1856bb9dabaf7e150b132142b156977411e300"
+        }
+      ],
+      "reason": "AI calibration draft proposition: The second report is not an independent replication. Direct inputs: B/document/f2; upstream=supported; original evidence=supported. Evidence: not an independent replication. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 34,
+              "end": 64,
+              "sha256": "cc3a75228f607754a7c835da9d1856bb9dabaf7e150b132142b156977411e300"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "B/document/f2/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "cross/f4/c1",
+      "stage": "cross",
+      "finding": "cross/f4",
+      "start": 0,
+      "end": 71,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/document/f1",
+        "B/document/f1",
+        "B/document/f2"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 36,
+          "sha256": "3573d2b71df1fa4f703baa52a22c6ce8d4949561c609f92de80abdcdd1ad314f"
+        },
+        {
+          "source": "B",
+          "start": 0,
+          "end": 32,
+          "sha256": "96043cfb8dc0c7b474a5e581af92f12d258d80ffaefcf794738a167ef7005b14"
+        },
+        {
+          "source": "B",
+          "start": 34,
+          "end": 64,
+          "sha256": "cc3a75228f607754a7c835da9d1856bb9dabaf7e150b132142b156977411e300"
+        }
+      ],
+      "reason": "AI calibration draft proposition: These are accounts of one experiment, not two independent replications. Direct inputs: A/document/f1, B/document/f1, B/document/f2; upstream=supported; original evidence=supported. Evidence: Experiment E observed a 2 point gain | This report retells experiment E | not an independent replication. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "conditional",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 36,
+              "sha256": "3573d2b71df1fa4f703baa52a22c6ce8d4949561c609f92de80abdcdd1ad314f"
+            }
+          ]
+        },
+        {
+          "source": "B",
+          "stance": "conditional",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 32,
+              "sha256": "96043cfb8dc0c7b474a5e581af92f12d258d80ffaefcf794738a167ef7005b14"
+            },
+            {
+              "source": "B",
+              "start": 34,
+              "end": 64,
+              "sha256": "cc3a75228f607754a7c835da9d1856bb9dabaf7e150b132142b156977411e300"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "A/document/f1/c1",
+        "B/document/f1/c1",
+        "B/document/f2/c1"
+      ],
+      "link": "combined",
+      "critical": false
+    }
+  ],
+  "retentions": [
+    {
+      "fact_id": "F1",
+      "layer": "map_collection",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/chunk/1"
+      ],
+      "reason": "AI calibration draft F1: required proposition 'Experiment E observed a 2 point gain.' at map_collection. Actual direct input aliases: A/chunk/1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'experiment E' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F1",
+      "layer": "document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/map/1/f1"
+      ],
+      "reason": "AI calibration draft F1: required proposition 'Experiment E observed a 2 point gain.' at document_reduce. Actual direct input aliases: A/map/1/f1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'experiment E' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F1",
+      "layer": "cross_document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/document/f1"
+      ],
+      "reason": "AI calibration draft F1: required proposition 'Experiment E observed a 2 point gain.' at cross_document_reduce. Actual direct input aliases: A/document/f1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'experiment E' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F2",
+      "layer": "map_collection",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/chunk/1"
+      ],
+      "reason": "AI calibration draft F2: required proposition 'The second report retells experiment E.' at map_collection. Actual direct input aliases: B/chunk/1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'experiment E' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F2",
+      "layer": "document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/map/1/f1"
+      ],
+      "reason": "AI calibration draft F2: required proposition 'The second report retells experiment E.' at document_reduce. Actual direct input aliases: B/map/1/f1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'experiment E' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F2",
+      "layer": "cross_document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/document/f1"
+      ],
+      "reason": "AI calibration draft F2: required proposition 'The second report retells experiment E.' at cross_document_reduce. Actual direct input aliases: B/document/f1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'experiment E' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F3",
+      "layer": "map_collection",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/chunk/1"
+      ],
+      "reason": "AI calibration draft F3: required proposition 'The second report is not an independent replication.' at map_collection. Actual direct input aliases: B/chunk/1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'experiment E' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F3",
+      "layer": "document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/map/1/f2"
+      ],
+      "reason": "AI calibration draft F3: required proposition 'The second report is not an independent replication.' at document_reduce. Actual direct input aliases: B/map/1/f2. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'experiment E' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F3",
+      "layer": "cross_document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/document/f2"
+      ],
+      "reason": "AI calibration draft F3: required proposition 'The second report is not an independent replication.' at cross_document_reduce. Actual direct input aliases: B/document/f2. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'experiment E' and all contrary evidence; no transfer between source identities."
+    }
+  ],
+  "relations": [
+    {
+      "relation_id": "R1",
+      "classification": "pass",
+      "conflict_recalled": "na",
+      "conflict_asserted": false,
+      "conflict_correct": "na"
+    }
+  ],
+  "atomized_findings": [
+    "A/map/1/f1",
+    "A/document/f1",
+    "B/map/1/f1",
+    "B/map/1/f2",
+    "B/document/f1",
+    "B/document/f2",
+    "cross/f1",
+    "cross/f2",
+    "cross/f3",
+    "cross/f4"
+  ],
+  "reviews": [],
+  "origin": "codex_draft",
+  "acceptance_judgments": []
+}

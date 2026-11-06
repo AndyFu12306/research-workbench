@@ -1,0 +1,409 @@
+{
+  "version": "quality-assessment-v2",
+  "assessment_id": "Q11_correct_calibration_draft",
+  "revision": 2,
+  "candidate_id": "Q11_correct",
+  "rubric": "quality-rubric-v2",
+  "atomization": "quality-atomization-v2",
+  "claims": [
+    {
+      "claim_id": "A/map/1/f1/c1",
+      "stage": "A/map/1",
+      "finding": "A/map/1/f1",
+      "start": 0,
+      "end": 14,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/chunk/1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 14,
+          "sha256": "08eddf5e55266967f5507e60d3720cff9197376f23a29c46923f2bc9a34a3567"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 方法A在成人样本中改善结果。 Direct inputs: A/chunk/1; upstream=supported; original evidence=supported. Evidence: 方法A在成人样本中改善结果。. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 14,
+              "sha256": "08eddf5e55266967f5507e60d3720cff9197376f23a29c46923f2bc9a34a3567"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [],
+      "link": "root",
+      "critical": true
+    },
+    {
+      "claim_id": "A/document/f1/c1",
+      "stage": "A/document",
+      "finding": "A/document/f1",
+      "start": 0,
+      "end": 14,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/map/1/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 14,
+          "sha256": "08eddf5e55266967f5507e60d3720cff9197376f23a29c46923f2bc9a34a3567"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 方法A在成人样本中改善结果。 Direct inputs: A/map/1/f1; upstream=supported; original evidence=supported. Evidence: 方法A在成人样本中改善结果。. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 14,
+              "sha256": "08eddf5e55266967f5507e60d3720cff9197376f23a29c46923f2bc9a34a3567"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "A/map/1/f1/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "B/map/1/f1/c1",
+      "stage": "B/map/1",
+      "finding": "B/map/1/f1",
+      "start": 0,
+      "end": 15,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/chunk/1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 15,
+          "sha256": "522ff15f5de5b9c8ab761ed5f770db572d83b342fc6c03d5207bdd628f687a83"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 方法A在儿童样本中未改善结果。 Direct inputs: B/chunk/1; upstream=supported; original evidence=supported. Evidence: 方法A在儿童样本中未改善结果。. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 15,
+              "sha256": "522ff15f5de5b9c8ab761ed5f770db572d83b342fc6c03d5207bdd628f687a83"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [],
+      "link": "root",
+      "critical": true
+    },
+    {
+      "claim_id": "B/document/f1/c1",
+      "stage": "B/document",
+      "finding": "B/document/f1",
+      "start": 0,
+      "end": 15,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/map/1/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 15,
+          "sha256": "522ff15f5de5b9c8ab761ed5f770db572d83b342fc6c03d5207bdd628f687a83"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 方法A在儿童样本中未改善结果。 Direct inputs: B/map/1/f1; upstream=supported; original evidence=supported. Evidence: 方法A在儿童样本中未改善结果。. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 15,
+              "sha256": "522ff15f5de5b9c8ab761ed5f770db572d83b342fc6c03d5207bdd628f687a83"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "B/map/1/f1/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "cross/f1/c1",
+      "stage": "cross",
+      "finding": "cross/f1",
+      "start": 0,
+      "end": 14,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/document/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 14,
+          "sha256": "08eddf5e55266967f5507e60d3720cff9197376f23a29c46923f2bc9a34a3567"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 方法A在成人样本中改善结果。 Direct inputs: A/document/f1; upstream=supported; original evidence=supported. Evidence: 方法A在成人样本中改善结果。. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 14,
+              "sha256": "08eddf5e55266967f5507e60d3720cff9197376f23a29c46923f2bc9a34a3567"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "A/document/f1/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "cross/f2/c1",
+      "stage": "cross",
+      "finding": "cross/f2",
+      "start": 0,
+      "end": 15,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "B/document/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 15,
+          "sha256": "522ff15f5de5b9c8ab761ed5f770db572d83b342fc6c03d5207bdd628f687a83"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 方法A在儿童样本中未改善结果。 Direct inputs: B/document/f1; upstream=supported; original evidence=supported. Evidence: 方法A在儿童样本中未改善结果。. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "B",
+          "stance": "supports",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 15,
+              "sha256": "522ff15f5de5b9c8ab761ed5f770db572d83b342fc6c03d5207bdd628f687a83"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "B/document/f1/c1"
+      ],
+      "link": "faithful",
+      "critical": true
+    },
+    {
+      "claim_id": "cross/f3/c1",
+      "stage": "cross",
+      "finding": "cross/f3",
+      "start": 0,
+      "end": 19,
+      "upstream_support": "supported",
+      "source_support": "supported",
+      "upstream_refs": [
+        "A/document/f1",
+        "B/document/f1"
+      ],
+      "source_evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 14,
+          "sha256": "08eddf5e55266967f5507e60d3720cff9197376f23a29c46923f2bc9a34a3567"
+        },
+        {
+          "source": "B",
+          "start": 0,
+          "end": 15,
+          "sha256": "522ff15f5de5b9c8ab761ed5f770db572d83b342fc6c03d5207bdd628f687a83"
+        }
+      ],
+      "reason": "AI calibration draft proposition: 人群条件不同，不能直接称为同人群矛盾。 Direct inputs: A/document/f1, B/document/f1; upstream=supported; original evidence=supported. Evidence: 方法A在成人样本中改善结果。 | 方法A在儿童样本中未改善结果。. The cited spans provide only their specified source and condition; compare the exact proposition above to these premises, not to a vote across sources.",
+      "citations": [
+        {
+          "source": "A",
+          "stance": "conditional",
+          "evidence": [
+            {
+              "source": "A",
+              "start": 0,
+              "end": 14,
+              "sha256": "08eddf5e55266967f5507e60d3720cff9197376f23a29c46923f2bc9a34a3567"
+            }
+          ]
+        },
+        {
+          "source": "B",
+          "stance": "conditional",
+          "evidence": [
+            {
+              "source": "B",
+              "start": 0,
+              "end": 15,
+              "sha256": "522ff15f5de5b9c8ab761ed5f770db572d83b342fc6c03d5207bdd628f687a83"
+            }
+          ]
+        }
+      ],
+      "severity": "none",
+      "kind_correct": "pass",
+      "predecessor_claims": [
+        "A/document/f1/c1",
+        "B/document/f1/c1"
+      ],
+      "link": "combined",
+      "critical": false
+    }
+  ],
+  "retentions": [
+    {
+      "fact_id": "F1",
+      "layer": "map_collection",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/chunk/1"
+      ],
+      "reason": "AI calibration draft F1: required proposition '方法A在成人样本中改善结果。' at map_collection. Actual direct input aliases: A/chunk/1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'adults' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F1",
+      "layer": "document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/map/1/f1"
+      ],
+      "reason": "AI calibration draft F1: required proposition '方法A在成人样本中改善结果。' at document_reduce. Actual direct input aliases: A/map/1/f1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'adults' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F1",
+      "layer": "cross_document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "A/document/f1"
+      ],
+      "reason": "AI calibration draft F1: required proposition '方法A在成人样本中改善结果。' at cross_document_reduce. Actual direct input aliases: A/document/f1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'adults' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F2",
+      "layer": "map_collection",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/chunk/1"
+      ],
+      "reason": "AI calibration draft F2: required proposition '方法A在儿童样本中未改善结果。' at map_collection. Actual direct input aliases: B/chunk/1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'children' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F2",
+      "layer": "document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/map/1/f1"
+      ],
+      "reason": "AI calibration draft F2: required proposition '方法A在儿童样本中未改善结果。' at document_reduce. Actual direct input aliases: B/map/1/f1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'children' and all contrary evidence; no transfer between source identities."
+    },
+    {
+      "fact_id": "F2",
+      "layer": "cross_document_reduce",
+      "availability": "explicit_complete",
+      "outcome": "preserved",
+      "input_refs": [
+        "B/document/f1"
+      ],
+      "reason": "AI calibration draft F2: required proposition '方法A在儿童样本中未改善结果。' at cross_document_reduce. Actual direct input aliases: B/document/f1. availability=explicit_complete; output=preserved. The authored output explicitly retains the stated value, identity and required scope.",
+      "counter_information": "Keep condition 'children' and all contrary evidence; no transfer between source identities."
+    }
+  ],
+  "relations": [
+    {
+      "relation_id": "R1",
+      "classification": "pass",
+      "conflict_recalled": "na",
+      "conflict_asserted": false,
+      "conflict_correct": "na"
+    }
+  ],
+  "atomized_findings": [
+    "A/map/1/f1",
+    "A/document/f1",
+    "B/map/1/f1",
+    "B/document/f1",
+    "cross/f1",
+    "cross/f2",
+    "cross/f3"
+  ],
+  "reviews": [],
+  "origin": "codex_draft",
+  "acceptance_judgments": []
+}

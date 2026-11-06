@@ -1,0 +1,100 @@
+{
+  "version": "quality-candidate-v1",
+  "candidate_id": "Q02_paraphrase",
+  "revision": 2,
+  "case_id": "Q02",
+  "stages": [
+    {
+      "alias": "A/map/1",
+      "findings": [
+        {
+          "alias": "A/map/1/f1",
+          "text": "Under load X, method A latency was 250 ms.",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "A/chunk/1"
+          ]
+        }
+      ]
+    },
+    {
+      "alias": "A/document",
+      "findings": [
+        {
+          "alias": "A/document/f1",
+          "text": "Under load X, method A latency was 250 ms.",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "A/map/1/f1"
+          ]
+        }
+      ]
+    },
+    {
+      "alias": "B/map/1",
+      "findings": [
+        {
+          "alias": "B/map/1/f1",
+          "text": "Under load X, method B latency was 0.5 s.",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "B/chunk/1"
+          ]
+        }
+      ]
+    },
+    {
+      "alias": "B/document",
+      "findings": [
+        {
+          "alias": "B/document/f1",
+          "text": "Under load X, method B latency was 0.5 s.",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "B/map/1/f1"
+          ]
+        }
+      ]
+    },
+    {
+      "alias": "cross",
+      "findings": [
+        {
+          "alias": "cross/f1",
+          "text": "Under load X, method A latency was 250 ms.",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "A/document/f1"
+          ]
+        },
+        {
+          "alias": "cross/f2",
+          "text": "Under load X, method B latency was 500 ms.",
+          "kind": "source_summary",
+          "category": "finding",
+          "citations": [
+            "B/document/f1"
+          ]
+        },
+        {
+          "alias": "cross/f3",
+          "text": "Under load X, A has lower latency than B.",
+          "kind": "ai_inference",
+          "category": "finding",
+          "citations": [
+            "A/document/f1",
+            "B/document/f1"
+          ]
+        }
+      ]
+    }
+  ],
+  "expected": "completed",
+  "max_calls": 106,
+  "stage_input_limit": 24000
+}

@@ -1,0 +1,107 @@
+{
+  "version": "research-quality-benchmark-v1",
+  "case_id": "Q01",
+  "revision": 2,
+  "language": "zh",
+  "requirements_version": "quality-requirements-v1",
+  "question": {
+    "version": "quality-question-v1",
+    "title": "方法A的研究结果、条件和限制是什么？",
+    "description": "Q15/Q16: evaluate method A only. Synthetic evaluation; no external knowledge."
+  },
+  "sources": [
+    {
+      "alias": "A",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0001"
+      ],
+      "text": "同一测试集上，甲方法准确率72%。",
+      "sha256": "620de654d3688139197132da250e2f21f7060615e9e3c06188d6d4e4cef4d272"
+    },
+    {
+      "alias": "B",
+      "identity": [
+        "zotero",
+        "personal",
+        "FAKE0002"
+      ],
+      "text": "同一测试集上，乙方法准确率68%。",
+      "sha256": "28c179e5fde405bdee284e1866f93388944af486b81029c20fad1f814aa22a1a"
+    }
+  ],
+  "facts": [
+    {
+      "fact_id": "F1",
+      "proposition": "同一测试集上，甲方法准确率72%。",
+      "subject": "synthetic A",
+      "method": "甲方法",
+      "comparison": "versus the explicitly stated comparator",
+      "result": "accuracy",
+      "value_unit": "72%",
+      "polarity": "observed",
+      "conditions": "same test set",
+      "uncertainty": "Statistical significance was not reported.",
+      "evidence": [
+        {
+          "source": "A",
+          "start": 0,
+          "end": 17,
+          "sha256": "620de654d3688139197132da250e2f21f7060615e9e3c06188d6d4e4cef4d272"
+        }
+      ],
+      "critical": true,
+      "limitation": false,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    },
+    {
+      "fact_id": "F2",
+      "proposition": "同一测试集上，乙方法准确率68%。",
+      "subject": "synthetic B",
+      "method": "乙方法",
+      "comparison": "versus the explicitly stated comparator",
+      "result": "accuracy",
+      "value_unit": "68%",
+      "polarity": "observed",
+      "conditions": "same test set",
+      "uncertainty": "Statistical significance was not reported.",
+      "evidence": [
+        {
+          "source": "B",
+          "start": 0,
+          "end": 17,
+          "sha256": "28c179e5fde405bdee284e1866f93388944af486b81029c20fad1f814aa22a1a"
+        }
+      ],
+      "critical": true,
+      "limitation": false,
+      "stages": [
+        "map_collection",
+        "document_reduce",
+        "cross_document_reduce"
+      ]
+    }
+  ],
+  "relations": [
+    {
+      "relation_id": "R1",
+      "facts": [
+        "F1",
+        "F2"
+      ],
+      "kind": "support",
+      "conditions": "Preserve the explicitly stated settings and source identities.",
+      "expected": "甲比乙提高4个百分点。"
+    }
+  ],
+  "max_chars": 8000,
+  "overlap_chars": 0,
+  "forbidden": [
+    "甲比乙提高40个百分点。"
+  ]
+}
