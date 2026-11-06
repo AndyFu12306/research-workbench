@@ -1,5 +1,15 @@
 # 系统架构
 
+分阶段输出（2026-11-06）：CLI分别构造Map/Document Reduce/Cross Reduce的StageBudget，
+默认输出8192/32768/32768。Planner与Map请求只使用Map预算；DocumentAnalysisService的
+reduce_stage_budget用于文献Reduce；PreparedCross保存两级Reduce预算并按阶段选择。
+allocate_budget分别预留每次Reduce的完整输入、该阶段输出及安全额度，费用用各自输出上限。
+子执行config在预算不同于Map时增加reduce_stage_budget，父config增加reduce_stage_budgets；
+均位于既有JSON配置与计划hash中，不增加migration。登记/阶段启动/完成重验所选预算，
+历史支撑链hash包含这些配置；旧统一预算缺省为stage_budget，旧字节格式与历史不回写。
+未改变阶段schema、Finding、Citation或来源闭包校验；当前分支无ObservationBinding命名实现，
+不引入或修改PR #22内容。新执行仍是显式完整重跑，无自动付费重试。
+
 CLI容量调整（2026-11-06）：CLI构造StageBudget默认输入512000、context1000000操作单位，
 输出8192真实tokens；PlanningBudget同步，CrossBudget整体默认8000000操作单位。
 每个Document/Cross Reduce按所配置完整输入额度独立预留，Map用正式请求估算，全部预留在SEND前

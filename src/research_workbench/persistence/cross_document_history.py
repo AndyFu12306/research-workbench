@@ -271,6 +271,8 @@ def _read_document(session, parent, member, config):
         and child_config["planner_envelope_version"] == expected["planner_envelope_version"]
         and child_config["preflight_map_estimates"] == expected["map_estimates"]
         and child_config["stage_budget"] == config["stage_budget"]
+        and child_config.get("reduce_stage_budget", child_config["stage_budget"])
+        == config.get("reduce_stage_budgets", {}).get("document_reduce", config["stage_budget"])
         and child_config["pricing"] == config["pricing"],
         "history_integrity",
     )

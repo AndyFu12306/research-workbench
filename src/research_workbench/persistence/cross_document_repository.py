@@ -101,6 +101,19 @@ def plan_config(prepared):
         "contract_versions": dict(CONTRACT_VERSIONS),
         "prompt_versions": dict(PROMPT_VERSIONS),
         "stage_budget": asdict(prepared.stage_budget),
+        **(
+            {
+                "reduce_stage_budgets": {
+                    "document_reduce": asdict(prepared.budget_for("document_reduce")),
+                    "cross_document_reduce": asdict(prepared.budget_for("cross_document_reduce")),
+                }
+            }
+            if any(
+                prepared.budget_for(s) != prepared.stage_budget
+                for s in ("document_reduce", "cross_document_reduce")
+            )
+            else {}
+        ),
         "budget": {
             "max_calls": prepared.budget.max_calls,
             "max_estimated_tokens": prepared.budget.max_estimated_tokens,
@@ -152,6 +165,7 @@ def plan_config(prepared):
                     ),
                     prepared.pricing,
                     p.estimates,
+                    reduce_stage_budget=prepared.budget_for("document_reduce"),
                 ),
             }
             for i, (doc, p) in enumerate(zip(s.documents, prepared.documents, strict=True))
@@ -264,6 +278,8 @@ class CrossDocumentRepository:
             prepared.stage_budget,
             prepared.budget,
             prepared.pricing,
+            document_reduce_budget=prepared.budget_for("document_reduce"),
+            cross_reduce_budget=prepared.budget_for("cross_document_reduce"),
         )
         require(allocation == prepared.allocation)
         for p, doc in zip(prepared.documents, s.documents, strict=True):
@@ -316,6 +332,7 @@ class CrossDocumentRepository:
                     provider=s.provider,
                     model=s.model,
                     stage_budget=prepared.stage_budget,
+                    reduce_stage_budget=prepared.budget_for("document_reduce"),
                     execution_budget=budget,
                     pricing=prepared.pricing,
                     estimates=p.estimates,
@@ -423,6 +440,8 @@ class CrossDocumentRepository:
                 )
             require(
                 cfg["stage_budget"] == asdict(prepared.stage_budget)
+                and cfg.get("reduce_stage_budget", cfg["stage_budget"])
+                == asdict(prepared.budget_for("document_reduce"))
                 and cfg["preflight_map_estimates"] == [asdict(e) for e in p.estimates]
                 and cfg["pricing"] == json.loads(config)["pricing"]
             )
@@ -449,7 +468,7 @@ class CrossDocumentRepository:
             check_allowance(
                 prepared.allocation.documents[member_ordinal - 1][ordinal - 1],
                 estimate,
-                prepared.stage_budget,
+                prepared.budget_for(request.stage),
                 prepared.pricing,
             )
             self._documents._start_stage(session, child.id, ordinal, request, estimate)
@@ -524,7 +543,10 @@ class CrossDocumentRepository:
                 raise CrossConflict()
             self._bind_outcomes(session, run, handle, prepared, request, outcomes, fixed=False)
             cost = check_allowance(
-                prepared.allocation.cross, estimate, prepared.stage_budget, prepared.pricing
+                prepared.allocation.cross,
+                estimate,
+                prepared.budget_for("cross_document_reduce"),
+                prepared.pricing,
             )
             changed = session.execute(
                 update(cross_stages)

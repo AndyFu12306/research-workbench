@@ -1,5 +1,17 @@
 # 架构决定
 
+## ADR-063：Map与两级Reduce分别绑定输出预算
+
+2026-11-06用户提供Execution=3/Question=3真实诊断：5次Map完成，第6次Document Reduce的
+incomplete_details.reason=max_output_tokens，统一8192输出不足已由服务端确认。
+以可选的独立StageBudget扩展现有编排，不修改prompt/schema、不增加调度系统或迁移。
+CLI默认Map8192、Document32768、Cross32768；独立参数优先于兼容的统一输出参数。
+Planner/Map最终请求估算使用Map预算；两级Reduce各有完整固定预留、费用与context校验。
+PreparedCross及父子持久化JSON绑定这些预算；阶段请求必须与对应已登记预算相等。
+只有分阶段预算不同于Map时追加JSON键，旧统一预算配置和专用历史读取保持兼容。
+执行1/2/3不可变，不读取或改写原研究库。incomplete继续失败即停、缺usage保留未知，
+增大输出上限只提供下一次尝试所需容量，不代表真实运行成功或质量提高的保证。
+
 ## ADR-062：CLI用充足且可配置的Reduce预留，区分操作单位和模型token
 
 2026-11-06用户优先普通科研论文可用性，替代CLI中24k输入/1M整体/8192输出硬上限的旧限制。

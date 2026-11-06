@@ -127,8 +127,22 @@ def check_allowance(allowance, estimate, budget, price):
     return cost
 
 
-def allocate_budget(groups, stage_budget, budget, price=None):
+def allocate_budget(
+    groups,
+    stage_budget,
+    budget,
+    price=None,
+    *,
+    document_reduce_budget=None,
+    cross_reduce_budget=None,
+):
     validate_budget(stage_budget)
+    document_reduce_budget = (
+        stage_budget if document_reduce_budget is None else document_reduce_budget
+    )
+    cross_reduce_budget = stage_budget if cross_reduce_budget is None else cross_reduce_budget
+    validate_budget(document_reduce_budget)
+    validate_budget(cross_reduce_budget)
     require(type(budget) is CrossBudget)
     require(type(groups) is tuple and 2 <= len(groups) <= 5)
     require(all(type(g) is tuple and len(g) > 0 for g in groups))
@@ -138,20 +152,24 @@ def allocate_budget(groups, stage_budget, budget, price=None):
     require(len(versions) == 1, "budget_exceeded")
     version = next(iter(versions))
     require(type(version) is str and 1 <= len(version) <= 64)
-    reserve = CallAllowance(
-        stage_budget.max_input_tokens,
-        stage_budget.max_input_tokens
-        + stage_budget.output_tokens
-        + stage_budget.safety_margin_tokens,
-        version,
-        exact_cost(price, stage_budget.max_input_tokens, stage_budget.output_tokens),
-    )
-    check_allowance(
-        reserve,
-        RequestEstimate(reserve.input_tokens, reserve.context_tokens, version),
-        stage_budget,
-        price,
-    )
+
+    def reserved(b):
+        reserve = CallAllowance(
+            b.max_input_tokens,
+            b.max_input_tokens + b.output_tokens + b.safety_margin_tokens,
+            version,
+            exact_cost(price, b.max_input_tokens, b.output_tokens),
+        )
+        check_allowance(
+            reserve,
+            RequestEstimate(reserve.input_tokens, reserve.context_tokens, version),
+            b,
+            price,
+        )
+        return reserve
+
+    document_reserve = reserved(document_reduce_budget)
+    cross_reserve = reserved(cross_reduce_budget)
     documents = []
     for group in groups:
         allowances = []
@@ -164,8 +182,8 @@ def allocate_budget(groups, stage_budget, budget, price=None):
             )
             check_allowance(a, e, stage_budget, price)
             allowances.append(a)
-        documents.append((*allowances, reserve))
-    all_calls = [a for g in documents for a in g] + [reserve]
+        documents.append((*allowances, document_reserve))
+    all_calls = [a for g in documents for a in g] + [cross_reserve]
     total = sum(a.context_tokens for a in all_calls)
     cost = exact_sum(a.cost for a in all_calls) if price else None
     require(
@@ -175,7 +193,7 @@ def allocate_budget(groups, stage_budget, budget, price=None):
     require(
         budget.max_estimated_cost is None or cost <= budget.max_estimated_cost, "budget_exceeded"
     )
-    return Allocation(tuple(documents), reserve, len(all_calls), total, cost)
+    return Allocation(tuple(documents), cross_reserve, len(all_calls), total, cost)
 
 
 @dataclass(frozen=True, slots=True)
@@ -216,6 +234,22 @@ class PreparedCross:
     stage_budget: StageBudget
     budget: CrossBudget
     pricing: Pricing | None
+    document_reduce_budget: StageBudget | None = None
+    cross_reduce_budget: StageBudget | None = None
+
+    def budget_for(self, stage):
+        require(stage in CONTRACT_VERSIONS)
+        if stage == "document_reduce":
+            return (
+                self.stage_budget
+                if self.document_reduce_budget is None
+                else self.document_reduce_budget
+            )
+        if stage == "cross_document_reduce":
+            return (
+                self.stage_budget if self.cross_reduce_budget is None else self.cross_reduce_budget
+            )
+        return self.stage_budget
 
 
 @dataclass(frozen=True, slots=True)
@@ -242,7 +276,7 @@ def validate_topology(request, prepared, outcomes):
         and request.question == selection.question
         and request.documents == selection.documents
         and not request.chunks
-        and request.budget == prepared.stage_budget
+        and request.budget == prepared.budget_for("cross_document_reduce")
     )
     require(len(outcomes) == len(prepared.documents) == len(request.children))
     for i, (p, outcome, child) in enumerate(
@@ -261,7 +295,7 @@ def validate_topology(request, prepared, outcomes):
             and r.documents == (selection.documents[i],)
             and not r.chunks
             and r.chunking == p.plan.chunking
-            and r.budget == prepared.stage_budget
+            and r.budget == prepared.budget_for("document_reduce")
             and len(r.children) == len(p.requests)
         )
         for map_result, expected in zip(r.children, p.requests, strict=True):

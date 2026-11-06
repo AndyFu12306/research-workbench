@@ -119,7 +119,9 @@ def history_result(result, child_ordinals=()):
     )
 
 
-def document_config(plan, stage_budget, execution_budget, pricing, estimates):
+def document_config(
+    plan, stage_budget, execution_budget, pricing, estimates, *, reduce_stage_budget=None
+):
     price_dict = (
         None
         if pricing is None
@@ -149,6 +151,8 @@ def document_config(plan, stage_budget, execution_budget, pricing, estimates):
         },
         "pricing": price_dict,
     }
+    if reduce_stage_budget is not None and reduce_stage_budget != stage_budget:
+        config["reduce_stage_budget"] = asdict(reduce_stage_budget)
     return config
 
 
@@ -259,6 +263,7 @@ class DocumentAnalysisRepository:
         execution_budget: ExecutionBudget,
         pricing: Pricing | None,
         estimates: tuple[RequestEstimate, ...],
+        reduce_stage_budget: StageBudget | None = None,
     ) -> DocumentRun:
         _name(provider, 64)
         _name(model, 256)
@@ -277,7 +282,14 @@ class DocumentAnalysisRepository:
             <= execution_budget.max_estimated_tokens,
             "execution_budget_exceeded",
         )
-        config = document_config(plan, stage_budget, execution_budget, pricing, estimates)
+        config = document_config(
+            plan,
+            stage_budget,
+            execution_budget,
+            pricing,
+            estimates,
+            reduce_stage_budget=reduce_stage_budget,
+        )
         question = session.get(QuestionRow, _identifier(question_id))
         source = session.get(SourceRow, _identifier(source_id))
         _require(
@@ -366,7 +378,12 @@ class DocumentAnalysisRepository:
             and doc.content_sha256 == run.content_sha256
             and len(doc.text) == run.input_chars
         )
-        _require(asdict(request.budget) == config["stage_budget"])
+        expected_budget = (
+            config.get("reduce_stage_budget", config["stage_budget"])
+            if request.stage == "document_reduce"
+            else config["stage_budget"]
+        )
+        _require(asdict(request.budget) == expected_budget)
         rows = self._stages(session, run.id)
         _require(
             len(rows) == run.chunk_count + 1
@@ -488,7 +505,10 @@ class DocumentAnalysisRepository:
                 Decimal(0),
             )
             reserved_cost = (
-                price.cost(request.budget.max_input_tokens, request.budget.output_tokens)
+                price.cost(
+                    config.get("reduce_stage_budget", config["stage_budget"])["max_input_tokens"],
+                    config.get("reduce_stage_budget", config["stage_budget"])["output_tokens"],
+                )
                 if reserve
                 else Decimal(0)
             )

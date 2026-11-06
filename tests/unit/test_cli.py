@@ -46,7 +46,7 @@ def session(monkeypatch, tmp_path):
             return ZoteroFulltext(key, "a" * 80 if key == "FAKE0001" else "b" * 90)
 
     reader, provider = Reader(), FakeStageProvider()
-    provider.provider, provider.model = "deepseek", "synthetic-model"
+    provider.provider, provider.model = "deepseek", "deepseek-flash"
 
     def estimate(request):
         _, result = prepare_stage_call(request, model=provider.model, provider="deepseek")
@@ -80,7 +80,7 @@ def answers(monkeypatch, last="SEND", first="READ", cap="10"):
             "Project",
             "Question?",
             "Scope",
-            "synthetic-model",
+            "deepseek-flash",
             "CNY",
             "1",
             "2",
@@ -112,6 +112,10 @@ def test_full_workflow_and_offline_history(session, monkeypatch, capsys):
     assert "来源块" in output and "tokens=100/40" in output
     assert "输入操作单位上限=512000" in output
     assert "context 操作单位上限=1000000" in output
+    assert "map: 输出=8192 tokens" in output
+    assert "document_reduce: 输出=32768 tokens" in output
+    assert "cross_document_reduce: 输出=32768 tokens" in output
+    assert [r.budget.output_tokens for r in s.provider.calls] == [8192, 32768, 8192, 32768, 32768]
     assert "synthetic-test-secret" not in output
     assert "a" * 80 not in output and "b" * 90 not in output
     # No Zotero client or credential input is allowed when querying history.
@@ -125,6 +129,8 @@ def test_full_workflow_and_offline_history(session, monkeypatch, capsys):
         assert len(repo.get_call_usage(1)) == 5
         config = json.loads(repo.get(1).config_json)
         assert config["stage_budget"]["max_input_tokens"] == 512000
+        assert config["reduce_stage_budgets"]["document_reduce"]["output_tokens"] == 32768
+        assert config["reduce_stage_budgets"]["cross_document_reduce"]["output_tokens"] == 32768
         assert config["budget"]["max_estimated_tokens"] == 8000000
         assert config["documents"][0]["planning_budget"]["max_input_tokens"] == 512000
     assert b"synthetic-test-secret" not in s.path.read_bytes()
@@ -313,6 +319,44 @@ def test_cli_configured_output_budget_is_previewed_and_persisted(session, monkey
         config = json.loads(CrossDocumentRepository(db).get(1).config_json)
         assert config["stage_budget"]["output_tokens"] == 8192
         assert config["documents"][0]["planning_budget"]["reserved_output_tokens"] == 8192
+
+
+def test_cli_three_output_options_and_legacy_override(session, monkeypatch, capsys):
+    answers(monkeypatch)
+    assert (
+        invoke(
+            session,
+            "run",
+            "--stage-output-tokens",
+            "4096",
+            "--map-output-tokens",
+            "6144",
+            "--document-reduce-output-tokens",
+            "24576",
+            "--cross-document-reduce-output-tokens",
+            "49152",
+        )
+        == 0
+    )
+    assert [r.budget.output_tokens for r in session.provider.calls] == [
+        6144,
+        24576,
+        6144,
+        24576,
+        49152,
+    ]
+    with Database(session.path) as db:
+        config = json.loads(CrossDocumentRepository(db).get(1).config_json)
+        assert config["documents"][0]["planning_budget"]["reserved_output_tokens"] == 6144
+        assert (
+            config["documents"][0]["execution_config"]["reduce_stage_budget"]["output_tokens"]
+            == 24576
+        )
+
+
+def test_cli_reduce_reservation_must_fit_context_before_io(session):
+    assert invoke(session, "run", "--stage-context-units", "530000") == 2
+    assert session.provider.calls == [] and not session.path.exists()
 
 
 @pytest.mark.parametrize("output,context", [(8193, 65536), (8192, 32768), (0, 65536)])

@@ -56,19 +56,44 @@ class DocumentAnalysisService:
         chunking: ChunkingConfig | None = None,
         planning_budget: PlanningBudget | None = None,
         stage_budget: StageBudget | None = None,
+        reduce_stage_budget: StageBudget | None = None,
         execution_budget: ExecutionBudget | None = None,
         pricing: Pricing | None = None,
     ):
         self._reader = reader
         self._provider = provider
-        self._planner = MapBudgetPlanner(chunking=chunking, budget=planning_budget)
         self._stage_budget = stage_budget if stage_budget is not None else StageBudget()
-        self._budget = execution_budget if execution_budget is not None else ExecutionBudget()
+        self._reduce_stage_budget = (
+            reduce_stage_budget if reduce_stage_budget is not None else self._stage_budget
+        )
+        self._budget = (
+            execution_budget
+            if execution_budget is not None
+            else (
+                ExecutionBudget(
+                    reduce_reserved_tokens=self._reduce_stage_budget.max_input_tokens
+                    + self._reduce_stage_budget.output_tokens
+                    + self._reduce_stage_budget.safety_margin_tokens
+                )
+                if reduce_stage_budget is not None
+                else ExecutionBudget()
+            )
+        )
         if type(self._budget) is not ExecutionBudget:
             raise DocumentAnalysisError("execution_budget_exceeded")
         self._pricing = pricing
         self._runs = DocumentAnalysisRepository(database)
         validate_budget(self._stage_budget)
+        validate_budget(self._reduce_stage_budget)
+        if planning_budget is None:
+            planning_budget = PlanningBudget(
+                context_tokens=self._stage_budget.context_tokens,
+                max_input_tokens=self._stage_budget.max_input_tokens,
+                reserved_output_tokens=self._stage_budget.output_tokens,
+                safety_margin_tokens=self._stage_budget.safety_margin_tokens,
+                protocol_overhead_tokens=self._stage_budget.protocol_overhead_tokens,
+            )
+        self._planner = MapBudgetPlanner(chunking=chunking, budget=planning_budget)
         if pricing is not None and type(pricing) is not Pricing:
             raise DocumentAnalysisError("execution_budget_exceeded")
         if self._budget.max_estimated_cost is not None and pricing is None:
@@ -133,7 +158,7 @@ class DocumentAnalysisService:
                 for e in estimates
             )
             total_cost += self._pricing.cost(
-                self._stage_budget.max_input_tokens, self._stage_budget.output_tokens
+                self._reduce_stage_budget.max_input_tokens, self._reduce_stage_budget.output_tokens
             )
             if total_cost > self._budget.max_estimated_cost:
                 raise DocumentAnalysisError("execution_budget_exceeded")
@@ -148,6 +173,7 @@ class DocumentAnalysisService:
                 provider=self._provider.provider,
                 model=self._provider.model,
                 stage_budget=self._stage_budget,
+                reduce_stage_budget=self._reduce_stage_budget,
                 execution_budget=self._budget,
                 pricing=self._pricing,
                 estimates=prepared.estimates,
@@ -201,7 +227,7 @@ class DocumentAnalysisService:
                 CONTRACT_VERSIONS[stage],
                 question_input,
                 (document,),
-                budget=self._stage_budget,
+                budget=self._reduce_stage_budget,
                 chunking=plan.chunking,
                 children=tuple(children),
             )

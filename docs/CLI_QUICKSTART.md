@@ -1,5 +1,57 @@
 # 两篇文献的首次真实运行
 
+**最新：分阶段输出额度（2026-11-06，覆盖下方历史统一输出示例）**
+
+Execution=3 / Question=3的用户记录已经确认：第一篇5次Map成功，第6次Document Reduce
+因incomplete_details.reason=max_output_tokens失败，后续11次未开始。已知名义费用0.140670 CNY，
+失败Reduce用量未知，不能当作零费。本轮开发没有读取/修改真实数据库，原执行1/2/3保留。
+
+| 阶段 | 独立参数 | 默认输出tokens |
+| --- | --- | ---: |
+| Map | `--map-output-tokens` | 8192 |
+| Document Reduce | `--document-reduce-output-tokens` | 32768 |
+| Cross Document Reduce | `--cross-reduce-output-tokens` | 32768 |
+
+Cross选项也接受完整别名`--cross-document-reduce-output-tokens`。
+旧`--stage-output-tokens`仍可统一设置三阶段；显式独立参数优先。不要只复制旧的统一8192参数，
+否则会把两级Reduce也设回8192。当前推荐完整命令：
+
+```powershell
+Set-Location C:\Projects\research-workbench-cli
+$env:PYTHONUTF8 = '1'
+uv sync --frozen --extra dev
+$env:ZOTERO_CLI_PATH = (Get-Command zotero-cli -ErrorAction Stop).Source
+uv run --frozen research-workbench run --stage-input-units 512000 --stage-context-units 1000000 --max-estimated-units 8000000 --map-output-tokens 8192 --document-reduce-output-tokens 32768 --cross-reduce-output-tokens 32768
+```
+
+直接`uv run --frozen research-workbench run`也使用上述默认值。每阶段都有自己的StageBudget
+和实际max_output_tokens；共同的输入/context参数应用于三者并分别检查。Map Planner仅预留
+Map的输出8192；两个Document Reduce和Cross Reduce分别预留各自完整输入、输出32768及安全余量。
+旧历史读取和预算字段保持兼容，新预算配置进入既有父子配置与fingerprint，不新增迁移。
+
+下一次SEND前必须核对：模型deepseek-flash、两篇文献身份、Map总数、每阶段输出额度与费用预留、
+总体操作单位与所填费用阈值。若仍为5+9个Map，预览应显示Map调用14、Document Reduce调用2、
+Cross调用1，共17次；输出额度合计为212992 tokens（14×8192+3×32768），包含reasoning，
+这是最大预留而非预计实际消耗。按当前512000输入额度，三个Reduce的输入预留合计1536000
+操作单位，另加Map实际请求的字节代理估算。总名义费用预留计算为：
+
+`(Map输入操作估算之和 + 1536000) × 输入每百万单价 / 1000000 + 212992 × 输出每百万单价 / 1000000`。
+
+与统一8192相比，三次Reduce多预留73728输出tokens，即多预留`0.073728 × 输出每百万单价`费用；
+Map数/内容及单价不变时才可如此比较。币种与单价仍由用户填写，程序不内置或推断价格，
+预留不是实际账单保证。确认总预留不超过自己填写的阈值后才输入SEND；程序不自动提高费用阈值。
+这是创建新Project/Question/执行并从Map开始；前次已知费用不是下一次的预算或总账单。
+
+Findings与引用不截断或删除，schema/来源链校验不放宽；任何阶段incomplete仍停止且未知usage
+保持None。模拟回归中的输出token消耗由MockTransport脚本指定，不把字符数/UTF-8字节当作真实token。
+
+本轮定向验证：**421 passed**，包括新增分阶段输出回归7项、CLI 30项，以及文献/跨文献
+预算、绑定、事务、历史、Provider与严格校验相关测试。覆盖5+9 Map的大输出、两个Reduce独立
+额度、各自额度不足、context/整体/费用不足、预算篡改拒绝、旧统一预算历史及单文献Planner同步。
+Ruff check/format（97文件）、两种入口help启动与diff检查通过。未跑完整pytest、未访问真实
+Zotero/研究数据库、未执行付费请求；尚未确认新配置的真实完整运行成功。
+当前CLI分支没有ObservationBinding命名实现，本轮没有引入或修改PR #22的代码。
+
 **当前容量默认及下一次运行（2026-11-06）**
 
 用户报告Execution=2的第一篇5次Map成功，Document Reduce在网络前被budget_exceeded拒绝。
@@ -13,7 +65,7 @@
 | `--stage-input-units` | 512000 | 完整请求输入操作额度，包括包装/schema，Map及两级Reduce共用 |
 | `--stage-context-units` | 1000000 | 单次context操作额度，旧`--stage-context-tokens`为兼容别名 |
 | `--max-estimated-units` | 8000000 | 整次Map与三次Reduce预留的总操作额度 |
-| `--stage-output-tokens` | 8192 | 每阶段输出token额度，包含reasoning |
+| `--stage-output-tokens` | 未指定 | 兼容统一设置；当前默认以页首独立参数为准 |
 
 操作单位沿用UTF-8字节代理与输出/安全预留，不是精确token计数。库级默认不影响CLI新配置。
 DeepSeek官方当前[容量说明](https://api-docs.deepseek.com/quick_start/pricing/)标称flash/v4-pro
@@ -26,7 +78,7 @@ Set-Location C:\Projects\research-workbench-cli
 $env:PYTHONUTF8 = '1'
 uv sync --frozen --extra dev
 $env:ZOTERO_CLI_PATH = (Get-Command zotero-cli -ErrorAction Stop).Source
-uv run --frozen research-workbench run --stage-input-units 512000 --stage-context-units 1000000 --max-estimated-units 8000000 --stage-output-tokens 8192
+uv run --frozen research-workbench run --stage-input-units 512000 --stage-context-units 1000000 --max-estimated-units 8000000 --map-output-tokens 8192 --document-reduce-output-tokens 32768 --cross-reduce-output-tokens 32768
 ```
 
 也可以直接`uv run --frozen research-workbench run`使用这些默认值。随后选择deepseek-flash、
@@ -159,7 +211,7 @@ Set-Location C:\Projects\research-workbench-cli
 $env:PYTHONUTF8 = '1'
 uv sync --frozen --extra dev
 $env:ZOTERO_CLI_PATH = (Get-Command zotero-cli -ErrorAction Stop).Source
-uv run --frozen research-workbench run --stage-input-units 512000 --stage-context-units 1000000 --max-estimated-units 8000000 --stage-output-tokens 8192
+uv run --frozen research-workbench run --stage-input-units 512000 --stage-context-units 1000000 --max-estimated-units 8000000 --map-output-tokens 8192 --document-reduce-output-tokens 32768 --cross-reduce-output-tokens 32768
 ```
 
 这是新建Project/Question和新执行，完整从Map开始，不是恢复或覆盖Execution=1。

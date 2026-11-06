@@ -18,6 +18,7 @@ from research_workbench.analysis.document_pipeline import (
     RequestEstimate,
 )
 from research_workbench.analysis.errors import AnalysisProviderFailure
+from research_workbench.analysis.planning import PlanningBudget
 from research_workbench.analysis.stage_contracts import (
     CONTRACT_VERSIONS,
     StageBudget,
@@ -811,7 +812,15 @@ def test_description_exceeding_budget_rejected_before_model_call(
         9000 if limit == "planner" else 3000
     )
     questions.update(s.question.id, description=description)
-    kwargs = {} if limit == "planner" else {"stage_budget": StageBudget(max_input_tokens=6000)}
+    # Explicitly isolate the final provider budget: default Planner now follows Map budget.
+    kwargs = (
+        {}
+        if limit == "planner"
+        else {
+            "stage_budget": StageBudget(max_input_tokens=6000),
+            "planning_budget": PlanningBudget(),
+        }
+    )
     error = PlanningLimitError if limit == "planner" else StageBudgetError
     with pytest.raises(error) as exc:
         execute(s, **kwargs)

@@ -10,7 +10,7 @@ import warnings
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 
-from research_workbench.analysis.cross_document_pipeline import ERRORS, CrossBudget
+from research_workbench.analysis.cross_document_pipeline import ERRORS, CrossBudget, exact_sum
 from research_workbench.analysis.document_pipeline import Pricing
 from research_workbench.analysis.errors import (
     INCOMPLETE_REASONS,
@@ -184,9 +184,21 @@ def preview(prepared):
     display(f"最后 1 个 Cross Reduce；预计最多 {allocation.calls} 次调用，失败即停。")
     display(
         f"整体操作单位估算/上限：{allocation.context_tokens}/{budget.max_estimated_tokens}；"
-        f"调用上限：{budget.max_calls}；"
-        f"单次输出上限：{prepared.stage_budget.output_tokens} tokens。"
+        f"调用上限：{budget.max_calls}。"
     )
+    grouped = (
+        ("map", tuple(a for g in allocation.documents for a in g[:-1])),
+        ("document_reduce", tuple(g[-1] for g in allocation.documents)),
+        ("cross_document_reduce", (allocation.cross,)),
+    )
+    for stage, allowances in grouped:
+        b = prepared.budget_for(stage)
+        cost = exact_sum(a.cost for a in allowances) if prepared.pricing else None
+        display(
+            f"{stage}: 输出={b.output_tokens} tokens；调用={len(allowances)}；"
+            f"操作单位预留={sum(a.context_tokens for a in allowances)}；"
+            f"名义费用预留={cost} {prepared.pricing.currency if prepared.pricing else 'unknown'}"
+        )
     display(
         f"单次输入操作单位上限={prepared.stage_budget.max_input_tokens}，"
         f"context 操作单位上限={prepared.stage_budget.context_tokens}；"
@@ -262,7 +274,14 @@ def configured_stage_budget(output_tokens, context_tokens, input_units=512_000):
     return budget
 
 
-def run_workflow(database, *, stage_budget=None, max_estimated_units=8_000_000):
+def run_workflow(
+    database,
+    *,
+    stage_budget=None,
+    document_reduce_budget=None,
+    cross_reduce_budget=None,
+    max_estimated_units=8_000_000,
+):
     confirm("允许在本机检查 Zotero 并搜索/读取你选择的两篇全文？此时不会调用 AI。", "READ")
     reader = ZoteroClient()
     health = reader.health_check()
@@ -281,7 +300,9 @@ def run_workflow(database, *, stage_budget=None, max_estimated_units=8_000_000):
         raise CliError("模型名称格式无效。")
     if stage_budget is not None:
         try:
-            validate_model_budget(model, stage_budget)
+            for b in (stage_budget, document_reduce_budget, cross_reduce_budget):
+                if b is not None:
+                    validate_model_budget(model, b)
         except ValueError:
             raise CliError(
                 "所配置context或输出额度超过该模型的公开容量；请按模型能力调整。"
@@ -313,6 +334,8 @@ def run_workflow(database, *, stage_budget=None, max_estimated_units=8_000_000):
                 reader,
                 provider,
                 stage_budget=stage_budget,
+                document_reduce_budget=document_reduce_budget,
+                cross_reduce_budget=cross_reduce_budget,
                 planning_budget=PlanningBudget(
                     context_tokens=stage_budget.context_tokens,
                     max_input_tokens=stage_budget.max_input_tokens,
@@ -365,9 +388,19 @@ def main(argv=None):
     run_parser.add_argument(
         "--stage-output-tokens",
         type=int,
-        default=8192,
-        help="每阶段真实输出token额度，默认8192，最高按模型能力（包含reasoning）",
+        default=None,
+        help="兼容选项：统一设置三阶段输出；独立阶段选项优先",
     )
+    for name, default in (("map", 8192), ("document-reduce", 32768), ("cross-reduce", 32768)):
+        options = [f"--{name}-output-tokens"]
+        if name == "cross-reduce":
+            options.append("--cross-document-reduce-output-tokens")
+        run_parser.add_argument(
+            *options,
+            type=int,
+            default=None,
+            help=f"该阶段输出tokens，默认{default}，包含reasoning",
+        )
     run_parser.add_argument(
         "--stage-context-units",
         "--stage-context-tokens",
@@ -395,19 +428,31 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         path = database_path(args.database)
-        stage_budget = (
-            configured_stage_budget(
-                args.stage_output_tokens, args.stage_context_tokens, args.stage_input_units
-            )
-            if args.command == "run"
-            else None
-        )
-        if (
-            args.command == "run"
-            and args.max_estimated_units
-            < stage_budget.max_input_tokens
-            + stage_budget.output_tokens
-            + stage_budget.safety_margin_tokens
+        stage_budget = document_reduce_budget = cross_reduce_budget = None
+        if args.command == "run":
+            budgets = []
+            for value, default in (
+                (args.map_output_tokens, 8192),
+                (args.document_reduce_output_tokens, 32768),
+                (args.cross_reduce_output_tokens, 32768),
+            ):
+                output = (
+                    value
+                    if value is not None
+                    else (
+                        args.stage_output_tokens
+                        if args.stage_output_tokens is not None
+                        else default
+                    )
+                )
+                budgets.append(
+                    configured_stage_budget(
+                        output, args.stage_context_tokens, args.stage_input_units
+                    )
+                )
+            stage_budget, document_reduce_budget, cross_reduce_budget = budgets
+        if args.command == "run" and args.max_estimated_units < max(
+            b.max_input_tokens + b.output_tokens + b.safety_margin_tokens for b in budgets
         ):
             raise CliError("整体操作额度不足以预留一次Reduce；请调整 --max-estimated-units。")
         if args.command == "run" and not interactive_terminal():
@@ -424,6 +469,8 @@ def main(argv=None):
                 run_workflow(
                     database,
                     stage_budget=stage_budget,
+                    document_reduce_budget=document_reduce_budget,
+                    cross_reduce_budget=cross_reduce_budget,
                     max_estimated_units=args.max_estimated_units,
                 )
             elif args.command == "history":

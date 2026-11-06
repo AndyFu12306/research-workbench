@@ -65,6 +65,8 @@ class CrossDocumentAnalysisService:
         chunking=None,
         planning_budget=None,
         stage_budget=None,
+        document_reduce_budget=None,
+        cross_reduce_budget=None,
         cross_budget=None,
         pricing=None,
     ):
@@ -75,11 +77,26 @@ class CrossDocumentAnalysisService:
         self._pricing = pricing
         effective_stage_budget = stage_budget if stage_budget is not None else StageBudget()
         require(type(effective_stage_budget) is StageBudget)
+        self._document_reduce_budget = (
+            effective_stage_budget if document_reduce_budget is None else document_reduce_budget
+        )
+        self._cross_reduce_budget = (
+            effective_stage_budget if cross_reduce_budget is None else cross_reduce_budget
+        )
+        require(
+            type(self._document_reduce_budget) is StageBudget
+            and type(self._cross_reduce_budget) is StageBudget
+        )
         require(
             self._budget.max_estimated_tokens
-            >= effective_stage_budget.max_input_tokens
-            + effective_stage_budget.output_tokens
-            + effective_stage_budget.safety_margin_tokens,
+            >= max(
+                b.max_input_tokens + b.output_tokens + b.safety_margin_tokens
+                for b in (
+                    effective_stage_budget,
+                    self._document_reduce_budget,
+                    self._cross_reduce_budget,
+                )
+            ),
             "budget_exceeded",
         )
         self._documents = DocumentAnalysisService(
@@ -89,12 +106,13 @@ class CrossDocumentAnalysisService:
             chunking=chunking,
             planning_budget=planning_budget,
             stage_budget=effective_stage_budget,
+            reduce_stage_budget=self._document_reduce_budget,
             execution_budget=ExecutionBudget(
                 101,
                 self._budget.max_estimated_tokens,
-                effective_stage_budget.max_input_tokens
-                + effective_stage_budget.output_tokens
-                + effective_stage_budget.safety_margin_tokens,
+                self._document_reduce_budget.max_input_tokens
+                + self._document_reduce_budget.output_tokens
+                + self._document_reduce_budget.safety_margin_tokens,
             ),
             pricing=pricing,
         )
@@ -147,9 +165,18 @@ class CrossDocumentAnalysisService:
             self._documents._stage_budget,
             self._budget,
             self._pricing,
+            document_reduce_budget=self._document_reduce_budget,
+            cross_reduce_budget=self._cross_reduce_budget,
         )
         return PreparedCross(
-            selection, plans, allocation, self._documents._stage_budget, self._budget, self._pricing
+            selection,
+            plans,
+            allocation,
+            self._documents._stage_budget,
+            self._budget,
+            self._pricing,
+            self._document_reduce_budget,
+            self._cross_reduce_budget,
         )
 
     def run_analysis(self, question_id, source_ids):
@@ -176,6 +203,8 @@ class CrossDocumentAnalysisService:
             require(type(prepared) is PreparedCross)
             require(prepared.budget == self._budget and prepared.pricing == self._pricing)
             require(prepared.stage_budget == self._documents._stage_budget)
+            require(prepared.budget_for("document_reduce") == self._document_reduce_budget)
+            require(prepared.budget_for("cross_document_reduce") == self._cross_reduce_budget)
             require(
                 (prepared.selection.provider, prepared.selection.model)
                 == (self._provider.provider, self._provider.model)
@@ -243,7 +272,7 @@ class CrossDocumentAnalysisService:
                 CONTRACT_VERSIONS["cross_document_reduce"],
                 prepared.selection.question,
                 prepared.selection.documents,
-                budget=prepared.stage_budget,
+                budget=prepared.budget_for("cross_document_reduce"),
                 chunking=prepared.documents[0].plan.chunking,
                 children=tuple(o.result for o in outcomes),
             )
