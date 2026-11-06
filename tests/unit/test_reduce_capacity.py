@@ -16,6 +16,12 @@ from research_workbench.application.cross_document_analysis import CrossDocument
 from research_workbench.cli import ReportingProvider, configured_stage_budget
 
 
+@pytest.fixture(autouse=True)
+def _disable_interactive_authorization_for_mocktransport(monkeypatch):
+    """Keep offline provider tests noninteractive; production still requires SEND."""
+    monkeypatch.setattr(ReportingProvider, "authorize_stage", lambda _self, _request: None)
+
+
 @pytest.mark.parametrize("wire", ["deepseek"], indirect=True)
 def test_complete_long_reduces_without_dropping_findings(cross_setup, wire, capsys):  # noqa: F811
     s = cross_setup
