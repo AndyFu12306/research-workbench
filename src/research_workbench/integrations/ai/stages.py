@@ -24,6 +24,35 @@ from .deepseek import _normalize as normalize_response
 from .deepseek import _request_failure as request_failure
 from .openai import OpenAIAnalysisProvider
 
+# Public nominal token capacities checked 2026-11-06; not tokenizer estimates.
+# https://api-docs.deepseek.com/quick_start/pricing/
+DEEPSEEK_MODEL_LIMITS = {
+    "deepseek-flash": (1_000_000, 384_000),
+    "deepseek-v4-pro": (1_000_000, 384_000),
+}
+
+# Conservative output ceiling for unregistered DeepSeek names; unchanged from prior behavior.
+DEFAULT_DEEPSEEK_OUTPUT_LIMIT = 8192
+
+
+def model_output_limit(model, provider="deepseek"):
+    """Single source for the per-stage output ceiling; verified caps for known models."""
+    if provider != "deepseek":
+        return 4096
+    limits = DEEPSEEK_MODEL_LIMITS.get(model)
+    return limits[1] if limits is not None else DEFAULT_DEEPSEEK_OUTPUT_LIMIT
+
+
+def validate_model_budget(model, budget):
+    """Known model: verified capacity. Unregistered DeepSeek: conservative output ceiling."""
+    limits = DEEPSEEK_MODEL_LIMITS.get(model)
+    if limits is not None:
+        if budget.output_tokens > limits[1] or budget.context_tokens > limits[0]:
+            raise StageCapabilityError()
+        return
+    if budget.output_tokens > DEFAULT_DEEPSEEK_OUTPUT_LIMIT:
+        raise StageCapabilityError()
+
 
 @dataclass(frozen=True, slots=True)
 class StageEstimate:
@@ -54,6 +83,10 @@ def prepare_stage_call(
     ):
         raise StageError() from None
     rendered = render_stage_input(request)
+    if request.budget.output_tokens > model_output_limit(model, provider):
+        raise StageCapabilityError()
+    if provider == "deepseek":
+        validate_model_budget(model, request.budget)
     payload = {
         "model": model,
         "instructions": stage_instructions(request.stage),
@@ -81,7 +114,12 @@ def prepare_stage_call(
         estimated_input > request.budget.max_input_tokens
         or estimated_context > request.budget.context_tokens
     ):
-        raise StageBudgetError()
+        raise StageBudgetError(
+            input_units=estimated_input,
+            input_limit=request.budget.max_input_tokens,
+            context_units=estimated_context,
+            context_limit=request.budget.context_tokens,
+        )
     return payload, StageEstimate(estimated_input, estimated_context)
 
 

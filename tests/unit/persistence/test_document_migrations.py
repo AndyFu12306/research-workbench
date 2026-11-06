@@ -35,7 +35,7 @@ def test_upgrade_0003_preserves_existing_completed_analysis(tmp_path, monkeypatc
         db.upgrade()
         db.upgrade()
         with db._engine.connect() as c:
-            assert c.execute(text("SELECT version_num FROM alembic_version")).scalar_one() == "0005"
+            assert c.execute(text("SELECT version_num FROM alembic_version")).scalar_one() == "0006"
             assert (
                 c.execute(text("SELECT result_json FROM analysis_runs")).scalar_one()
                 == "existing-generated-result"

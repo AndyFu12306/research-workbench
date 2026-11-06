@@ -1,5 +1,53 @@
 # 路线与阶段门槛
 
+2026-11-06 后端 CLI 稳定基线整理：本轮仅修正文档、提交/Push、等待新 HEAD 双平台 CI 并创建独立 PR；不合并、不开始下一阶段开发。
+按用户已核验的真实运行与科研审计记录，Execution 7 为 completed，17 个阶段完成，
+两篇文献的真实 DeepSeek 分析、历史查询及引用/证据追溯链核验成功。
+五条结论审计仍发现数值错配、实验体系混用和临床证据不足；科研语义准确性尚未全面验收。
+本轮不重跑 DeepSeek、不重新验证 Execution 7、不读取真实研究数据；下方授权及未测试说明均保留其历史阶段范围。
+Single Paper Analysis 仅为后续方向，须本 PR 审查、用户确认合并并同步 main 后另行设计开发。
+合并前审查基线 a9a70ab：本地离线单元测试1069 passed；远程 Windows/Ubuntu 各1069 passed、8 deselected，Ruff通过。
+该基线 Ubuntu 的1条 annotation 已通过[公开 job 页面](https://github.com/AndyFu12306/research-workbench/actions/runs/42185841614/job/127785840852)只读核清：级别 notice，通知 ubuntu-latest 自2026-10-19起迁移到 Ubuntu 26，附[runner-images说明](https://github.com/actions/runner-images/issues/14748)。此前详情接口不支持/限流的限制仍如实保留；该平台通知不是业务代码或测试失败，无需修改 workflow。
+本轮文档提交的新 HEAD 双平台 CI 与最终审查状态以独立 PR 记录为准；不把旧 HEAD 结果转记为新 HEAD 通过。
+
+2026-11-06 当前交付：用户授权在 codex/minimal-research-cli 实现安全续跑 MVP，允许普通 Commit/Push。
+追加 0006；规范成功 JSON/hash 与绑定原子保存，新父子执行显式记录复用谱系、阶段与剩余预算，
+严格来源/问题/模型/版本/预算/请求/ID/引用重验，逐次 SEND，无重试。旧执行不回写。
+Execution 4 只读评估确认 0005、9/1/7，无规范检查点，拒绝从其续跑；仅后续新执行可完整恢复。
+定向离线验证，不运行完整 pytest、真实 Zotero/付费 API，不改 PR #22、Issue #21 或冻结评估。
+本轮定向离线验收 154 passed，Ruff 与两种 CLI 离线启动通过；迁移仅临时库验证。
+下述“尚无 resume”等为此前阶段记录，当前行为见 CLI_QUICKSTART 与 ADR-065。
+
+Execution=4诊断/检查点评估（2026-11-06）：只读状态核对9个成功、1个invalid_output、7个未开始；
+失败候选/细分类别未保存，具体原始违约原因不能确认。新增固定分类码、匿名失败展示和离线inspect，
+预算保持不变。实现条件式无损投影重验原语，覆盖成功复用/变更拒绝；没有可执行resume命令，
+完整规范检查点与新执行复用谱系/记账须补齐。仅合成定向测试，无Zotero/付费请求，不回写原执行，
+本轮提交并Push后停止；PR #22/Issue #21与冻结评估不改。
+
+CLI分阶段输出修复（2026-11-06）：Execution=3的Document Reduce在第6次调用明确因输出额度
+耗尽失败，后续11次未开始，已知名义费用0.140670 CNY且该失败调用usage未知（用户报告）。
+本轮实现Map8192、Document32768、Cross32768独立配置，配套计划/预算/费用/持久化绑定和
+5+9 Map模拟大输出回归。仅定向离线检查后提交并Push，执行1/2/3、PR #22/Issue #21及冻结
+评估保持原样，不以模拟成功代替真实成功，不自动发起新付费请求。
+
+CLI容量优先调整（2026-11-06）：用户报告Execution=2第一篇5次Map完成，Document Reduce
+在网络前被24k内部估算额度拒绝。本轮扩大CLI默认容量并开放输入/整体预算参数，按公开模型容量
+设置provider profile；只做定向离线验证、提交和普通Push，保留执行1/2及冻结评估记录。
+不以模拟完成代替真实三层验收，不自动触发下一次付费尝试。
+
+CLI 首次真实运行故障修复（2026-11-06）：用户报告 Execution=1 / Question=1 在第2次 Map
+incomplete 后停止，三层执行未完成。修复明确错误码传播，增加白名单原因和显式输出预算配置；
+只用模拟响应/临时数据库验证。原失败历史不改写，不自动重试或发起下一次真实运行，
+仍在现有 CLI 分支提交与普通 Push；PR #22 / Issue #21 / 冻结评估保持不动。
+
+2026-11-06 优先级调整：暂停 Phase 4B.5a 额外人工/多模型复核及等待 Gemini，保留已有结果，
+DeepSeek 语义复核不计正式 human review。用户授权从最新远程 main `b716ad7` 创建独立
+`codex/minimal-research-cli` / `C:/Projects/research-workbench-cli`，实现最小两文献 CLI，
+运行定向离线测试、Ruff、启动检查并 Conventional Commit / 普通 Push 后停止。
+不修改 PR #22 / Issue #21、冻结 Benchmark/Assessment/审计文件，不 merge、删除旧分支/worktree
+或自动调用真实 API/私人文献。CLI 首次真实运行由用户在终端两次 opt-in 完成；质量验收仍独立。
+实现与首次操作见 [CLI 指南](CLI_QUICKSTART.md)。后续历史授权描述不覆盖本次明确授权。
+
 当前：**Phase 4B.4 — 有界跨文献综合与作用域历史**。Issue #19 v2 + v2.1已获用户正式Branch + Implementation授权；基线main 41b136113aaaa56a9801590f938fcc745a0e546d（PR #18 / Issue #17已完成）。分支codex/phase4b4-cross-document-synthesis，独立worktree C:/Projects/research-workbench-phase4b4。本轮只实现、离线验证和本地提交；不创建PR、不合并、不关闭Issue、不进入4B.5，全部旧分支/worktree保留。真实API及旧Level B仍NOT TESTED。
 
 | Phase | 内容 | 状态 |

@@ -1,5 +1,82 @@
 # 系统架构
 
+2026-11-06 当前验收状态（依据用户已核验的真实运行及科研审计记录）：Execution 7 已 completed，
+17 个阶段全部完成，两篇文献的真实 DeepSeek 端到端分析、历史查询与引用/证据追溯链核验成功。
+结构可追溯不保证语义支持：五条结论审计发现数值错配、实验体系混用和临床证据不足，
+科研语义准确性尚未全面验收。本轮仅整理文档，不重新读取研究数据、验证该执行或调用 AI。
+以下实现及未测试说明保留当时范围；当前严格续跑设计见 ADR-065，早期投影重建评估不是当前续跑机制。
+
+2026-11-06 安全续跑：application/resume.py 在新获取的冻结 Question/SourceDocument 上，
+用成功检查点的原规范 JSON 重放既有严格 validator，核对相同 Finding ID、Citation、Chunk 闭包及
+history_result，而不是从投影重组 JSON。保持 JSON 字段顺序，因为现有 ID 算法绑定规范字节。
+0006 只追加 stage_checkpoints 与 execution_resumes：成功/检查点同事务，保存 output/request/
+projection hash；来源、预算、版本通过现有父子配置/成员/边及源 fingerprint 绑定。原文/payload 不落库。
+执行来源的完整支持行摘要在预览后、原子登记与每次复用时重验；唯一 source_run_id 防止重复启动。
+新执行仍走现有 parent owner/CAS 与完整引用校验，失败阶段重新调用，成功阶段不调用 Provider。
+
+复用的权威来源为 checkpoint.origin=reuse/source_run_id。为了仅追加表且保留旧表 CHECK/FK，
+旧 stage 行的 response_received 生命周期表示该生成结果曾经收取，不表示本次新收取；
+对外 get_stages/get_call_usage 依据 origin 返回 reused。复用时不构造 ProviderResult，
+response_id/input_tokens/output_tokens 均空，usage_cost/estimated_cost 为零；新执行的 allocated_cost
+使用登记的剩余预留。历史账单不复制，祖先各执行的自身费用单独列示，未知调用不按零计。
+
+剩余 Map 使用正式请求估算；已具备全部子结果的 Reduce 在启动前按实际输入重估，
+尚未知输入的 Reduce 保留原配置的完整上界，调用前再次检查，不借用额度或放松 schema。
+CLI 的 authorize_stage 在登记 running/发请求之前逐次 SEND；复用不要求付费确认，取消不记 unknown。
+迁移通过显式 backup_and_upgrade：只读 SQLite backup、完整性/FK 与旧表行摘要检查；
+真实数据库本轮仅 mode=ro/query_only 评估 Execution 4，未迁移，未回写旧执行。
+旧的投影重建原语不参与 resume；旧检查点缺失、running、已登记后继、任何绑定不一致都拒绝。
+本轮无新依赖，无真实 Zotero/AI 调用，以下检查点评估段为此前设计状态。
+
+校验诊断（2026-11-06）：StageValidationError只携带固定code与白名单整数计数；区分JSON、
+根结构、Finding数量/结构/字段、Citation格式/局部标签、来源绑定及子结果完整性。Cross/Document
+服务保留类别到既有error_code字段；持久化绑定校验与PersistenceError分开，不把所有已返回异常
+归为同一个invalid_output。原始失败候选仍不落库，未知异常仍使用泛化安全码，不推断具体类别。
+自动失败展示只列匿名阶段位置、固定类别和计数/usage，不展示来源key、生成文本、response ID。
+inspect只读Workbench状态与布尔投影，不调用Zotero或AI，也不尝试修复历史。
+
+检查点评估：既有history_result保存生成字段/引用投影，没有完整规范输出JSON；Finding ID却绑定
+规范输出字节顺序。replay_stage_projection仅在当前冻结来源、Question、版本、模型、StageBudget、
+执行绑定、请求hash、全部ID及完整投影均重验一致时返回内存结果，可供既有Reduce校验复用。
+属性顺序信息不足、内容/问题变更或任何ID/引用不一致时拒绝，不重分配ID以冒充旧结果。
+此原语不是完整续跑：当前无跨执行reuse来源/零新增调用状态，不伪造response_received或零usage。
+最小后续检查点需保存已验证规范生成JSON与绑定hash，再为新执行显式记录复用谱系、分别记账，
+只对剩余请求重新预检并SEND。本轮没有迁移或真实续跑，旧执行不可变。
+
+分阶段输出（2026-11-06）：CLI分别构造Map/Document Reduce/Cross Reduce的StageBudget，
+默认输出8192/32768/32768。Planner与Map请求只使用Map预算；DocumentAnalysisService的
+reduce_stage_budget用于文献Reduce；PreparedCross保存两级Reduce预算并按阶段选择。
+allocate_budget分别预留每次Reduce的完整输入、该阶段输出及安全额度，费用用各自输出上限。
+子执行config在预算不同于Map时增加reduce_stage_budget，父config增加reduce_stage_budgets；
+均位于既有JSON配置与计划hash中，不增加migration。登记/阶段启动/完成重验所选预算，
+历史支撑链hash包含这些配置；旧统一预算缺省为stage_budget，旧字节格式与历史不回写。
+未改变阶段schema、Finding、Citation或来源闭包校验；当前分支无ObservationBinding命名实现，
+不引入或修改PR #22内容。新执行仍是显式完整重跑，无自动付费重试。
+
+CLI容量调整（2026-11-06）：CLI构造StageBudget默认输入512000、context1000000操作单位，
+输出8192真实tokens；PlanningBudget同步，CrossBudget整体默认8000000操作单位。
+每个Document/Cross Reduce按所配置完整输入额度独立预留，Map用正式请求估算，全部预留在SEND前
+展示并受用户费用上限约束；不在已批准预算之外借额度。库级保守默认保持，CLI参数不再固定24k。
+DeepSeek flash/v4-pro公开容量profile为1M context/384K输出（2026-11-06文档）；
+模型输出限制与Workbench的UTF-8字节代理估算分开。context操作预算使用公开窗口作为保守代理边界，
+不是精确tokenizer。预算超限显示数值，不宣称真实模型超限；供应商明确context错误码单独分类，
+建议文献内分组Reduce再综合，未自动实现分层/截断/重试。没有migration或历史回写。
+
+2026-11-06 CLI 入口：标准库 argparse/getpass → 既有 repositories、QuestionSourceService、
+CrossDocumentAnalysisService → ZoteroClient / DeepSeekStageProvider。新增公开
+`prepare_analysis`（冻结全文、纯 AI 预检、不登记执行）与 `execute_prepared`（同一快照、登记时重验）。
+旧 `run_analysis` 组合这两步，保留公开行为。CLI 在两步之间展示预览并要求终端 `SEND`；
+不重新读取可能变化的全文，不更改契约、校验、预算、migration 或重试策略。
+历史页只通过 repository 读 Workbench；新增只读 `get_call_usage` 安全投影，无原始 payload。
+
+CLI incomplete 修复：Responses normalizer 抛出的 `AnalysisProviderIncomplete` 仍以
+`provider_incomplete` 作为安全码，仅携带白名单 `max_output_tokens/content_filter` 或 None，
+不保留原始响应/部分生成文本。Cross 的父执行、活动子执行和阶段保留此码与 response_received；
+无 usage 时不填零。原因仅在本次 CLI 失败时展示，未加持久化字段或迁移，旧历史保持原样。
+默认输出4096不变；DeepSeek阶段允许显式配置到8192，OpenAI阶段保持4096能力上限。
+CLI显式context与output同时传入PlanningBudget/StageBudget，沿用最终SDK估算、CrossBudget
+分配和费用门槛，不自动提升整体限制，不改变JSON Schema/引用校验或从incomplete提取可用结果。
+
 ## 分层与目标
 
 ```text

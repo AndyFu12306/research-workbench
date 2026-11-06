@@ -1,5 +1,80 @@
 # 架构决定
 
+以下决定保留各自制定时的范围；严格检查点续跑的后续设计见 ADR-065，取代 ADR-064 中尚未实现续跑的历史范围。原 CLI 入口设计仍为 ADR-060。
+
+## ADR-064：先保留安全校验类别，不把历史投影伪装为执行检查点
+
+2026-11-06只读核对用户指定Execution=4的状态、usage及失败结果存在性（未取回文献/模型候选）：
+9成功、1失败、7未开始，失败候选为空，旧码invalid_output不足以确认具体结构或Citation违约。
+保留预算及全部严格约束，仅增加固定分类与非敏感计数，分类在原error_code字段保存，无迁移。
+schema/本地标签失败、来源绑定、子结果完整性、持久化绑定失败与存储故障分开；未知原因不猜测。
+自动失败显示匿名位置，inspect离线查看条件，无原始响应、全文、Prompt、reasoning或Key输出。
+
+现有成功投影丢失规范输出属性顺序，而Finding ID受该顺序影响；不能普遍无损重建旧运行时图。
+条件式重验原语必须重算所有ID与投影并匹配旧请求/版本/模型/预算/来源绑定，不能改ID凑通过。
+合成测试证明可无损重建的结果可直接供Reduce校验复用，同时验证来源变化、版本/模型/预算/
+执行绑定变化及属性顺序损失均拒绝。尚未验证Execution=4的全部成功阶段可重建，inspect不访问
+Zotero，不能声称已验证当前源文件。当前执行schema也没有reused来源与零新增调用的独立状态，
+因此不实现或暗示付费resume，不将复用伪装成新的provider响应或自动重跑9个成功阶段。
+
+最小后续机制：在成功事务内保存已校验规范生成JSON（不是SDK原始响应）及hash，绑定完整问题/
+来源/实际请求/模型/StageBudget/Prompt与Contract版本及schema/指令摘要；新执行引用旧检查点，
+明确区分reused/新请求/原usage与新增费用，只为剩余调用预检并重新SEND。原执行保持不可变。
+
+## ADR-063：Map与两级Reduce分别绑定输出预算
+
+2026-11-06用户提供Execution=3/Question=3真实诊断：5次Map完成，第6次Document Reduce的
+incomplete_details.reason=max_output_tokens，统一8192输出不足已由服务端确认。
+以可选的独立StageBudget扩展现有编排，不修改prompt/schema、不增加调度系统或迁移。
+CLI默认Map8192、Document32768、Cross32768；独立参数优先于兼容的统一输出参数。
+Planner/Map最终请求估算使用Map预算；两级Reduce各有完整固定预留、费用与context校验。
+PreparedCross及父子持久化JSON绑定这些预算；阶段请求必须与对应已登记预算相等。
+只有分阶段预算不同于Map时追加JSON键，旧统一预算配置和专用历史读取保持兼容。
+执行1/2/3不可变，不读取或改写原研究库。incomplete继续失败即停、缺usage保留未知，
+增大输出上限只提供下一次尝试所需容量，不代表真实运行成功或质量提高的保证。
+
+## ADR-062：CLI用充足且可配置的Reduce预留，区分操作单位和模型token
+
+2026-11-06用户优先普通科研论文可用性，替代CLI中24k输入/1M整体/8192输出硬上限的旧限制。
+不引入tokenizer依赖或新调度架构；保留最终payload UTF-8字节代理，界面明确称操作单位。
+CLI默认输入512000、context1000000、整体8000000操作单位，输出8192tokens；输入/context/
+整体/输出均可配置。旧context-tokens参数保留为context-units别名，持久化字段名保持兼容。
+Map精确按操作估算预留；每个Reduce按完整配置输入额度预留，仍是显式固定预算，无自动借用或超支。
+较大的预留使一般5块论文的完整Map输入不再受24k拒绝，费用预览包含全部预留，阈值继续生效。
+公开[DeepSeek容量](https://api-docs.deepseek.com/quick_start/pricing/)标称context1M、最大输出384K；
+已知flash/v4-pro按保守取整数值profile校验配置，输出应用上限384000，OpenAI保持旧4096上限，
+未知DeepSeek模型保持旧8192输出profile，不推断未知模型能力。默认配置不是最大模型输出量。
+字节代理过界只说明本地操作预算不足，不证明真实token超限；明确的供应商context错误单独报告，
+需文献内分组Reduce、保留引用链，再合成文献/跨文献结果，此方案不自动执行。
+无finding删除/截断、schema或引用校验放宽、迁移、失败历史改写、付费重试或真实API验证。
+
+## ADR-061：incomplete 保持失败分类，输出预算必须显式选择
+
+2026-11-06 根据用户首次真实运行记录及源码，确认 normalizer 未提取 incomplete reason，
+Cross 对 AnalysisProviderFailure 的分类分支将 provider_incomplete 泛化为 provider_failed。
+本轮只修复此明确类别，不重写已失败 Execution=1；response_received 与缺失usage语义保持。
+只读取状态reason白名单，未知/非字符串不透传；CLI显示已知reason或unknown，原因不新增入库字段。
+Responses 的 max_output_tokens 包含可见输出与reasoning额度，达到额度可导致incomplete，
+但缺少原失败reason/usage，不能断言4096是该次故障的已证实根因。
+保留4096默认，StageBudget应用硬上限扩到8192，DeepSeek能力上限8192、OpenAI仍4096。
+CLI通过明确output/context选项同步规划/阶段预算及预检费用，保留24k输入、整体调用/token/费用
+限制；超限继续拒绝，非自动扩容或模型能力保证。无重试、修补、自动恢复或契约校验放宽。
+官方协议来源：[DeepSeek Responses](https://api-docs.deepseek.com/api/create-response/)。
+
+## ADR-060：先交付两文献交互式 CLI，准备与外发确认分离
+
+2026-11-06 用户调整优先级，暂停4B.5a额外人工及多模型复核，保留既有质量/审计成果。
+从最新远程main b716ad7建立独立CLI分支/worktree，不基于PR #22分支或修改冻结文件。
+选择标准库argparse/getpass，无新依赖；复用既有ZoteroClient、DeepSeekStageProvider及编排。
+本机读取前READ确认，完整全文及固定预算准备后SEND确认，Key仅隐藏输入到进程内存。
+公开prepare_analysis/execute_prepared让确认绑定同一全文快照；登记重验问题/来源关联和计划，
+不跨确认持有数据库事务。旧run_analysis组合两步；结构/引用/来源支撑/预算限制不放宽。
+CLI强制两篇，显式填写单价和费用阈值，不内置易过时的价格；操作估算不承诺实际账单。
+独立Workbench数据库通过既有Alembic迁移，无新migration；history/show只读本地历史，
+不hydrate Zotero或构造新请求。错误仅固定安全码，无traceback/raw payload/凭据输出。
+无自动付费调用、重试、修补、续跑、Zotero写入、PR创建或merge。CLI交付不等于真实Stage API
+或human review验收；本轮仅定向离线检查，用户首次真实运行需另行在终端确认。
+
 日期：2026-11-03。除注明暂定外，以下原则已接受；接受原则不代表已实现。
 
 ## ADR-001：Zotero 是唯一文献事实源
@@ -264,3 +339,29 @@ cross-document-history-v1为白名单投影，保存精确成员/执行/阶段�
 
 
 ADR-059独立审核补充（P1-09）：provider_sdk_incompatible不是可靠的响应凭据，同一码可能由responses.create内部未知异常或归一化错误产生。保持adapter协议不变，在新跨文献路径无显式返回证据时保守unknown；不检查异常原文/上下文猜测服务端结果。已有返回hook证据优先，拒答/incomplete等独立码不变，未知usage/费用保持None。P1-08仅恢复单篇repository显式签名兼容性，不改变父所有权或事务策略。
+
+
+## ADR-065：严格规范检查点、独立执行续跑及单次付费授权
+
+2026-11-06 用户要求直接交付安全续跑 MVP，取代此前仅评估/投影重建的范围。
+在当前 CLI 分支追加 Alembic 0006，所有旧 migration、阶段 schema/validator 和冻结评估保持不变。
+仅持久化校验后的规范生成 JSON（保留字段顺序）、内容/request/projection 哈希与来源谱系；
+用重新读取的相同全文及完整问题恢复 StageFinding/Citation/阶段输入，核对全部原 ID，不重分配。
+旧投影不含无损规范 JSON，绝不猜测键顺序。Execution 4 经只读核实缺少规范检查点，拒绝续跑；
+只支持新版本执行的完整检查点。运行状态不明的 running 也拒绝，不提供自动解锁/重试。
+
+复用创建全新父子执行，不更新原历史。原子唯一 source_run_id 使同一执行仅有一个直接后继；
+后继失败允许对后继继续。成功和检查点同事务落盘；预览后登记与每次复用重新核对原执行摘要。
+保持旧表约束以避免重建含 FK 的 SQLite 历史表，新增 checkpoint.origin 是权威生成来源，
+对外阶段/用量投影返回 reused；旧 response_received 表示该结果历史收取，不声称新 API 响应。
+不伪造 ProviderResult、响应 ID 或 usage，复用的新增费用为零，祖先费用分开且不重复入账。
+
+原配置逐字段比较（含价格版本、模型、预算、Prompt/Contract/Planner/Estimator 版本）。
+剩余请求重新做操作估算，已知 Reduce 动态输入也提前检查；未知动态输入保留完整上界并逐次检查。
+不截断、输出 repair 或修改约束以求通过。终端先预览剩余调用并确认启动，每个新增 API 请求
+仍单独输入 SEND；READ 授权后只读原选定来源。取消不伪装成未知的付费调用。
+
+迁移使用标准库 sqlite3 backup API，先保留且校验备份，再 Alembic upgrade，最后 integrity/FK
+及旧表逐行内容摘要检查；不自动恢复备份或覆盖数据库。本轮只在临时 SQLite 测试迁移。
+无新增依赖、无 Zotero 写入、无真实付费请求；允许本分支 Conventional Commit/普通 Push，
+不 merge、不改 PR #22/Issue #21、不删除 worktree、不扩充评估框架。

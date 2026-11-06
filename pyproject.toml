@@ -14,6 +14,9 @@ dependencies = [
     "openai>=2,<3",
 ]
 
+[project.scripts]
+research-workbench = "research_workbench.cli:main"
+
 [project.optional-dependencies]
 dev = ["pytest>=8,<10", "ruff>=0.14,<1"]
 

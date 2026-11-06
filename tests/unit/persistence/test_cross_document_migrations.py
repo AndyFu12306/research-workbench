@@ -9,9 +9,9 @@ from research_workbench.persistence.cross_document_models import cross_inputs, m
 from research_workbench.persistence.models import Base
 
 
-def test_0005_metadata_and_foreign_key_definitions(database):
+def test_current_metadata_preserves_0005_foreign_keys(database):
     with database._engine.connect() as c:
-        assert c.execute(text("select version_num from alembic_version")).scalar_one() == "0005"
+        assert c.execute(text("select version_num from alembic_version")).scalar_one() == "0006"
         assert c.execute(text("pragma foreign_keys")).scalar_one() == 1
         assert c.execute(text("pragma foreign_key_check")).all() == []
         assert compare_metadata(MigrationContext.configure(c), Base.metadata) == []
