@@ -4,15 +4,131 @@ from dataclasses import replace
 
 import pytest
 from quality_support.binding import attach
-from quality_support.contracts import Opportunity, QualityError
+from quality_support.contracts import Opportunity, QualityError, Review
 from quality_support.loading import ROOT, decode, encode, load_assessment, load_candidate, load_case
 from quality_support.reporting import markdown, report, runtime_metrics, structure_metrics
-from quality_support.scoring import count, semantic_metrics
+from quality_support.scoring import count, review_status, semantic_metrics
 from quality_support.scripted import run_memory
-from quality_support.validation import validate_assessment
+from quality_support.validation import review_targets, validate_assessment
 
 MANIFEST = decode((ROOT / "manifest.json").read_text("utf-8"))
 PAIRS = [(e["case_id"], name) for e in MANIFEST["cases"] for name in e["candidates"]]
+
+
+@pytest.mark.parametrize("q,name", PAIRS)
+def test_review_targets_cover_every_metric_object_separately(q, name):
+    case = load_case(q)
+    a = load_assessment(case, load_candidate(case, name))
+    expected = (
+        set(a.atomized_findings)
+        | {c.claim_id for c in a.claims}
+        | {f"{r.fact_id}/{r.layer}" for r in a.retentions}
+        | {r.relation_id for r in case.relations}
+        | {j.target_id for j in a.acceptance_judgments}
+    )
+    assert review_targets(case, a) == expected
+
+
+@pytest.mark.parametrize("role", ["primary", "secondary"])
+@pytest.mark.parametrize("object_type", ["claim", "retention"])
+def test_q13_ordinary_metric_missing_either_reviewer_stays_provisional(role, object_type):
+    case = load_case("Q13")
+    a = load_assessment(case, load_candidate(case, "correct"))
+    ordinary = next(
+        c
+        for c in a.claims
+        if not c.critical
+        and c.severity != "severe"
+        and c.upstream_support == c.source_support
+        and len(c.citations) == 1
+    )
+    assert not next(f for f in case.facts if f.fact_id == "F2").critical
+    assert all(r.availability == "explicit_complete" for r in a.retentions if r.fact_id == "F2")
+    omitted = ordinary.claim_id if object_type == "claim" else "F2/map_collection"
+    targets = tuple(sorted(review_targets(case, a)))
+    reviews = tuple(
+        Review(
+            f"fixture_{r}",
+            "mechanism_fixture",
+            r,
+            tuple(t for t in targets if r != role or t != omitted),
+            True,
+            "mechanism only",
+        )
+        for r in ("primary", "secondary")
+    )
+    simulated = replace(a, reviews=reviews)
+    validate_assessment(case, load_candidate(case, "correct"), simulated)
+    assert review_status(case, simulated, mechanism=True)["status"] == "provisional"
+    assert review_status(case, simulated, mechanism=True)["missing"] == 1
+    assert review_status(case, simulated)["status"] == "provisional"
+
+
+@pytest.mark.parametrize(
+    "q,name", [("Q15", "correct"), ("Q15", "wrong"), ("Q17", "preflight"), ("Q17", "capacity")]
+)
+def test_markdown_shows_separate_draft_acceptance(q, name):
+    case = load_case(q)
+    candidate = load_candidate(case, name)
+    a = load_assessment(case, candidate)
+    run = run_memory(case, candidate, "acceptance_markdown")
+    result = report(case, candidate, run, attach(case, candidate, run, a))
+    output = markdown(result)
+    projection = decode(output.split("```json\n")[1].split("\n```")[0])
+    assert projection["acceptance"] == result["acceptance"]
+    assert projection["metrics"] == result["observation_metrics"]
+    assert "Status: provisional" in output
+    assert "not formal human acceptance" in output
+    assert result["acceptance"]["N"] == len(a.acceptance_judgments)
+
+
+@pytest.mark.parametrize(
+    "rows",
+    [
+        (),
+        (Opportunity("a", "na", "not applicable"),),
+        (Opportunity("a", "indeterminate"), Opportunity("b", "unscored")),
+    ],
+)
+def test_markdown_acceptance_preserves_na_and_pending_counts(rows):
+    data = {
+        "version": "quality-report-v2",
+        "mode": "synthetic_reference",
+        "status": "provisional",
+        "review": {"missing": 1},
+        "observation_metrics": {},
+        "acceptance": count(rows),
+    }
+    output = markdown(data)
+    assert decode(output.split("```json\n")[1].split("\n```")[0])["acceptance"] == count(rows)
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"raw_response": "PRIVATE"},
+        {"N": True},
+        {"N": 99},
+        {"success": 99},
+        {"rate": "PRIVATE"},
+        {"coverage": "PRIVATE"},
+        {"status": "PRIVATE"},
+        {"status": "not_applicable"},
+        {"NA": -1},
+        {"J": "PRIVATE"},
+    ],
+)
+def test_markdown_rejects_malicious_or_inconsistent_acceptance(changes):
+    data = {
+        "version": "quality-report-v2",
+        "mode": "synthetic_reference",
+        "status": "provisional",
+        "review": {"missing": 1},
+        "observation_metrics": {},
+        "acceptance": count((Opportunity("a", "pass"),)) | changes,
+    }
+    with pytest.raises(QualityError):
+        markdown(data)
 
 
 @pytest.mark.parametrize("q,name", PAIRS)

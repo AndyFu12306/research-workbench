@@ -38,7 +38,9 @@ frozen dataclass防止意外字段赋值；tuple固定顺序，不等于防恶�
    collectively_sufficient必须指出多个实际输入、合成理由和相反/限定信息。不要要求每个Map包含跨块完整事实。
 6. 原文60→Map90为首次失真；下游忠实90，上游轴通过但来源轴失败，是继承错误。
    Cross改95另记新失真和继承根；仅从90改回60是无上游支持纠正，不计忠实恢复。
-7. primary/secondary须为不同真实人，关键事实、严重错误、两轴不同、跨块综合、多源冲突均须复核。
+7. primary/secondary须为不同真实人；所有参与正式语义评分的原子Claim、所有必需Retention、
+   所有Relation和AcceptanceJudgment均须逐项复核，Finding原子化完整性另行确认。
+   critical、severe、两轴分歧、跨块综合及多来源标记用于风险分级，不豁免普通指标对象。
    分歧保留不同意见与理由，第三位adjudicator记录裁决；不能覆盖原意见。
 
 本仓库的46份assessment为Codex草稿，origin=codex_draft、reviews为空。没有实际人类签名或独立审核。

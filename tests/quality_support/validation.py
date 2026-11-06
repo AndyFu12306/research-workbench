@@ -126,22 +126,12 @@ def finding_sources(case, candidate):
 
 
 def review_targets(case, assessment):
+    # Risk flags prioritize review; every scored object still needs both reviewers.
+    # Finding atomization and individual Claim semantics are separate attestations.
     targets = set(assessment.atomized_findings)
     targets.update(j.target_id for j in assessment.acceptance_judgments)
-    for c in assessment.claims:
-        if (
-            c.critical
-            or c.severity == "severe"
-            or c.upstream_support != c.source_support
-            or len(c.citations) > 1
-        ):
-            targets.add(c.claim_id)
-    critical = {f.fact_id for f in case.facts if f.critical}
-    targets.update(
-        f"{r.fact_id}/{r.layer}"
-        for r in assessment.retentions
-        if r.fact_id in critical or r.availability == "collectively_sufficient"
-    )
+    targets.update(c.claim_id for c in assessment.claims)
+    targets.update(f"{r.fact_id}/{r.layer}" for r in assessment.retentions)
     targets.update(r.relation_id for r in case.relations)
     return targets
 
@@ -243,9 +233,6 @@ def validate_assessment(case, candidate, assessment):
 
 def validate_reviews(case, assessment):
     targets = review_targets(case, assessment)
-    # Noncritical claims are reviewable too, but arbitrary/sensitive target strings are not.
-    targets |= {c.claim_id for c in assessment.claims}
-    targets |= {f"{r.fact_id}/{r.layer}" for r in assessment.retentions}
     for r in assessment.reviews:
         identifier(r.reviewer)
         require(bool(r.targets) and set(r.targets) <= targets and bool(r.note.strip()))

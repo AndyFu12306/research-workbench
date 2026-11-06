@@ -138,7 +138,7 @@ def markdown(data):
     )
     require(set(data["observation_metrics"]) <= set(names))
     safe = {}
-    for name, metric in data["observation_metrics"].items():
+    for name, metric in {**data["observation_metrics"], "acceptance": data["acceptance"]}.items():
         # Rebuild from safe numeric values, rejecting injected prose/extra fields.
         require(set(metric) == {"success", "N", "J", "I", "U", "NA", "rate", "coverage", "status"})
         require(
@@ -153,7 +153,16 @@ def markdown(data):
         )
         require(metric["rate"] == (f"{metric['success']}/{metric['J']}" if metric["J"] else None))
         require(metric["coverage"] == (f"{metric['J']}/{metric['N']}" if metric["N"] else None))
-        require(metric["status"] in ("provisional", "complete", "not_applicable"))
+        require(
+            metric["status"]
+            == (
+                "provisional"
+                if metric["I"] or metric["U"]
+                else "complete"
+                if metric["N"]
+                else "not_applicable"
+            )
+        )
         safe[name] = metric
     unique(list(safe))
     # Project fields; do not interpolate arbitrary annotation reasons or input text.
@@ -163,7 +172,13 @@ def markdown(data):
         "Real model quality: NOT TESTED.\n\n"
         f"Independent human review outstanding: {data['review']['missing']}.\n\n"
         "Counts include N/J/I/U/NA; no composite score.\n\n"
+        "Acceptance counts reflect annotation judgments, not formal human acceptance.\n\n"
         + "```json\n"
-        + encode({"metrics": safe})
+        + encode(
+            {
+                "metrics": {k: v for k, v in safe.items() if k != "acceptance"},
+                "acceptance": safe["acceptance"],
+            }
+        )
         + "\n```\n"
     )
