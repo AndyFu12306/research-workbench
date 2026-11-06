@@ -31,11 +31,26 @@ DEEPSEEK_MODEL_LIMITS = {
     "deepseek-v4-pro": (1_000_000, 384_000),
 }
 
+# Conservative output ceiling for unregistered DeepSeek names; unchanged from prior behavior.
+DEFAULT_DEEPSEEK_OUTPUT_LIMIT = 8192
+
+
+def model_output_limit(model, provider="deepseek"):
+    """Single source for the per-stage output ceiling; verified caps for known models."""
+    if provider != "deepseek":
+        return 4096
+    limits = DEEPSEEK_MODEL_LIMITS.get(model)
+    return limits[1] if limits is not None else DEFAULT_DEEPSEEK_OUTPUT_LIMIT
+
 
 def validate_model_budget(model, budget):
-    """Known model profile: output tokens and conservative context operation ceiling."""
+    """Known model: verified capacity. Unregistered DeepSeek: conservative output ceiling."""
     limits = DEEPSEEK_MODEL_LIMITS.get(model)
-    if limits and (budget.output_tokens > limits[1] or budget.context_tokens > limits[0]):
+    if limits is not None:
+        if budget.output_tokens > limits[1] or budget.context_tokens > limits[0]:
+            raise StageCapabilityError()
+        return
+    if budget.output_tokens > DEFAULT_DEEPSEEK_OUTPUT_LIMIT:
         raise StageCapabilityError()
 
 
@@ -68,11 +83,7 @@ def prepare_stage_call(
     ):
         raise StageError() from None
     rendered = render_stage_input(request)
-    # Unknown DeepSeek names keep the previously supported output profile.
-    output_limit = (
-        DEEPSEEK_MODEL_LIMITS.get(model, (0, 8192))[1] if provider == "deepseek" else 4096
-    )
-    if request.budget.output_tokens > output_limit:
+    if request.budget.output_tokens > model_output_limit(model, provider):
         raise StageCapabilityError()
     if provider == "deepseek":
         validate_model_budget(model, request.budget)

@@ -336,6 +336,33 @@ def show_failure(database, execution_id):
             )
 
 
+def require_model_budgets(model, budgets):
+    """Reject budgets the model cannot serve before keys, source reads or paid calls."""
+    try:
+        for budget in budgets:
+            if budget is not None:
+                validate_model_budget(model, budget)
+    except ValueError:
+        raise CliError(
+            "所配置或历史保存的阶段输出额度超过该模型容量；未登记模型按保守输出上限处理。"
+            "不会自动修改历史预算。请按模型能力调整。"
+        ) from None
+
+
+def require_history_model_budgets(model, config_json):
+    """Check the saved Map / Document Reduce / Cross Reduce budgets without any I/O."""
+    config = json.loads(config_json)
+    reduce_budgets = config.get("reduce_stage_budgets", {})
+    require_model_budgets(
+        model,
+        (
+            StageBudget(**config["stage_budget"]),
+            StageBudget(**reduce_budgets.get("document_reduce", config["stage_budget"])),
+            StageBudget(**reduce_budgets.get("cross_document_reduce", config["stage_budget"])),
+        ),
+    )
+
+
 def run_workflow(
     database,
     *,
@@ -361,14 +388,7 @@ def run_workflow(
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}", model):
         raise CliError("模型名称格式无效。")
     if stage_budget is not None:
-        try:
-            for b in (stage_budget, document_reduce_budget, cross_reduce_budget):
-                if b is not None:
-                    validate_model_budget(model, b)
-        except ValueError:
-            raise CliError(
-                "所配置context或输出额度超过该模型的公开容量；请按模型能力调整。"
-            ) from None
+        require_model_budgets(model, (stage_budget, document_reduce_budget, cross_reduce_budget))
     display("请按服务商控制台填写当前单价；程序不内置价格，也不联网查询价格。")
     currency = ask("币种（三位字母，例如 CNY）：").upper()
     input_price = positive_decimal("输入价格 / 百万 tokens（保守使用非缓存价）：")
@@ -449,6 +469,9 @@ def resume_workflow(database, source_id):
     model = ask("当前 DeepSeek 模型名称（必须与原执行完全一致）：")
     if (old.provider, old.model) != ("deepseek", model):
         raise CheckpointUnavailable()
+    # Historical Map/Reduce budgets are checked before Zotero reads, the key prompt
+    # and any new paid call; saved budgets are never rewritten.
+    require_history_model_budgets(model, old.config_json)
     confirm(
         "允许重新只读获取原执行选定的 Zotero 全文以校验 fingerprint？不会搜索或写入 Zotero。",
         "READ",
