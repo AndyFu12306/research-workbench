@@ -291,7 +291,7 @@ def test_stage_dto_repr_and_safe_exceptions_hide_all_text():
 @pytest.mark.parametrize(
     "budget",
     [
-        StageBudget(output_tokens=8193),
+        StageBudget(output_tokens=384001),
         StageBudget(output_tokens=True),
         StageBudget(context_tokens=0),
         StageBudget(max_input_tokens=-1),

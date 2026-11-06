@@ -51,6 +51,7 @@ PROVIDER_FAILURE_MESSAGES = {
     "provider_network": "The provider network connection failed.",
     "provider_model_unavailable": "The configured provider model is unavailable.",
     "provider_invalid_request": "The provider rejected the request parameters.",
+    "provider_context_length": "Model context exceeded. Use hierarchical Reduce; no retry.",
     "provider_structured_output": "The provider rejected structured output configuration.",
     "provider_responses_incompatible": "The provider Responses endpoint is unavailable.",
     "provider_sdk_incompatible": "The provider response could not be normalized safely.",

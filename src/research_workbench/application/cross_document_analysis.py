@@ -282,7 +282,10 @@ class CrossDocumentAnalysisService:
             code = (
                 exc.code
                 if isinstance(exc, CrossDocumentError)
-                or (isinstance(exc, AnalysisProviderFailure) and exc.code == "provider_incomplete")
+                or (
+                    isinstance(exc, AnalysisProviderFailure)
+                    and exc.code in ("provider_incomplete", "provider_context_length")
+                )
                 else (
                     "persistence_failed" if isinstance(exc, PersistenceError) else "provider_failed"
                 )
@@ -315,6 +318,7 @@ class CrossDocumentAnalysisService:
                 in (
                     "provider_refusal",
                     "provider_incomplete",
+                    "provider_context_length",
                     "provider_invalid_json",
                     "provider_empty_json",
                 ),

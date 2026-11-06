@@ -24,6 +24,20 @@ from .deepseek import _normalize as normalize_response
 from .deepseek import _request_failure as request_failure
 from .openai import OpenAIAnalysisProvider
 
+# Public nominal token capacities checked 2026-11-06; not tokenizer estimates.
+# https://api-docs.deepseek.com/quick_start/pricing/
+DEEPSEEK_MODEL_LIMITS = {
+    "deepseek-flash": (1_000_000, 384_000),
+    "deepseek-v4-pro": (1_000_000, 384_000),
+}
+
+
+def validate_model_budget(model, budget):
+    """Known model profile: output tokens and conservative context operation ceiling."""
+    limits = DEEPSEEK_MODEL_LIMITS.get(model)
+    if limits and (budget.output_tokens > limits[1] or budget.context_tokens > limits[0]):
+        raise StageCapabilityError()
+
 
 @dataclass(frozen=True, slots=True)
 class StageEstimate:
@@ -54,10 +68,14 @@ def prepare_stage_call(
     ):
         raise StageError() from None
     rendered = render_stage_input(request)
-    # This opt-in extension is for DeepSeek only; retain the OpenAI stage ceiling.
-    output_limit = 8192 if provider == "deepseek" else 4096
+    # Unknown DeepSeek names keep the previously supported output profile.
+    output_limit = (
+        DEEPSEEK_MODEL_LIMITS.get(model, (0, 8192))[1] if provider == "deepseek" else 4096
+    )
     if request.budget.output_tokens > output_limit:
         raise StageCapabilityError()
+    if provider == "deepseek":
+        validate_model_budget(model, request.budget)
     payload = {
         "model": model,
         "instructions": stage_instructions(request.stage),
@@ -85,7 +103,12 @@ def prepare_stage_call(
         estimated_input > request.budget.max_input_tokens
         or estimated_context > request.budget.context_tokens
     ):
-        raise StageBudgetError()
+        raise StageBudgetError(
+            input_units=estimated_input,
+            input_limit=request.budget.max_input_tokens,
+            context_units=estimated_context,
+            context_limit=request.budget.context_tokens,
+        )
     return payload, StageEstimate(estimated_input, estimated_context)
 
 

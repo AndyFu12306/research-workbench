@@ -23,6 +23,7 @@ ERRORS = {
     "invalid_output": "Cross-document output validation failed.",
     "provider_failed": "Cross-document provider failed.",
     "provider_incomplete": "Provider output is incomplete; synthesis is unavailable.",
+    "provider_context_length": "Model context exceeded; hierarchical Reduce is needed.",
     "interrupted": "Cross-document call outcome is unknown or execution interrupted.",
     "parent_aborted": "Parent execution stopped before this document completed.",
 }

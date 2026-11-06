@@ -1,5 +1,50 @@
 # 两篇文献的首次真实运行
 
+**当前容量默认及下一次运行（2026-11-06）**
+
+用户报告Execution=2的第一篇5次Map成功，Document Reduce在网络前被budget_exceeded拒绝。
+结合源码可以确认24k输入额度与每Reduce同样大小的固定预留是容量瓶颈；开发未读取私人数据库，
+不能声称测得原Reduce的准确大小或真实token数。原Execution=1/2及已完成Map保持原样。
+
+当前CLI默认与参数如下；下方4096/8192硬上限等段落记录前轮修复历史，以此表为当前行为：
+
+| 参数 | 当前默认 | 含义 |
+| --- | ---: | --- |
+| `--stage-input-units` | 512000 | 完整请求输入操作额度，包括包装/schema，Map及两级Reduce共用 |
+| `--stage-context-units` | 1000000 | 单次context操作额度，旧`--stage-context-tokens`为兼容别名 |
+| `--max-estimated-units` | 8000000 | 整次Map与三次Reduce预留的总操作额度 |
+| `--stage-output-tokens` | 8192 | 每阶段输出token额度，包含reasoning |
+
+操作单位沿用UTF-8字节代理与输出/安全预留，不是精确token计数。库级默认不影响CLI新配置。
+DeepSeek官方当前[容量说明](https://api-docs.deepseek.com/quick_start/pricing/)标称flash/v4-pro
+context1M、最大输出384K；内置profile保守取1000000/384000，不内置价格，不自动联网调用模型查询。
+已知模型的输出/context配置不能超过该profile；这不是模型实际账户能力已实测的保证。
+输入操作额度最多应为context操作额度减去输出和1024安全预留。
+
+```powershell
+Set-Location C:\Projects\research-workbench-cli
+$env:PYTHONUTF8 = '1'
+uv sync --frozen --extra dev
+$env:ZOTERO_CLI_PATH = (Get-Command zotero-cli -ErrorAction Stop).Source
+uv run --frozen research-workbench run --stage-input-units 512000 --stage-context-units 1000000 --max-estimated-units 8000000 --stage-output-tokens 8192
+```
+
+也可以直接`uv run --frozen research-workbench run`使用这些默认值。随后选择deepseek-flash、
+两篇文献、价格和费用阈值、隐藏输入Key，核对预览，再以SEND明确批准外发。
+这是新建研究/执行并从Map开始，不恢复旧执行。整体操作额度增大不等于批准提高费用阈值。
+三个Reduce均提前独立预留512k完整输入额度，费用预览是保守预留，不是对实际Reduce费用的预测。
+实际输入更长时可将`--stage-input-units`调到例如900000，同时检查费用预览；不自动删改任何结果。
+
+本地估算超限会显示阶段和输入/context数值，不能据此断言真实模型窗口不足。
+若服务商明确返回context_length_exceeded等结构化错误，保存provider_context_length，
+建议把文献内完整Map结果按组Reduce、保留每层Finding引用后再合成文献，最后跨文献Reduce。
+本版不自动启动该分层方案或付费重试，失败结果与完整Map历史保留。
+
+本轮容量修复定向验证：**403 passed**，包含真实SDK MockTransport的长Reduce流水线回归、
+CLI、阶段Provider/校验、Cross计划/预算/执行/历史和DeepSeek旧接口相关测试。
+Ruff check与format（96文件）、两种CLI入口help启动和diff检查通过。未跑完整pytest、未访问
+真实文献/研究数据库或付费API；没有重写失败执行，真实完整运行仍需用户重新确认后验证。
+
 本入口复用现有 DeepSeekStageProvider、ZoteroClient、来源关联服务与跨文献编排。
 初版仅离线验证。用户随后首次真实运行在第2次 Map incomplete 后失败，
 **真实两文献三层流水线尚未完整成功**；本次故障修复仍只用模拟响应和临时 SQLite 验证。
@@ -91,7 +136,7 @@ uv run --frozen research-workbench show 1
 预算采用 UTF-8 字节保守操作估算，非服务商精确 tokenizer；用户填写价格也可能过时，
 估算/阈值与 usage 名义费用均不是账单保证。服务商账单为实际费用依据。
 
-## 首次 incomplete 的修复与下一次尝试
+## 首次 incomplete 修复记录（历史；当前运行使用页首容量配置）
 
 用户提供的真实记录：Execution ID=1、Question ID=1，模型deepseek-flash，预计17次调用，
 第一次Map completed（2428 input / 2562 output tokens），第二次Map provider_incomplete且无可用usage，
@@ -107,20 +152,20 @@ CrossDocumentError，明确的provider_incomplete被归为provider_failed。现�
 或content_filter。原日志没有reason/失败调用usage，不能由首次成功的2562推断第二次需求。
 程序不输出reasoning或原始响应，不猜测被过滤的内容，也不从部分JSON恢复结果。
 
-本版默认仍4096。如决定以8192输出额度重新尝试，复制以下命令：
+当时默认4096；当前CLI已按页首更新。现在以8192输出额度重新尝试，使用：
 
 ```powershell
 Set-Location C:\Projects\research-workbench-cli
 $env:PYTHONUTF8 = '1'
 uv sync --frozen --extra dev
 $env:ZOTERO_CLI_PATH = (Get-Command zotero-cli -ErrorAction Stop).Source
-uv run --frozen research-workbench run --stage-output-tokens 8192 --stage-context-tokens 65536
+uv run --frozen research-workbench run --stage-input-units 512000 --stage-context-units 1000000 --max-estimated-units 8000000 --stage-output-tokens 8192
 ```
 
 这是新建Project/Question和新执行，完整从Map开始，不是恢复或覆盖Execution=1。
 继续按READ、两篇选择、deepseek-flash、价格/费用上限、隐藏Key、预览、SEND操作。
-context是本地操作预算，不向服务商声明或保证模型窗口；输入上限仍24000，整体预算不自动提升。
-8192不是新默认或成功保证；缺少相应context预留、整体预算或费用额度时在外发前拒绝。
+context是本地操作预算，不向服务商声明或保证模型窗口；当前输入与整体额度以页首配置为准。
+8192现为CLI默认值，但不是成功保证；缺少相应context预留、整体预算或费用额度时在外发前拒绝。
 较高输出额度会增加估算费用，动态Reduce仍可能超限。若再次incomplete，记录终端显示的
 安全reason、执行ID和阶段状态即可，不要分享原文/Prompt/Key/原始响应。
 

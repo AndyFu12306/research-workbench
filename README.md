@@ -5,8 +5,10 @@
 保留 PR #22 和全部既有结果。下方阶段授权描述为历史范围，本次用户授权覆盖其中的旧限制。
 实现两篇文献的本机选择、Project/Question/来源关联、全文预检、外发预览和终端确认，
 复用 DeepSeekStageProvider 完成 Map → Document Reduce → Cross Reduce，并离线查看历史。
-用户首次真实运行报告：连接、全文及预算预检通过，第1次 Map 成功，第2次 Map incomplete，
-三层流水线尚未完整成功。CLI 故障修复仅做离线验证，保留原失败执行；
+用户真实运行报告：Execution=1在第2次Map incomplete；Execution=2第一篇5次Map全部成功，
+Document Reduce被内部24k估算额度阻止。CLI现默认输入512k操作单位、context 1M操作单位、
+整体8M操作单位和8192输出tokens，均可配置；它们与模型真实token容量分开显示。
+三层流水线尚未真实完整成功。故障修复只做离线验证，保留原失败执行；
 [PowerShell 运行及修复指南](docs/CLI_QUICKSTART.md)。
 
 建立在 Zotero 之上的个人 AI 研究工作台。Zotero 是唯一文献事实源，Workbench 保存研究对象及来源引用，不建立第二套文献库。

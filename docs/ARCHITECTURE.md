@@ -1,5 +1,14 @@
 # 系统架构
 
+CLI容量调整（2026-11-06）：CLI构造StageBudget默认输入512000、context1000000操作单位，
+输出8192真实tokens；PlanningBudget同步，CrossBudget整体默认8000000操作单位。
+每个Document/Cross Reduce按所配置完整输入额度独立预留，Map用正式请求估算，全部预留在SEND前
+展示并受用户费用上限约束；不在已批准预算之外借额度。库级保守默认保持，CLI参数不再固定24k。
+DeepSeek flash/v4-pro公开容量profile为1M context/384K输出（2026-11-06文档）；
+模型输出限制与Workbench的UTF-8字节代理估算分开。context操作预算使用公开窗口作为保守代理边界，
+不是精确tokenizer。预算超限显示数值，不宣称真实模型超限；供应商明确context错误码单独分类，
+建议文献内分组Reduce再综合，未自动实现分层/截断/重试。没有migration或历史回写。
+
 2026-11-06 CLI 入口：标准库 argparse/getpass → 既有 repositories、QuestionSourceService、
 CrossDocumentAnalysisService → ZoteroClient / DeepSeekStageProvider。新增公开
 `prepare_analysis`（冻结全文、纯 AI 预检、不登记执行）与 `execute_prepared`（同一快照、登记时重验）。

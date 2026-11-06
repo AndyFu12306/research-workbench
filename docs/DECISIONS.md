@@ -1,5 +1,20 @@
 # 架构决定
 
+## ADR-062：CLI用充足且可配置的Reduce预留，区分操作单位和模型token
+
+2026-11-06用户优先普通科研论文可用性，替代CLI中24k输入/1M整体/8192输出硬上限的旧限制。
+不引入tokenizer依赖或新调度架构；保留最终payload UTF-8字节代理，界面明确称操作单位。
+CLI默认输入512000、context1000000、整体8000000操作单位，输出8192tokens；输入/context/
+整体/输出均可配置。旧context-tokens参数保留为context-units别名，持久化字段名保持兼容。
+Map精确按操作估算预留；每个Reduce按完整配置输入额度预留，仍是显式固定预算，无自动借用或超支。
+较大的预留使一般5块论文的完整Map输入不再受24k拒绝，费用预览包含全部预留，阈值继续生效。
+公开[DeepSeek容量](https://api-docs.deepseek.com/quick_start/pricing/)标称context1M、最大输出384K；
+已知flash/v4-pro按保守取整数值profile校验配置，输出应用上限384000，OpenAI保持旧4096上限，
+未知DeepSeek模型保持旧8192输出profile，不推断未知模型能力。默认配置不是最大模型输出量。
+字节代理过界只说明本地操作预算不足，不证明真实token超限；明确的供应商context错误单独报告，
+需文献内分组Reduce、保留引用链，再合成文献/跨文献结果，此方案不自动执行。
+无finding删除/截断、schema或引用校验放宽、迁移、失败历史改写、付费重试或真实API验证。
+
 ## ADR-061：incomplete 保持失败分类，输出预算必须显式选择
 
 2026-11-06 根据用户首次真实运行记录及源码，确认 normalizer 未提取 incomplete reason，

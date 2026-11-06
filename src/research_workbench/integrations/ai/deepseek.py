@@ -37,6 +37,12 @@ def _request_failure(status: int | None, code: object, param: object) -> Analysi
         kind = "quota"
     elif status == 429:
         kind = "rate_limit"
+    elif code in (
+        "context_length_exceeded",
+        "context_window_exceeded",
+        "max_context_length_exceeded",
+    ):
+        kind = "context_length"
     elif code in ("model_not_found", "model_not_available", "invalid_model") or param == "model":
         kind = "model_unavailable"
     elif code in (

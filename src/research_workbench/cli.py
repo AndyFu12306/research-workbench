@@ -18,11 +18,19 @@ from research_workbench.analysis.errors import (
     AnalysisProviderError,
 )
 from research_workbench.analysis.planning import PlanningBudget
-from research_workbench.analysis.stage_contracts import MAX_STAGE_OUTPUT_TOKENS, StageBudget
+from research_workbench.analysis.stage_contracts import (
+    MAX_STAGE_OUTPUT_TOKENS,
+    StageBudget,
+    StageBudgetError,
+)
 from research_workbench.analysis.stage_validation import validate_budget
 from research_workbench.application.cross_document_analysis import CrossDocumentAnalysisService
 from research_workbench.application.source_links import QuestionSourceService
-from research_workbench.integrations.ai.stages import DeepSeekStageProvider
+from research_workbench.integrations.ai.stages import (
+    DEEPSEEK_MODEL_LIMITS,
+    DeepSeekStageProvider,
+    validate_model_budget,
+)
 from research_workbench.integrations.zotero import ZoteroClient
 from research_workbench.integrations.zotero.errors import ZoteroError
 from research_workbench.persistence import Database, ProjectRepository, QuestionRepository
@@ -99,7 +107,25 @@ class ReportingProvider:
         return self.delegate.capabilities
 
     def estimate_stage(self, request):
-        return self.delegate.estimate_stage(request)
+        try:
+            return self.delegate.estimate_stage(request)
+        except StageBudgetError as exc:
+            display(f"Workbench 操作估算超限：{request.stage}（不是服务商真实 token 超限判定）。")
+            for label, value in (
+                ("输入估算", exc.input_units),
+                ("输入额度", exc.input_limit),
+                ("context估算", exc.context_units),
+                ("context额度", exc.context_limit),
+            ):
+                if type(value) is int:
+                    display(f"{label}={value}")
+            display(
+                "可调高 --stage-input-units / --stage-context-tokens；不删除任何 Finding 或引用。"
+            )
+            display(
+                "若真实 token 输入确实超过模型窗口，需按文献分组做分层 Reduce，再综合各组结果。"
+            )
+            raise
 
     def generate_stage(self, request):
         self.calls += 1
@@ -157,14 +183,21 @@ def preview(prepared):
     allocation, budget = prepared.allocation, prepared.budget
     display(f"最后 1 个 Cross Reduce；预计最多 {allocation.calls} 次调用，失败即停。")
     display(
-        f"操作估算/上限：{allocation.context_tokens}/{budget.max_estimated_tokens}；"
+        f"整体操作单位估算/上限：{allocation.context_tokens}/{budget.max_estimated_tokens}；"
         f"调用上限：{budget.max_calls}；"
         f"单次输出上限：{prepared.stage_budget.output_tokens} tokens。"
     )
     display(
-        f"单次输入上限={prepared.stage_budget.max_input_tokens}，"
-        f"context 上限={prepared.stage_budget.context_tokens}；输出额度包含 reasoning tokens。"
+        f"单次输入操作单位上限={prepared.stage_budget.max_input_tokens}，"
+        f"context 操作单位上限={prepared.stage_budget.context_tokens}；"
+        "输出额度包含 reasoning tokens。"
     )
+    limits = DEEPSEEK_MODEL_LIMITS.get(prepared.selection.model)
+    if limits:
+        display(f"公开模型容量（token）：context={limits[0]}，最大输出={limits[1]}。")
+    else:
+        display("该模型无内置容量资料；请按供应商能力配置，模型真实限制未在本机核实。")
+    display("每个 Document Reduce 和 Cross Reduce 均提前预留完整输入额度，费用预览含这些预留。")
     display(
         f"按所填单价估算预留：{allocation.cost} {prepared.pricing.currency}；"
         f"费用阈值：{budget.max_estimated_cost} {prepared.pricing.currency}。"
@@ -214,18 +247,22 @@ def show_run(database, run_id):
             display("来源块：" + json.dumps(finding["chunk_refs"], ensure_ascii=False))
 
 
-def configured_stage_budget(output_tokens, context_tokens):
-    budget = StageBudget(output_tokens=output_tokens, context_tokens=context_tokens)
+def configured_stage_budget(output_tokens, context_tokens, input_units=512_000):
+    budget = StageBudget(
+        output_tokens=output_tokens, context_tokens=context_tokens, max_input_tokens=input_units
+    )
     try:
         validate_budget(budget)
     except ValueError:
-        raise CliError(f"阶段输出额度必须为 1–{MAX_STAGE_OUTPUT_TOKENS} 的整数。") from None
+        raise CliError(
+            f"阶段输入/context必须为正整数，输出额度为 1–{MAX_STAGE_OUTPUT_TOKENS}。"
+        ) from None
     if context_tokens < budget.max_input_tokens + output_tokens + budget.safety_margin_tokens:
         raise CliError("context 额度不足以容纳输入、输出与安全预留；请显式配置更大的 context。")
     return budget
 
 
-def run_workflow(database, *, stage_budget=None):
+def run_workflow(database, *, stage_budget=None, max_estimated_units=8_000_000):
     confirm("允许在本机检查 Zotero 并搜索/读取你选择的两篇全文？此时不会调用 AI。", "READ")
     reader = ZoteroClient()
     health = reader.health_check()
@@ -242,6 +279,13 @@ def run_workflow(database, *, stage_budget=None):
     model = ask("DeepSeek 模型名称（填写账户实际可用且支持 Responses/结构化输出的模型）：")
     if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}", model):
         raise CliError("模型名称格式无效。")
+    if stage_budget is not None:
+        try:
+            validate_model_budget(model, stage_budget)
+        except ValueError:
+            raise CliError(
+                "所配置context或输出额度超过该模型的公开容量；请按模型能力调整。"
+            ) from None
     display("请按服务商控制台填写当前单价；程序不内置价格，也不联网查询价格。")
     currency = ask("币种（三位字母，例如 CNY）：").upper()
     input_price = positive_decimal("输入价格 / 百万 tokens（保守使用非缓存价）：")
@@ -271,11 +315,15 @@ def run_workflow(database, *, stage_budget=None):
                 stage_budget=stage_budget,
                 planning_budget=PlanningBudget(
                     context_tokens=stage_budget.context_tokens,
+                    max_input_tokens=stage_budget.max_input_tokens,
                     reserved_output_tokens=stage_budget.output_tokens,
+                    max_total_estimated_tokens=max_estimated_units,
                 )
                 if stage_budget is not None
                 else None,
-                cross_budget=CrossBudget(max_estimated_cost=cap),
+                cross_budget=CrossBudget(
+                    max_estimated_tokens=max_estimated_units, max_estimated_cost=cap
+                ),
                 pricing=pricing,
             )
             prepared = service.prepare_analysis(question.id, source_ids)
@@ -317,14 +365,28 @@ def main(argv=None):
     run_parser.add_argument(
         "--stage-output-tokens",
         type=int,
-        default=4096,
-        help=f"每阶段输出额度，1–{MAX_STAGE_OUTPUT_TOKENS}，默认4096（包含reasoning）",
+        default=8192,
+        help="每阶段真实输出token额度，默认8192，最高按模型能力（包含reasoning）",
     )
     run_parser.add_argument(
+        "--stage-context-units",
         "--stage-context-tokens",
+        dest="stage_context_tokens",
         type=int,
-        default=32768,
-        help="单次context操作预算，默认32768；提高输出时需显式预留足够context",
+        default=1_000_000,
+        help="单次context操作估算额度，默认1000000；UTF-8字节代理，不是真实token计数",
+    )
+    run_parser.add_argument(
+        "--stage-input-units",
+        type=int,
+        default=512_000,
+        help="完整阶段输入操作估算额度，默认512000，适用于Map及两种Reduce",
+    )
+    run_parser.add_argument(
+        "--max-estimated-units",
+        type=int,
+        default=8_000_000,
+        help="本次整体操作估算额度，默认8000000；费用上限仍独立生效",
     )
     history = commands.add_parser("history", help="离线列出某个 Question 的执行历史")
     history.add_argument("--question", type=int, required=True)
@@ -334,10 +396,20 @@ def main(argv=None):
     try:
         path = database_path(args.database)
         stage_budget = (
-            configured_stage_budget(args.stage_output_tokens, args.stage_context_tokens)
+            configured_stage_budget(
+                args.stage_output_tokens, args.stage_context_tokens, args.stage_input_units
+            )
             if args.command == "run"
             else None
         )
+        if (
+            args.command == "run"
+            and args.max_estimated_units
+            < stage_budget.max_input_tokens
+            + stage_budget.output_tokens
+            + stage_budget.safety_margin_tokens
+        ):
+            raise CliError("整体操作额度不足以预留一次Reduce；请调整 --max-estimated-units。")
         if args.command == "run" and not interactive_terminal():
             raise CliError("真实运行必须使用交互式终端；不接受管道确认或重定向输出。")
         if args.command != "run" and not path.is_file():
@@ -349,7 +421,11 @@ def main(argv=None):
                     "通过 Alembic 升级上述独立 Workbench 数据库到 head（不操作 Zotero 数据库）。"
                 )
                 database.upgrade()
-                run_workflow(database, stage_budget=stage_budget)
+                run_workflow(
+                    database,
+                    stage_budget=stage_budget,
+                    max_estimated_units=args.max_estimated_units,
+                )
             elif args.command == "history":
                 runs = CrossDocumentRepository(database).list_by_question(args.question)
                 if not runs:

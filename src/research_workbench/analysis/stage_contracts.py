@@ -16,8 +16,8 @@ MAX_SOURCES = 100
 MAX_DEPTH = 16
 MAX_GRAPH_NODES = 1000
 MAX_OUTPUT_CHARS = 100_000
-# Application ceiling, not a claim about every model. Defaults remain 4096.
-MAX_STAGE_OUTPUT_TOKENS = 8_192
+# Largest supported DeepSeek profile, not a claim about every model. Library default is 4096.
+MAX_STAGE_OUTPUT_TOKENS = 384_000
 KINDS = ("source_summary", "ai_inference")
 CATEGORIES = ("approach", "finding", "agreement", "disagreement", "limitation", "research_gap")
 
@@ -35,7 +35,13 @@ class StageCapabilityError(StageError):
 
 
 class StageBudgetError(StageError):
-    def __init__(self):
+    def __init__(
+        self, *, input_units=None, input_limit=None, context_units=None, context_limit=None
+    ):
+        self.input_units = input_units
+        self.input_limit = input_limit
+        self.context_units = context_units
+        self.context_limit = context_limit
         ValueError.__init__(self, "Final stage request exceeds the configured budget.")
 
 

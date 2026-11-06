@@ -110,6 +110,8 @@ def test_full_workflow_and_offline_history(session, monkeypatch, capsys):
     output = capsys.readouterr().out
     assert "预计最多 5 次" in output and "执行 ID=1" in output
     assert "来源块" in output and "tokens=100/40" in output
+    assert "输入操作单位上限=512000" in output
+    assert "context 操作单位上限=1000000" in output
     assert "synthetic-test-secret" not in output
     assert "a" * 80 not in output and "b" * 90 not in output
     # No Zotero client or credential input is allowed when querying history.
@@ -119,7 +121,12 @@ def test_full_workflow_and_offline_history(session, monkeypatch, capsys):
     assert invoke(s, "show", "1") == 0
     assert "completed" in capsys.readouterr().out
     with Database(s.path) as db:
-        assert len(CrossDocumentRepository(db).get_call_usage(1)) == 5
+        repo = CrossDocumentRepository(db)
+        assert len(repo.get_call_usage(1)) == 5
+        config = json.loads(repo.get(1).config_json)
+        assert config["stage_budget"]["max_input_tokens"] == 512000
+        assert config["budget"]["max_estimated_tokens"] == 8000000
+        assert config["documents"][0]["planning_budget"]["max_input_tokens"] == 512000
     assert b"synthetic-test-secret" not in s.path.read_bytes()
     assert b"a" * 80 not in s.path.read_bytes()
 
@@ -287,12 +294,21 @@ def test_cli_incomplete_diagnostic_is_allowlisted(session, monkeypatch, capsys, 
 def test_cli_configured_output_budget_is_previewed_and_persisted(session, monkeypatch, capsys):
     answers(monkeypatch)
     assert (
-        invoke(session, "run", "--stage-output-tokens", "8192", "--stage-context-tokens", "65536")
+        invoke(
+            session,
+            "run",
+            "--stage-output-tokens",
+            "8192",
+            "--stage-context-tokens",
+            "65536",
+            "--stage-input-units",
+            "24000",
+        )
         == 0
     )
     assert all(r.budget.output_tokens == 8192 for r in session.provider.calls)
     text = capsys.readouterr().out
-    assert "8192 tokens" in text and "context 上限=65536" in text
+    assert "8192 tokens" in text and "context 操作单位上限=65536" in text
     with Database(session.path) as db:
         config = json.loads(CrossDocumentRepository(db).get(1).config_json)
         assert config["stage_budget"]["output_tokens"] == 8192
