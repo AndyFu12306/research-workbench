@@ -1,13 +1,22 @@
 # 两篇文献的首次真实运行
 
-**最新：安全断点续跑 MVP（2026-11-06）**
+**当前稳定基线状态（2026-11-06）**
+
+按用户已完成并核验的真实运行及科研审计记录，Execution 7 为 `completed`，17 个阶段全部完成。
+两篇文献的真实 DeepSeek 端到端分析成功，历史结果可查询，引用与证据追溯链核验成功。
+五条科研结论的审计仍发现数值错配、实验体系混用和临床证据不足；
+**技术成功与科研语义质量分别验收，后者尚未通过全面验收**，不可直接据此形成临床结论。
+本轮仅文档修正与 PR 创建，不重新运行 DeepSeek、不重新验证 Execution 7，也不读取真实研究数据。
+以下首次运行、修复及未测试说明保留当时范围，不代表 Execution 7 的当前状态；无需为本轮整理重跑分析。
+
+**安全断点续跑 MVP（历史实现记录，2026-11-06；设计见 ADR-065）**
 
 `resume` 适用于本版之后创建、状态为 failed/interrupted、检查点完整的执行。
 原 Execution 1–4 不回写。Execution 4 在 mode=ro/query_only 下复核为 0005：9 completed、
 1 failed、7 not_started，没有规范 JSON 检查点，数据库文件哈希前后一致。
 因此明确拒绝 `resume 4`，即使升级也不凭旧投影猜测 JSON 字段顺序或重新分配 Finding ID。
 
-下一次先创建具备完整检查点的新执行（默认预算与此前显式参数一致）：
+首次使用本版时创建具备完整检查点的新执行（历史操作指引，默认预算与此前显式参数一致）：
 
 ```powershell
 Set-Location C:\Projects\research-workbench-cli
@@ -214,7 +223,7 @@ Ruff check与format（96文件）、两种CLI入口help启动和diff检查通过
 
 本入口复用现有 DeepSeekStageProvider、ZoteroClient、来源关联服务与跨文献编排。
 初版仅离线验证。用户随后首次真实运行在第2次 Map incomplete 后失败，
-**真实两文献三层流水线尚未完整成功**；本次故障修复仍只用模拟响应和临时 SQLite 验证。
+**该次首次运行尚未完整成功（历史状态）**；当次故障修复只用模拟响应和临时 SQLite 验证，后续 Execution 7 的成功状态见本页开头。
 Phase 4B.5a 额外人工/多模型复核暂停；既有审计、Benchmark、Assessment 和 PR #22 保留，
 既有 DeepSeek 语义复核不作为正式 human review。CLI 可运行不等于质量验收通过。
 

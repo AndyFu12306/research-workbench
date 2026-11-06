@@ -1,25 +1,31 @@
 # Personal Research Workbench
 
-**2026-11-06 当前优先事项：最小可用 CLI。** 从最新远程 main `b716ad7` 建立独立
+**2026-11-06 当前状态：后端 CLI 稳定基线待独立 PR 审查，尚未合并。** 从远程 main `b716ad7` 建立独立
 `codex/minimal-research-cli` / `C:/Projects/research-workbench-cli`，暂停 Phase 4B.5a 额外人工及多模型复核，
 保留 PR #22 和全部既有结果。下方阶段授权描述为历史范围，本次用户授权覆盖其中的旧限制。
 实现两篇文献的本机选择、Project/Question/来源关联、全文预检、外发预览和终端确认，
 复用 DeepSeekStageProvider 完成 Map → Document Reduce → Cross Reduce，并离线查看历史。
-最新Execution=4：第一篇Map/Document Reduce及第二篇前3次Map成功，第4次Map收到完整响应后
+按用户已完成并核验的真实运行及科研审计记录，Execution 7 为 `completed`，17 个阶段全部完成；
+两篇文献的真实 DeepSeek 端到端分析成功，历史结果可查询，引用与证据追溯链核验成功。
+五条科研结论的审计仍发现数值错配、实验体系混用和临床证据不足等问题；
+**技术运行成功不代表科研语义准确性已通过全面验收**，生成结论仍需逐条对照原文核验。
+本轮只整理文档和创建 PR，不重新运行或验证 Execution 7，不读取真实研究数据或调用 AI。
+
+历史故障Execution=4：第一篇Map/Document Reduce及第二篇前3次Map成功，第4次Map收到完整响应后
 invalid_output。只读核对确认9个成功阶段、1个失败、7个未开始，失败候选和细分类别未保存，
 不能追溯断言具体违约原因。现已增加严格检查点与独立 `resume` 命令：新执行保存规范生成 JSON、哈希及复用谱系，
 重新校验问题/来源/模型/版本/预算/请求/全部成功结果，只对剩余阶段发起新调用，历史费用与新费用分开。
-Execution=4 缺少规范检查点，明确拒绝续跑；请先用本版创建新执行。每次新 API 请求都需终端输入 `SEND`。
+Execution=4 缺少规范检查点，明确拒绝续跑；后续新执行才具备完整检查点。每次新 API 请求都需终端输入 `SEND`。
 仅追加 Alembic 0006，新运行升级前备份并校验历史行不变；原执行 1–4 不回写。详见 [CLI 指南](docs/CLI_QUICKSTART.md)。
 CLI现默认Map输出8192、Document Reduce输出32768、Cross Reduce输出32768 tokens，分别可配；
 输入512k、context 1M、整体8M操作单位保留，阶段预留、费用与持久化绑定同步更新。
 Execution=1/2/3/4均保留，不自动恢复或重试；操作估算与模型真实token容量分开显示。
-三层流水线尚未真实完整成功。故障修复只做离线验证，保留原失败执行；
+此前故障修复只做离线验证，原失败执行继续保留；Execution 7 的真实成功状态以上述用户核验记录为准。
 [PowerShell 运行及修复指南](docs/CLI_QUICKSTART.md)。
 
 建立在 Zotero 之上的个人 AI 研究工作台。Zotero 是唯一文献事实源，Workbench 保存研究对象及来源引用，不建立第二套文献库。
 
-> 以下旧阶段段落保留各自实现/验收时的范围；当前开发状态以本页开头和末尾 Phase 4B.3 说明为准。
+> 以下旧阶段段落保留各自实现/验收时的范围；当前状态以本页开头为准，不将历史 NOT TESTED 记录当作 Execution 7 的当前状态。
 
 当前开发 **Phase 4B.4：有界跨文献综合与作用域历史**，[Issue #19](https://github.com/AndyFu12306/research-workbench/issues/19)，设计 v2 + v2.1，基线 `41b136113aaaa56a9801590f938fcc745a0e546d`（PR #18 已合并）。独立分支 `codex/phase4b4-cross-document-synthesis` / worktree `C:/Projects/research-workbench-phase4b4`；本轮只允许实现、离线验证和本地提交，不创建 PR、不合并、不关闭 Issue、不进入 4B.5。全部旧分支/worktree 保留。真实 StageProvider API、Zotero Level B 仍 NOT TESTED。
 
