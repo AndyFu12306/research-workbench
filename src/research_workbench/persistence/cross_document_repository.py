@@ -8,7 +8,7 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from decimal import Decimal, Inexact, Rounded, localcontext
 
-from sqlalchemy import insert, select, update
+from sqlalchemy import insert, inspect, select, update
 from sqlalchemy.exc import OperationalError
 
 from research_workbench.analysis.chunking import fingerprint
@@ -33,6 +33,8 @@ from research_workbench.analysis.document_pipeline import DocumentRun, Execution
 from research_workbench.analysis.stage_contracts import CONTRACT_VERSIONS, PROMPT_VERSIONS
 from research_workbench.analysis.stage_validation import render_stage_input, validate_stage_output
 
+from .checkpoint_models import checkpoints, resumes
+from .checkpoints import execution_digest, save_checkpoint
 from .cross_document_models import cross_inputs, cross_stages, members, runs
 from .document_models import executions, stages
 from .document_repository import (
@@ -75,6 +77,18 @@ class CrossCosts:
     not_started_calls: int
 
 
+@dataclass(frozen=True, slots=True)
+class CrossCallUsage:
+    scope: str
+    ordinal: int
+    stage: str
+    status: str
+    call_outcome: str
+    input_tokens: int | None
+    output_tokens: int | None
+    error_code: str | None
+
+
 def plan_config(prepared):
     """Allowlisted plan identity. Never asdict a source, request or recursive result."""
     s = prepared.selection
@@ -89,6 +103,19 @@ def plan_config(prepared):
         "contract_versions": dict(CONTRACT_VERSIONS),
         "prompt_versions": dict(PROMPT_VERSIONS),
         "stage_budget": asdict(prepared.stage_budget),
+        **(
+            {
+                "reduce_stage_budgets": {
+                    "document_reduce": asdict(prepared.budget_for("document_reduce")),
+                    "cross_document_reduce": asdict(prepared.budget_for("cross_document_reduce")),
+                }
+            }
+            if any(
+                prepared.budget_for(s) != prepared.stage_budget
+                for s in ("document_reduce", "cross_document_reduce")
+            )
+            else {}
+        ),
         "budget": {
             "max_calls": prepared.budget.max_calls,
             "max_estimated_tokens": prepared.budget.max_estimated_tokens,
@@ -140,6 +167,7 @@ def plan_config(prepared):
                     ),
                     prepared.pricing,
                     p.estimates,
+                    reduce_stage_budget=prepared.budget_for("document_reduce"),
                 ),
             }
             for i, (doc, p) in enumerate(zip(s.documents, prepared.documents, strict=True))
@@ -242,7 +270,7 @@ class CrossDocumentRepository:
             raise CrossConflict()
         return self._row(session, handle.run_id)
 
-    def register(self, prepared):
+    def register(self, prepared, *, resume=None):
         require(type(prepared) is PreparedCross)
         s = prepared.selection
         s.__post_init__()
@@ -252,6 +280,8 @@ class CrossDocumentRepository:
             prepared.stage_budget,
             prepared.budget,
             prepared.pricing,
+            document_reduce_budget=prepared.budget_for("document_reduce"),
+            cross_reduce_budget=prepared.budget_for("cross_document_reduce"),
         )
         require(allocation == prepared.allocation)
         for p, doc in zip(prepared.documents, s.documents, strict=True):
@@ -272,6 +302,12 @@ class CrossDocumentRepository:
         config = _json(plan_config(prepared))
         owner = secrets.token_hex(32)
         with self._transaction() as session:
+            if resume is not None:
+                require(execution_digest(session, resume.source_id) == resume.source_sha256)
+                if session.execute(
+                    select(resumes).where(resumes.c.source_run_id == resume.source_id)
+                ).first():
+                    raise CrossConflict()
             rid = session.execute(
                 insert(runs).values(
                     question_id=s.question_id,
@@ -288,6 +324,17 @@ class CrossDocumentRepository:
                     created_at=utc_now(),
                 )
             ).inserted_primary_key[0]
+            if resume is not None:
+                session.execute(
+                    insert(resumes).values(
+                        source_run_id=resume.source_id,
+                        run_id=rid,
+                        source_sha256=resume.source_sha256,
+                        new_calls=resume.new_calls,
+                        new_context_units=resume.new_context_units,
+                        new_cost=str(resume.new_cost) if resume.new_cost is not None else None,
+                    )
+                )
             bindings = []
             for i, (p, doc, source_id) in enumerate(
                 zip(prepared.documents, s.documents, s.source_ids, strict=True), 1
@@ -304,6 +351,7 @@ class CrossDocumentRepository:
                     provider=s.provider,
                     model=s.model,
                     stage_budget=prepared.stage_budget,
+                    reduce_stage_budget=prepared.budget_for("document_reduce"),
                     execution_budget=budget,
                     pricing=prepared.pricing,
                     estimates=p.estimates,
@@ -411,6 +459,8 @@ class CrossDocumentRepository:
                 )
             require(
                 cfg["stage_budget"] == asdict(prepared.stage_budget)
+                and cfg.get("reduce_stage_budget", cfg["stage_budget"])
+                == asdict(prepared.budget_for("document_reduce"))
                 and cfg["preflight_map_estimates"] == [asdict(e) for e in p.estimates]
                 and cfg["pricing"] == json.loads(config)["pricing"]
             )
@@ -437,7 +487,7 @@ class CrossDocumentRepository:
             check_allowance(
                 prepared.allocation.documents[member_ordinal - 1][ordinal - 1],
                 estimate,
-                prepared.stage_budget,
+                prepared.budget_for(request.stage),
                 prepared.pricing,
             )
             self._documents._start_stage(session, child.id, ordinal, request, estimate)
@@ -458,7 +508,66 @@ class CrossDocumentRepository:
                 or rows[ordinal - 1].status != "running"
             ):
                 raise CrossConflict()
-            return self._documents._complete_stage(session, child.id, ordinal, result, metadata)
+            completed = self._documents._complete_stage(
+                session, child.id, ordinal, result, metadata
+            )
+            row = self._documents._stages(session, child.id)[ordinal - 1]
+            save_checkpoint(session, run.id, member_ordinal, ordinal, result, row.result_json)
+            return completed
+
+    def reuse_document_stage(self, handle, prepared, member_ordinal, ordinal, result, resume):
+        """No ProviderResult is fabricated. Legacy lifecycle denotes original receipt;
+        checkpoint origin and public usage explicitly identify reuse (zero new charge).
+        """
+        with self._transaction() as session:
+            run = self._lock(session, handle)
+            children, _ = self._registered(session, run, handle, prepared)
+            require(execution_digest(session, resume.source_id) == resume.source_sha256)
+            lineage = (
+                session.execute(select(resumes).where(resumes.c.run_id == run.id)).mappings().one()
+            )
+            require(lineage.source_run_id == resume.source_id)
+            expected = dict(((m, n), r) for m, n, r in resume.results)
+            require(expected.get((member_ordinal, ordinal)) == result)
+            original = (
+                session.execute(
+                    select(checkpoints).where(
+                        checkpoints.c.run_id == resume.source_id,
+                        checkpoints.c.member == member_ordinal,
+                        checkpoints.c.ordinal == ordinal,
+                    )
+                )
+                .mappings()
+                .one()
+            )
+            projection = history_result(
+                result, range(1, ordinal) if result.request.stage == "document_reduce" else ()
+            )
+            require(
+                original.output_json == result.output_json
+                and original.output_sha256 == fingerprint(result.output_json)
+                and original.request_sha256 == fingerprint(render_stage_input(result.request))
+                and original.projection_sha256 == fingerprint(projection)
+            )
+            child = children[member_ordinal - 1]
+            require(all(c.status == "completed" for c in children[: member_ordinal - 1]))
+            completed = self._documents._complete_stage(session, child.id, ordinal, result, None)
+            session.execute(
+                update(stages)
+                .where(stages.c.execution_id == child.id, stages.c.ordinal == ordinal)
+                .values(
+                    input_tokens=None,
+                    output_tokens=None,
+                    response_id=None,
+                    usage_cost="0",
+                    estimated_cost="0",
+                )
+            )
+            row = self._documents._stages(session, child.id)[ordinal - 1]
+            save_checkpoint(
+                session, run.id, member_ordinal, ordinal, result, row.result_json, resume.source_id
+            )
+            return completed
 
     def _bind_outcomes(self, session, run, handle, prepared, request, outcomes, *, fixed):
         validate_topology(request, prepared, outcomes)
@@ -512,7 +621,10 @@ class CrossDocumentRepository:
                 raise CrossConflict()
             self._bind_outcomes(session, run, handle, prepared, request, outcomes, fixed=False)
             cost = check_allowance(
-                prepared.allocation.cross, estimate, prepared.stage_budget, prepared.pricing
+                prepared.allocation.cross,
+                estimate,
+                prepared.budget_for("cross_document_reduce"),
+                prepared.pricing,
             )
             changed = session.execute(
                 update(cross_stages)
@@ -568,6 +680,7 @@ class CrossDocumentRepository:
             )
             if changed.rowcount != 1:
                 raise CrossConflict()
+            save_checkpoint(session, run.id, 0, 1, result, data)
             changed = session.execute(
                 update(runs)
                 .where(runs.c.id == run.id, runs.c.status == "running")
@@ -726,6 +839,14 @@ class CrossDocumentRepository:
                 if config["pricing"]
                 else None
             )
+            if inspect(session.connection()).has_table("execution_resumes"):
+                lineage = (
+                    session.execute(select(resumes).where(resumes.c.run_id == run_id))
+                    .mappings()
+                    .first()
+                )
+                if lineage:
+                    allocated = Decimal(lineage.new_cost) if lineage.new_cost is not None else None
             return CrossCosts(
                 allocated,
                 known,
@@ -733,3 +854,77 @@ class CrossDocumentRepository:
                 sum(r.call_outcome == "unknown" for r in rows),
                 sum(r.call_outcome == "not_started" for r in rows),
             )
+
+    def get_ancestor_costs(self, run_id):
+        """Each ancestor's own charges exactly once; no reuse is re-billed."""
+        ancestors = []
+        with self._database._session() as session:
+            if not inspect(session.connection()).has_table("execution_resumes"):
+                return ()
+            current = run_id
+            while True:
+                row = (
+                    session.execute(select(resumes).where(resumes.c.run_id == current))
+                    .mappings()
+                    .first()
+                )
+                if row is None:
+                    break
+                require(row.source_run_id < current, "history_integrity")
+                current = row.source_run_id
+                ancestors.append(current)
+        return tuple((i, self.get_costs(i)) for i in ancestors)
+
+    def get_call_usage(self, run_id):
+        """Offline usage/status projection, including failed and unstarted calls."""
+        with self._database._session() as session:
+            self._row(session, _identifier(run_id))
+            values = [
+                (f"document-{m.ordinal}", r)
+                for m in self._members(session, run_id)
+                for r in self._documents._stages(session, m.document_execution_id)
+            ]
+            values.append(("cross", self._stage(session, run_id)))
+            reused = (
+                {
+                    (f"document-{r.member}", r.ordinal)
+                    for r in session.execute(
+                        select(checkpoints).where(
+                            checkpoints.c.run_id == run_id, checkpoints.c.origin == "reuse"
+                        )
+                    ).mappings()
+                }
+                if inspect(session.connection()).has_table("stage_checkpoints")
+                else set()
+            )
+            return tuple(
+                CrossCallUsage(
+                    scope,
+                    r.ordinal,
+                    r.stage,
+                    r.status,
+                    "reused" if (scope, r.ordinal) in reused else r.call_outcome,
+                    r.input_tokens,
+                    r.output_tokens,
+                    r.error_code,
+                )
+                for scope, r in values
+            )
+
+    def has_failed_candidate(self, run_id):
+        """Boolean projection only; do not retrieve failed candidate text."""
+        with self._database._session() as session:
+            self._row(session, _identifier(run_id))
+            ids = [m.document_execution_id for m in self._members(session, run_id)]
+            document_values = session.execute(
+                select(stages.c.result_json.is_not(None)).where(
+                    stages.c.execution_id.in_(ids), stages.c.status.in_(("failed", "interrupted"))
+                )
+            ).scalars()
+            cross_values = session.execute(
+                select(cross_stages.c.result_json.is_not(None)).where(
+                    cross_stages.c.run_id == run_id,
+                    cross_stages.c.status.in_(("failed", "interrupted")),
+                )
+            ).scalars()
+            return any(document_values) or any(cross_values)

@@ -132,13 +132,15 @@ def test_reliable_receipt_failures_keep_response_received(
     service = CrossDocumentAnalysisService(
         s.db, s.reader, wire["instance"], chunking=ChunkingConfig(100, 0), pricing=PRICE
     )
-    with pytest.raises(CrossDocumentError):
+    with pytest.raises(CrossDocumentError) as caught:
         service.run_analysis(s.question.id, tuple(x.id for x in s.sources))
     run = s.repo.list_by_question(s.question.id)[0]
     rows = history_stages(s, run)
     assert run.status == "failed" and len(attempts) == at and len(wire["calls"]) == at
     failed = rows[at - 1]
     assert failed.status == "failed" and failed.call_outcome == "response_received"
+    if fault == "incomplete":
+        assert caught.value.code == run.error_code == failed.error_code == "provider_incomplete"
     if fault == "illegal_reference":
         assert (failed.input_tokens, failed.output_tokens) == (31, 17)
         assert failed.usage_cost == "0.000198"

@@ -1,6 +1,6 @@
 """Explicit ordered selection, frozen plans, sequential execution and one Cross."""
 
-from research_workbench.analysis.chunking import SourceDocument, SourceIdentity
+from research_workbench.analysis.chunking import PlanningLimitError, SourceDocument, SourceIdentity
 from research_workbench.analysis.cross_document_pipeline import (
     CrossBudget,
     CrossConflict,
@@ -23,8 +23,10 @@ from research_workbench.analysis.stage_contracts import (
     StageBudget,
     StageBudgetError,
     StageRequest,
+    StageValidationError,
 )
 from research_workbench.analysis.stage_validation import validate_stage_output
+from research_workbench.integrations.zotero.errors import ZoteroError
 from research_workbench.integrations.zotero.models import ZoteroFulltext
 from research_workbench.persistence.cross_document_repository import CrossDocumentRepository
 from research_workbench.persistence.document_repository import DocumentAnalysisRepository
@@ -37,9 +39,16 @@ from .document_analysis import DocumentAnalysisService
 class _DocumentTransactions:
     """Private adapter: all child mutations pass the same parent ownership gate."""
 
-    def __init__(self, repository, handle, prepared, member_ordinal):
+    def __init__(self, repository, handle, prepared, member_ordinal, resume=None):
         self.repository, self.handle, self.prepared = repository, handle, prepared
         self.member_ordinal = member_ordinal
+        self.resume = resume
+
+    def reuse_stage(self, execution_id, ordinal, result):
+        require(execution_id == self.handle.bindings[self.member_ordinal - 1].document_execution_id)
+        return self.repository.reuse_document_stage(
+            self.handle, self.prepared, self.member_ordinal, ordinal, result, self.resume
+        )
 
     def start_stage(self, execution_id, ordinal, request, estimate):
         require(execution_id == self.handle.bindings[self.member_ordinal - 1].document_execution_id)
@@ -64,6 +73,8 @@ class CrossDocumentAnalysisService:
         chunking=None,
         planning_budget=None,
         stage_budget=None,
+        document_reduce_budget=None,
+        cross_reduce_budget=None,
         cross_budget=None,
         pricing=None,
     ):
@@ -74,11 +85,26 @@ class CrossDocumentAnalysisService:
         self._pricing = pricing
         effective_stage_budget = stage_budget if stage_budget is not None else StageBudget()
         require(type(effective_stage_budget) is StageBudget)
+        self._document_reduce_budget = (
+            effective_stage_budget if document_reduce_budget is None else document_reduce_budget
+        )
+        self._cross_reduce_budget = (
+            effective_stage_budget if cross_reduce_budget is None else cross_reduce_budget
+        )
+        require(
+            type(self._document_reduce_budget) is StageBudget
+            and type(self._cross_reduce_budget) is StageBudget
+        )
         require(
             self._budget.max_estimated_tokens
-            >= effective_stage_budget.max_input_tokens
-            + effective_stage_budget.output_tokens
-            + effective_stage_budget.safety_margin_tokens,
+            >= max(
+                b.max_input_tokens + b.output_tokens + b.safety_margin_tokens
+                for b in (
+                    effective_stage_budget,
+                    self._document_reduce_budget,
+                    self._cross_reduce_budget,
+                )
+            ),
             "budget_exceeded",
         )
         self._documents = DocumentAnalysisService(
@@ -88,12 +114,13 @@ class CrossDocumentAnalysisService:
             chunking=chunking,
             planning_budget=planning_budget,
             stage_budget=effective_stage_budget,
+            reduce_stage_budget=self._document_reduce_budget,
             execution_budget=ExecutionBudget(
                 101,
                 self._budget.max_estimated_tokens,
-                effective_stage_budget.max_input_tokens
-                + effective_stage_budget.output_tokens
-                + effective_stage_budget.safety_margin_tokens,
+                self._document_reduce_budget.max_input_tokens
+                + self._document_reduce_budget.output_tokens
+                + self._document_reduce_budget.safety_margin_tokens,
             ),
             pricing=pricing,
         )
@@ -146,15 +173,55 @@ class CrossDocumentAnalysisService:
             self._documents._stage_budget,
             self._budget,
             self._pricing,
+            document_reduce_budget=self._document_reduce_budget,
+            cross_reduce_budget=self._cross_reduce_budget,
         )
         return PreparedCross(
-            selection, plans, allocation, self._documents._stage_budget, self._budget, self._pricing
+            selection,
+            plans,
+            allocation,
+            self._documents._stage_budget,
+            self._budget,
+            self._pricing,
+            self._document_reduce_budget,
+            self._cross_reduce_budget,
         )
 
     def run_analysis(self, question_id, source_ids):
+        return self.execute_prepared(self.prepare_analysis(question_id, source_ids))
+
+    def prepare_analysis(self, question_id, source_ids):
+        """Freeze fulltexts and validate the complete budget without any AI call/write."""
         try:
-            prepared = self._prepare(question_id, source_ids)
-            handle = self._runs.register(prepared)
+            return self._prepare(question_id, source_ids)
+        except (PlanningLimitError, StageBudgetError):
+            raise CrossDocumentError("budget_exceeded") from None
+        except ZoteroError:
+            raise CrossDocumentError("source_unavailable") from None
+        except CrossDocumentError as exc:
+            raise CrossDocumentError(exc.code) from None
+        except PersistenceError:
+            raise CrossDocumentError("persistence_failed") from None
+        except Exception:
+            raise CrossDocumentError("invalid_plan") from None
+
+    def execute_prepared(self, prepared, *, _resume=None):
+        """Execute the exact reviewed snapshot; registration rechecks local bindings."""
+        try:
+            require(type(prepared) is PreparedCross)
+            require(prepared.budget == self._budget and prepared.pricing == self._pricing)
+            require(prepared.stage_budget == self._documents._stage_budget)
+            require(prepared.budget_for("document_reduce") == self._document_reduce_budget)
+            require(prepared.budget_for("cross_document_reduce") == self._cross_reduce_budget)
+            require(
+                (prepared.selection.provider, prepared.selection.model)
+                == (self._provider.provider, self._provider.model)
+            )
+            if _resume is not None:
+                from .resume import verify_resume
+
+                require(verify_resume(self, _resume.source_id, prepared) == _resume)
+            handle = self._runs.register(prepared, resume=_resume)
         except CrossConflict:
             raise CrossConflict() from None
         except CrossDocumentError as exc:
@@ -203,7 +270,12 @@ class CrossDocumentAnalysisService:
                 outcome = self._documents.execute_registered(
                     run,
                     plan,
-                    _repository=_DocumentTransactions(self._runs, handle, prepared, b.ordinal),
+                    _repository=_DocumentTransactions(
+                        self._runs, handle, prepared, b.ordinal, _resume
+                    ),
+                    _reuse={n: r for m, n, r in _resume.results if m == b.ordinal}
+                    if _resume is not None
+                    else None,
                     _before_stage=before_stage,
                     _before_call=before_call,
                     _response=response,
@@ -217,13 +289,15 @@ class CrossDocumentAnalysisService:
                 CONTRACT_VERSIONS["cross_document_reduce"],
                 prepared.selection.question,
                 prepared.selection.documents,
-                budget=prepared.stage_budget,
+                budget=prepared.budget_for("cross_document_reduce"),
                 chunking=prepared.documents[0].plan.chunking,
                 children=tuple(o.result for o in outcomes),
             )
             validate_topology(request, prepared, tuple(outcomes))
             estimate = self._documents._estimate(request)
             before_stage()
+            if hasattr(self._provider, "authorize_stage"):
+                self._provider.authorize_stage(request)
             self._runs.start_cross(handle, prepared, request, tuple(outcomes), estimate)
             before_stage()
             before_call()
@@ -255,7 +329,11 @@ class CrossDocumentAnalysisService:
                 pass
             code = (
                 exc.code
-                if isinstance(exc, CrossDocumentError)
+                if isinstance(exc, (CrossDocumentError, StageValidationError))
+                or (
+                    isinstance(exc, AnalysisProviderFailure)
+                    and exc.code in ("provider_incomplete", "provider_context_length")
+                )
                 else (
                     "persistence_failed" if isinstance(exc, PersistenceError) else "provider_failed"
                 )
@@ -276,7 +354,13 @@ class CrossDocumentAnalysisService:
             if unknown:
                 code = "interrupted"
             elif response_received and code == "provider_failed":
-                code = "invalid_output"
+                from research_workbench.analysis.document_pipeline import DocumentAnalysisError
+
+                code = (
+                    "invalid_output_persistence_binding"
+                    if isinstance(exc, DocumentAnalysisError)
+                    else "invalid_output"
+                )
             self._abort(
                 handle,
                 code,
@@ -288,11 +372,14 @@ class CrossDocumentAnalysisService:
                 in (
                     "provider_refusal",
                     "provider_incomplete",
+                    "provider_context_length",
                     "provider_invalid_json",
                     "provider_empty_json",
                 ),
             )
-            raise CrossDocumentError(code) from None
+            raise CrossDocumentError(
+                code, counts=exc.counts if isinstance(exc, StageValidationError) else ()
+            ) from None
 
     def _abort(
         self,

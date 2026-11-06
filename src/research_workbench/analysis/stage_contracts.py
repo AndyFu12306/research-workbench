@@ -5,6 +5,7 @@ from typing import Protocol
 
 from .chunking import ChunkingConfig, SourceDocument, SourceIdentity, TextChunk
 from .contracts import ProviderResult
+from .errors import VALIDATION_FAILURE_MESSAGES
 
 STAGES = ("map", "document_reduce", "cross_document_reduce")
 CONTRACT_VERSIONS = {stage: f"{stage.replace('_', '-')}-schema-v1" for stage in STAGES}
@@ -16,6 +17,8 @@ MAX_SOURCES = 100
 MAX_DEPTH = 16
 MAX_GRAPH_NODES = 1000
 MAX_OUTPUT_CHARS = 100_000
+# Largest supported DeepSeek profile, not a claim about every model. Library default is 4096.
+MAX_STAGE_OUTPUT_TOKENS = 384_000
 KINDS = ("source_summary", "ai_inference")
 CATEGORIES = ("approach", "finding", "agreement", "disagreement", "limitation", "research_gap")
 
@@ -32,8 +35,27 @@ class StageCapabilityError(StageError):
         ValueError.__init__(self, "Unsupported stage or contract version.")
 
 
+class StageValidationError(StageError):
+    """Fixed categories/counts only: never retain output, input, labels or SDK objects."""
+
+    def __init__(self, code="invalid_output_source_binding", *, counts=()):
+        self.code = code if code in VALIDATION_FAILURE_MESSAGES else "invalid_output_source_binding"
+        self.counts = tuple(
+            (k, v)
+            for k, v in counts
+            if k in ("finding_count", "citation_count") and type(v) is int and 0 <= v <= 1_000_000
+        )
+        ValueError.__init__(self, VALIDATION_FAILURE_MESSAGES[self.code])
+
+
 class StageBudgetError(StageError):
-    def __init__(self):
+    def __init__(
+        self, *, input_units=None, input_limit=None, context_units=None, context_limit=None
+    ):
+        self.input_units = input_units
+        self.input_limit = input_limit
+        self.context_units = context_units
+        self.context_limit = context_limit
         ValueError.__init__(self, "Final stage request exceeds the configured budget.")
 
 

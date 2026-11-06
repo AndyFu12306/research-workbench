@@ -51,6 +51,7 @@ PROVIDER_FAILURE_MESSAGES = {
     "provider_network": "The provider network connection failed.",
     "provider_model_unavailable": "The configured provider model is unavailable.",
     "provider_invalid_request": "The provider rejected the request parameters.",
+    "provider_context_length": "Model context exceeded. Use hierarchical Reduce; no retry.",
     "provider_structured_output": "The provider rejected structured output configuration.",
     "provider_responses_incompatible": "The provider Responses endpoint is unavailable.",
     "provider_sdk_incompatible": "The provider response could not be normalized safely.",
@@ -73,6 +74,17 @@ class AnalysisConfigurationError(AnalysisError):
     message = "Configure a supported model, API key and positive finite timeout."
 
 
+INCOMPLETE_REASONS = frozenset(("max_output_tokens", "content_filter"))
+
+
+class AnalysisProviderIncomplete(AnalysisProviderFailure):
+    """Only an allowlisted status reason; never retain the response or partial output."""
+
+    def __init__(self, reason=None):
+        self.reason = reason if type(reason) is str and reason in INCOMPLETE_REASONS else None
+        super().__init__("provider_incomplete")
+
+
 class AnalysisStateError(AnalysisError):
     code = "immutable_run"
     message = "Only a running analysis can be finalized; history is immutable."
@@ -83,8 +95,23 @@ class AnalysisPersistenceError(AnalysisError):
     message = "Analysis persistence failed; check the Workbench database."
 
 
+VALIDATION_FAILURE_MESSAGES = {
+    "invalid_output_json": "Output JSON is invalid, duplicated or non-standard.",
+    "invalid_output_structure": "Output top-level fields or status are invalid.",
+    "invalid_output_finding_count": "Finding count or empty-result status is invalid.",
+    "invalid_output_finding_structure": "Finding fields or field types are invalid.",
+    "invalid_output_finding_field": "Finding text, kind or category violates the contract.",
+    "invalid_output_citation_format": "Citation list, count, type or uniqueness is invalid.",
+    "invalid_output_citation_unknown": "Citation does not name a permitted local input.",
+    "invalid_output_source_binding": "Stage input or source fingerprint binding is invalid.",
+    "invalid_output_result_integrity": "A validated child result failed replay integrity checks.",
+    "invalid_output_persistence_binding": "Stage result does not match its persisted binding.",
+}
+
+
 FAILURE_MESSAGES = {
     **PROVIDER_FAILURE_MESSAGES,
+    **VALIDATION_FAILURE_MESSAGES,
     "provider_failed": AnalysisProviderError.message,
     "invalid_output": AnalysisOutputValidationError.message,
     "analysis_failed": AnalysisError.message,
