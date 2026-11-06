@@ -87,6 +87,7 @@ def answers(monkeypatch, last="SEND", first="READ", cap="10"):
             cap,
             last,
         ]
+        + ["SEND"] * 120
     )
     monkeypatch.setattr(builtins, "input", lambda prompt: next(values))
 
@@ -135,6 +136,43 @@ def test_full_workflow_and_offline_history(session, monkeypatch, capsys):
         assert config["documents"][0]["planning_budget"]["max_input_tokens"] == 512000
     assert b"synthetic-test-secret" not in s.path.read_bytes()
     assert b"a" * 80 not in s.path.read_bytes()
+
+
+def test_resume_cli_previews_remaining_calls_and_requires_send_per_new_request(
+    session, monkeypatch, capsys
+):
+    s = session
+    answers(monkeypatch)
+    s.provider.invalid_at = 4
+    assert invoke(s, "run") == 1
+    s.provider.invalid_at = None
+    s.provider.calls.clear()
+    values = iter(["deepseek-flash", "READ", "SEND", "SEND", "SEND"])
+    monkeypatch.setattr(builtins, "input", lambda prompt: next(values))
+    assert invoke(s, "resume", "1") == 0
+    assert len(s.provider.calls) == 2
+    output = capsys.readouterr().out
+    assert "预计新增付费调用=2" in output and "复用阶段=3" in output
+    assert "本执行新增已知费用=" in output
+    assert "synthetic-test-secret" not in output
+    assert invoke(s, "resume", "1") == 2  # Refuse before more input or source reads.
+
+
+def test_resume_cancel_before_new_call_is_not_recorded_as_unknown_api_call(session, monkeypatch):
+    s = session
+    answers(monkeypatch)
+    s.provider.invalid_at = 4
+    assert invoke(s, "run") == 1
+    s.provider.invalid_at = None
+    s.provider.calls.clear()
+    values = iter(["deepseek-flash", "READ", "SEND", "no"])
+    monkeypatch.setattr(builtins, "input", lambda prompt: next(values))
+    assert invoke(s, "resume", "1") == 1
+    assert not s.provider.calls
+    with Database(s.path) as db:
+        repo = CrossDocumentRepository(db)
+        assert all(c.call_outcome in ("reused", "not_started") for c in repo.get_call_usage(2))
+        assert repo.get_costs(2).known_usage_cost == 0
 
 
 @pytest.mark.parametrize("first,last", [("no", "SEND"), ("READ", "no")])

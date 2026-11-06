@@ -24,8 +24,9 @@ from research_workbench.analysis.stage_contracts import (
     StageBudgetError,
 )
 from research_workbench.analysis.stage_validation import validate_budget
-from research_workbench.application.checkpoints import inspect_execution
+from research_workbench.application.checkpoints import CheckpointUnavailable, inspect_execution
 from research_workbench.application.cross_document_analysis import CrossDocumentAnalysisService
+from research_workbench.application.resume import service_for_resume
 from research_workbench.application.source_links import QuestionSourceService
 from research_workbench.integrations.ai.stages import (
     DEEPSEEK_MODEL_LIMITS,
@@ -36,6 +37,7 @@ from research_workbench.integrations.zotero import ZoteroClient
 from research_workbench.integrations.zotero.errors import ZoteroError
 from research_workbench.persistence import Database, ProjectRepository, QuestionRepository
 from research_workbench.persistence.cross_document_repository import CrossDocumentRepository
+from research_workbench.persistence.safe_migration import backup_and_upgrade
 from research_workbench.persistence.source_repositories import SourceRepository
 
 
@@ -127,6 +129,9 @@ class ReportingProvider:
                 "若真实 token 输入确实超过模型窗口，需按文献分组做分层 Reduce，再综合各组结果。"
             )
             raise
+
+    def authorize_stage(self, request):
+        confirm(f"即将发送新的 {request.stage} API 请求（可能付费）；确认本次调用？", "SEND")
 
     def generate_stage(self, request):
         self.calls += 1
@@ -251,6 +256,44 @@ def show_run(database, run_id):
         f"名义费用（{currency}）：已知部分={costs.known_usage_cost} 全部={costs.usage_cost}；"
         f"未知调用={costs.unknown_calls} 未开始={costs.not_started_calls}（None=未知）"
     )
+    from sqlalchemy import inspect, select
+
+    from research_workbench.persistence.checkpoint_models import checkpoints, resumes
+
+    with database._session() as session:
+        if inspect(session.connection()).has_table("execution_resumes"):
+            lineage = (
+                session.execute(select(resumes).where(resumes.c.run_id == run.id))
+                .mappings()
+                .first()
+            )
+            reused = list(
+                session.execute(
+                    select(checkpoints).where(
+                        checkpoints.c.run_id == run.id, checkpoints.c.origin == "reuse"
+                    )
+                ).mappings()
+            )
+            if lineage:
+                historical = repo.get_costs(lineage.source_run_id)
+                new_calls = sum(
+                    c.call_outcome not in ("reused", "not_started")
+                    for c in repo.get_call_usage(run.id)
+                )
+                display(
+                    f"复用来源执行={lineage.source_run_id}；复用阶段={len(reused)}；"
+                    f"新增调用={new_calls}"
+                )
+                display(
+                    f"历史已知费用={historical.known_usage_cost} "
+                    f"历史全部费用={historical.usage_cost}；"
+                    f"本执行新增已知费用={costs.known_usage_cost} 新增全部费用={costs.usage_cost}"
+                )
+                for ancestor_id, ancestor in repo.get_ancestor_costs(run.id)[1:]:
+                    display(
+                        f"更早执行={ancestor_id} 自身已知费用={ancestor.known_usage_cost} "
+                        f"自身全部费用={ancestor.usage_cost}（独立历史，不计入新增费用）"
+                    )
     if run.status == "completed":
         data = json.loads(repo.get_history(run.id).result_json)
         display(f"\nAI 生成分析 / AI 推断（需人工核验）：{data['status']}")
@@ -397,6 +440,74 @@ def run_workflow(
         key = None
 
 
+def resume_workflow(database, source_id):
+    assessment = inspect_execution(database, source_id)
+    if not assessment.checkpoint_resume_available:
+        raise CheckpointUnavailable()
+    old = CrossDocumentRepository(database).get(source_id)
+    display(f"原执行={source_id}；原模型={old.model}。将创建新执行，历史保持不变。")
+    model = ask("当前 DeepSeek 模型名称（必须与原执行完全一致）：")
+    if (old.provider, old.model) != ("deepseek", model):
+        raise CheckpointUnavailable()
+    confirm(
+        "允许重新只读获取原执行选定的 Zotero 全文以校验 fingerprint？不会搜索或写入 Zotero。",
+        "READ",
+    )
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", getpass.GetPassWarning)
+            key = getpass.getpass("DeepSeek API Key（隐藏输入，仅本进程使用）：")
+    except getpass.GetPassWarning:
+        raise CliError("当前终端不能隐藏 Key；请使用原生 PowerShell。") from None
+    config = {"DEEPSEEK_API_KEY": key, "DEEPSEEK_MODEL": model, "DEEPSEEK_TIMEOUT_SECONDS": "60"}
+    try:
+        with DeepSeekStageProvider(environ=config) as delegate:
+            provider = ReportingProvider(delegate)
+            service, prepared, resume = service_for_resume(
+                database, ZoteroClient(), provider, source_id
+            )
+            display(
+                "外发预览：DeepSeek https://api.deepseek.com / Responses API；"
+                "原问题、剩余块全文及生成分析/引用。"
+            )
+            display(
+                "本地仅保存规范生成 JSON、引用和 fingerprint；不保存原文、请求 payload 或 Key。"
+            )
+            for m, n, result in resume.results:
+                display(
+                    f"复用：原执行 {source_id} document-{m}/{n} "
+                    f"{result.request.stage}；零新增调用。"
+                )
+            historical = CrossDocumentRepository(database).get_costs(source_id)
+            display(
+                f"历史已知费用={historical.known_usage_cost} "
+                f"历史全部费用={historical.usage_cost}（None=未知）"
+            )
+            for ancestor_id, ancestor in CrossDocumentRepository(database).get_ancestor_costs(
+                source_id
+            ):
+                display(
+                    f"更早执行={ancestor_id} 自身已知费用={ancestor.known_usage_cost} "
+                    f"自身全部费用={ancestor.usage_cost}（不计入新增费用）"
+                )
+            display(
+                f"预计新增付费调用={resume.new_calls}；"
+                f"新增 context 操作单位预留={resume.new_context_units}；"
+                f"新增名义费用预留={resume.new_cost} "
+                f"{prepared.pricing.currency if prepared.pricing else 'unknown'}"
+            )
+            display(
+                "严格校验全部来源/问题/模型/版本/预算/请求/成功结果；"
+                "动态 Reduce 仍可能超限。无自动重试。"
+            )
+            confirm("确认启动新执行？每次新 API 调用仍需再次输入 SEND。", "SEND")
+            run = service.execute_prepared(prepared, _resume=resume)
+            show_run(database, run.id)
+    finally:
+        config.clear()
+        key = None
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Research Workbench：两篇 Zotero 文献的交互式分析")
     parser.add_argument(
@@ -448,6 +559,9 @@ def main(argv=None):
         "inspect", help="离线检查安全诊断/检查点条件，不读Zotero、不调用AI"
     )
     inspect.add_argument("execution_id", type=int)
+    resume = commands.add_parser("resume", help="严格校验检查点，预览剩余调用后创建新执行")
+    resume.add_argument("execution_id", type=int)
+    commands.add_parser("migrate", help="完整备份并校验历史不变后，使用 Alembic 升级数据库")
     args = parser.parse_args(argv)
     try:
         path = database_path(args.database)
@@ -478,7 +592,7 @@ def main(argv=None):
             b.max_input_tokens + b.output_tokens + b.safety_margin_tokens for b in budgets
         ):
             raise CliError("整体操作额度不足以预留一次Reduce；请调整 --max-estimated-units。")
-        if args.command == "run" and not interactive_terminal():
+        if args.command in ("run", "resume") and not interactive_terminal():
             raise CliError("真实运行必须使用交互式终端；不接受管道确认或重定向输出。")
         if args.command != "run" and not path.is_file():
             raise CliError("Workbench 数据库不存在；请先使用 run。")
@@ -488,7 +602,7 @@ def main(argv=None):
                 display(
                     "通过 Alembic 升级上述独立 Workbench 数据库到 head（不操作 Zotero 数据库）。"
                 )
-                database.upgrade()
+                backup_and_upgrade(database, on_backup=lambda p: display(f"迁移前已验证备份：{p}"))
                 run_workflow(
                     database,
                     stage_budget=stage_budget,
@@ -496,6 +610,13 @@ def main(argv=None):
                     cross_reduce_budget=cross_reduce_budget,
                     max_estimated_units=args.max_estimated_units,
                 )
+            elif args.command == "migrate":
+                backup = backup_and_upgrade(
+                    database, on_backup=lambda p: display(f"迁移前已验证备份：{p}")
+                )
+                display(f"Alembic 升级及 integrity/FK/历史逐表内容检查通过；备份={backup}")
+            elif args.command == "resume":
+                resume_workflow(database, args.execution_id)
             elif args.command == "inspect":
                 result = inspect_execution(database, args.execution_id)
                 display(
@@ -512,12 +633,15 @@ def main(argv=None):
                 if result.failed and not result.diagnostic_available:
                     display("旧 invalid_output 无法追溯具体类别；不会猜测Citation或Finding错误。")
                 display(
-                    "checkpoint_resume_available=False；现有历史投影不是完整的可执行续跑检查点。"
+                    f"checkpoint_resume_available={result.checkpoint_resume_available}；"
+                    "仅为离线完整性初检；resume 仍须重验来源及全部绑定。"
                 )
                 display("离线结果重建需重验来源/版本/预算/模型/全部Finding ID；不能直接发起续跑。")
-                display(
-                    "最小后续机制：保存成功规范生成JSON与绑定hash，新执行记录复用来源及零新增调用，重新预览并SEND。"
-                )
+                if not result.checkpoint_resume_available:
+                    display(
+                        "缺少完整规范检查点、状态不允许或已启动过续跑：拒绝续跑；"
+                        "不猜测/重新分配 Finding ID。"
+                    )
             elif args.command == "history":
                 runs = CrossDocumentRepository(database).list_by_question(args.question)
                 if not runs:
@@ -535,6 +659,11 @@ def main(argv=None):
         return 130
     except CliError as exc:
         display(str(exc))
+        return 2
+    except CheckpointUnavailable:
+        display(
+            "拒绝续跑：检查点缺失/损坏，或问题、来源、模型、版本、预算、绑定不一致，或已启动过续跑。未自动重试。"
+        )
         return 2
     except ZoteroError as exc:
         display(f"Zotero 读取失败，层级：{exc.layer}；未展示可能含私人内容的原始诊断。")

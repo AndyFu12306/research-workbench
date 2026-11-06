@@ -3,6 +3,8 @@
 import json
 from dataclasses import asdict, dataclass
 
+from sqlalchemy import inspect, select
+
 from research_workbench.analysis.chunking import fingerprint
 from research_workbench.analysis.stage_contracts import CONTRACT_VERSIONS, PROMPT_VERSIONS
 from research_workbench.analysis.stage_validation import render_stage_input, validate_stage_output
@@ -103,10 +105,34 @@ def inspect_execution(database, execution_id):
     if run is None:
         raise CheckpointUnavailable()
     calls = repo.get_call_usage(execution_id)
+    available = False
+    from research_workbench.persistence.checkpoint_models import checkpoints, resumes
+
+    with database._session() as session:
+        if inspect(session.connection()).has_table("stage_checkpoints"):
+            rows = list(
+                session.execute(
+                    select(checkpoints).where(checkpoints.c.run_id == execution_id)
+                ).mappings()
+            )
+            expected = {
+                (int(c.scope.split("-")[1]), c.ordinal)
+                for c in calls
+                if c.status == "completed" and c.scope != "cross"
+            }
+            available = (
+                run.status in ("failed", "interrupted")
+                and {(r.member, r.ordinal) for r in rows} == expected
+                and all(fingerprint(r.output_json) == r.output_sha256 for r in rows)
+                and not session.execute(
+                    select(resumes).where(resumes.c.source_run_id == execution_id)
+                ).first()
+            )
     return ExecutionInspection(
         sum(c.status == "completed" for c in calls),
         sum(c.status in ("failed", "interrupted") for c in calls),
         sum(c.call_outcome == "not_started" for c in calls),
         repo.has_failed_candidate(execution_id),
         any((c.error_code or "").startswith("invalid_output_") for c in calls),
+        available,
     )

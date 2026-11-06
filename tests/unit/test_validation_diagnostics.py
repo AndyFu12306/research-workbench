@@ -101,7 +101,7 @@ def test_fourth_map_diagnostic_preserves_usage_and_stops(cross_setup, monkeypatc
     info = inspect_execution(s.db, run.id)
     assert (info.completed, info.failed, info.not_started) == (9, 1, 7)
     assert info.diagnostic_available and not info.raw_failed_candidate_saved
-    assert not info.checkpoint_resume_available
+    assert info.checkpoint_resume_available  # New executions now have canonical checkpoints.
     show_failure(s.db, run.id)
     diagnostic = capsys.readouterr().out
     assert "document-2/4 map: invalid_output_citation_unknown" in diagnostic

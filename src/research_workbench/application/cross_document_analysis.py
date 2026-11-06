@@ -39,9 +39,16 @@ from .document_analysis import DocumentAnalysisService
 class _DocumentTransactions:
     """Private adapter: all child mutations pass the same parent ownership gate."""
 
-    def __init__(self, repository, handle, prepared, member_ordinal):
+    def __init__(self, repository, handle, prepared, member_ordinal, resume=None):
         self.repository, self.handle, self.prepared = repository, handle, prepared
         self.member_ordinal = member_ordinal
+        self.resume = resume
+
+    def reuse_stage(self, execution_id, ordinal, result):
+        require(execution_id == self.handle.bindings[self.member_ordinal - 1].document_execution_id)
+        return self.repository.reuse_document_stage(
+            self.handle, self.prepared, self.member_ordinal, ordinal, result, self.resume
+        )
 
     def start_stage(self, execution_id, ordinal, request, estimate):
         require(execution_id == self.handle.bindings[self.member_ordinal - 1].document_execution_id)
@@ -198,7 +205,7 @@ class CrossDocumentAnalysisService:
         except Exception:
             raise CrossDocumentError("invalid_plan") from None
 
-    def execute_prepared(self, prepared):
+    def execute_prepared(self, prepared, *, _resume=None):
         """Execute the exact reviewed snapshot; registration rechecks local bindings."""
         try:
             require(type(prepared) is PreparedCross)
@@ -210,7 +217,11 @@ class CrossDocumentAnalysisService:
                 (prepared.selection.provider, prepared.selection.model)
                 == (self._provider.provider, self._provider.model)
             )
-            handle = self._runs.register(prepared)
+            if _resume is not None:
+                from .resume import verify_resume
+
+                require(verify_resume(self, _resume.source_id, prepared) == _resume)
+            handle = self._runs.register(prepared, resume=_resume)
         except CrossConflict:
             raise CrossConflict() from None
         except CrossDocumentError as exc:
@@ -259,7 +270,12 @@ class CrossDocumentAnalysisService:
                 outcome = self._documents.execute_registered(
                     run,
                     plan,
-                    _repository=_DocumentTransactions(self._runs, handle, prepared, b.ordinal),
+                    _repository=_DocumentTransactions(
+                        self._runs, handle, prepared, b.ordinal, _resume
+                    ),
+                    _reuse={n: r for m, n, r in _resume.results if m == b.ordinal}
+                    if _resume is not None
+                    else None,
                     _before_stage=before_stage,
                     _before_call=before_call,
                     _response=response,
@@ -280,6 +296,8 @@ class CrossDocumentAnalysisService:
             validate_topology(request, prepared, tuple(outcomes))
             estimate = self._documents._estimate(request)
             before_stage()
+            if hasattr(self._provider, "authorize_stage"):
+                self._provider.authorize_stage(request)
             self._runs.start_cross(handle, prepared, request, tuple(outcomes), estimate)
             before_stage()
             before_call()

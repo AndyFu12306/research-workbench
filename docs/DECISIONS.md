@@ -337,3 +337,29 @@ cross-document-history-v1为白名单投影，保存精确成员/执行/阶段�
 
 
 ADR-059独立审核补充（P1-09）：provider_sdk_incompatible不是可靠的响应凭据，同一码可能由responses.create内部未知异常或归一化错误产生。保持adapter协议不变，在新跨文献路径无显式返回证据时保守unknown；不检查异常原文/上下文猜测服务端结果。已有返回hook证据优先，拒答/incomplete等独立码不变，未知usage/费用保持None。P1-08仅恢复单篇repository显式签名兼容性，不改变父所有权或事务策略。
+
+
+## ADR-060：严格规范检查点、独立执行续跑及单次付费授权
+
+2026-11-06 用户要求直接交付安全续跑 MVP，取代此前仅评估/投影重建的范围。
+在当前 CLI 分支追加 Alembic 0006，所有旧 migration、阶段 schema/validator 和冻结评估保持不变。
+仅持久化校验后的规范生成 JSON（保留字段顺序）、内容/request/projection 哈希与来源谱系；
+用重新读取的相同全文及完整问题恢复 StageFinding/Citation/阶段输入，核对全部原 ID，不重分配。
+旧投影不含无损规范 JSON，绝不猜测键顺序。Execution 4 经只读核实缺少规范检查点，拒绝续跑；
+只支持新版本执行的完整检查点。运行状态不明的 running 也拒绝，不提供自动解锁/重试。
+
+复用创建全新父子执行，不更新原历史。原子唯一 source_run_id 使同一执行仅有一个直接后继；
+后继失败允许对后继继续。成功和检查点同事务落盘；预览后登记与每次复用重新核对原执行摘要。
+保持旧表约束以避免重建含 FK 的 SQLite 历史表，新增 checkpoint.origin 是权威生成来源，
+对外阶段/用量投影返回 reused；旧 response_received 表示该结果历史收取，不声称新 API 响应。
+不伪造 ProviderResult、响应 ID 或 usage，复用的新增费用为零，祖先费用分开且不重复入账。
+
+原配置逐字段比较（含价格版本、模型、预算、Prompt/Contract/Planner/Estimator 版本）。
+剩余请求重新做操作估算，已知 Reduce 动态输入也提前检查；未知动态输入保留完整上界并逐次检查。
+不截断、输出 repair 或修改约束以求通过。终端先预览剩余调用并确认启动，每个新增 API 请求
+仍单独输入 SEND；READ 授权后只读原选定来源。取消不伪装成未知的付费调用。
+
+迁移使用标准库 sqlite3 backup API，先保留且校验备份，再 Alembic upgrade，最后 integrity/FK
+及旧表逐行内容摘要检查；不自动恢复备份或覆盖数据库。本轮只在临时 SQLite 测试迁移。
+无新增依赖、无 Zotero 写入、无真实付费请求；允许本分支 Conventional Commit/普通 Push，
+不 merge、不改 PR #22/Issue #21、不删除 worktree、不扩充评估框架。

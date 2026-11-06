@@ -7,8 +7,10 @@
 复用 DeepSeekStageProvider 完成 Map → Document Reduce → Cross Reduce，并离线查看历史。
 最新Execution=4：第一篇Map/Document Reduce及第二篇前3次Map成功，第4次Map收到完整响应后
 invalid_output。只读核对确认9个成功阶段、1个失败、7个未开始，失败候选和细分类别未保存，
-不能追溯断言具体违约原因。本轮增加安全分类诊断与`inspect`离线检查，尚不提供付费断点续跑。
-旧投影仅在全部ID/来源/版本/预算等可无损重验时可离线重建；复用谱系与独立计费状态仍缺失。
+不能追溯断言具体违约原因。现已增加严格检查点与独立 `resume` 命令：新执行保存规范生成 JSON、哈希及复用谱系，
+重新校验问题/来源/模型/版本/预算/请求/全部成功结果，只对剩余阶段发起新调用，历史费用与新费用分开。
+Execution=4 缺少规范检查点，明确拒绝续跑；请先用本版创建新执行。每次新 API 请求都需终端输入 `SEND`。
+仅追加 Alembic 0006，新运行升级前备份并校验历史行不变；原执行 1–4 不回写。详见 [CLI 指南](docs/CLI_QUICKSTART.md)。
 CLI现默认Map输出8192、Document Reduce输出32768、Cross Reduce输出32768 tokens，分别可配；
 输入512k、context 1M、整体8M操作单位保留，阶段预留、费用与持久化绑定同步更新。
 Execution=1/2/3/4均保留，不自动恢复或重试；操作估算与模型真实token容量分开显示。

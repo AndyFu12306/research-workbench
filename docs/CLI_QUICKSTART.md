@@ -1,6 +1,70 @@
 # 两篇文献的首次真实运行
 
-**最新：Execution=4诊断与离线检查（2026-11-06）**
+**最新：安全断点续跑 MVP（2026-11-06）**
+
+`resume` 适用于本版之后创建、状态为 failed/interrupted、检查点完整的执行。
+原 Execution 1–4 不回写。Execution 4 在 mode=ro/query_only 下复核为 0005：9 completed、
+1 failed、7 not_started，没有规范 JSON 检查点，数据库文件哈希前后一致。
+因此明确拒绝 `resume 4`，即使升级也不凭旧投影猜测 JSON 字段顺序或重新分配 Finding ID。
+
+下一次先创建具备完整检查点的新执行（默认预算与此前显式参数一致）：
+
+```powershell
+Set-Location C:\Projects\research-workbench-cli
+$env:PYTHONUTF8 = '1'
+uv sync --frozen --extra dev
+$env:ZOTERO_CLI_PATH = (Get-Command zotero-cli -ErrorAction Stop).Source
+uv run --frozen research-workbench run
+```
+
+`run` 升级前会用 SQLite backup API 保存同目录 `*.backup-随机ID.db`，验证备份、integrity/FK，
+升级后逐表比较旧行内容。只追加 Alembic 0006，不改 0001–0005。也可单独先运行：
+
+```powershell
+uv run --frozen research-workbench migrate
+```
+
+本轮开发没有迁移真实数据库；上述操作由你下次运行时执行。备份含私人生成分析，不要提交或分享。
+
+以后若**新执行**中途失败，复制终端显示的 ID：
+
+```powershell
+$executionId = [int](Read-Host '输入本版新建且失败/中断的 Execution ID')
+uv run --frozen research-workbench inspect $executionId
+uv run --frozen research-workbench resume $executionId
+```
+
+`inspect` 只做离线初检；True 不代表 Zotero 指纹及全部输入绑定已通过。
+`resume` 要求输入与原执行一致的模型、READ 授权及隐藏 Key，重新读取相同来源全文，
+严格比较完整问题、内容 fingerprint、分块、模型、预算/价格、Prompt/Contract 版本、成员/边、
+每个成功阶段的请求 hash、规范 JSON/内容 hash、原 Finding ID、Citation 与完整历史投影。
+任一不一致均拒绝，绝不修补无效输出。读取的原文与重建的请求始终只在内存。
+
+通过后预览每个复用阶段、历史费用、预计新增付费调用、剩余 context/费用预留；
+能确定输入的 Reduce 在启动前重估，其余 Reduce 保留完整上界并在调用前检查实际输入。
+确认启动要输入 SEND，**每次新的 API 请求还要单独输入 SEND**，没有自动重试。
+复用阶段标为 reused，不调用 Provider，不复制旧 response ID、tokens 或历史费用；新费用为零。
+原执行包括失败调用的费用仍保留，unknown 仍为未知，不按零费用显示。
+
+同一个原执行仅允许原子登记一个后继，重复启动拒绝；后继失败可对该后继继续 `resume`。
+running/强杀后仍 running 的执行拒绝续跑；本 MVP 不猜测旧进程是否结束，也不提供解锁命令。
+开始前取消不登记新执行；新执行开始后取消则保留已复用阶段与其余 not_started 历史。
+
+本轮离线验收：**154 passed**；Ruff check / format --check（105 个文件）及 diff 检查通过；
+console script 和 `python -m research_workbench resume --help` 启动通过。
+定向覆盖成功复用/失败重执行、来源/问题/模型/版本/预算变化、JSON/hash/ID/绑定损坏、
+重复启动、费用及多次续跑不重复记账、1–4 历史不可变、合法空结果、写检查点失败回滚、
+0005→0006 备份/迁移/旧行完整性及 Alembic metadata 一致性、逐次 SEND 与取消。
+仅合成数据与临时 SQLite；未运行完整 pytest，真实 Zotero/API 仍未测试。
+实际旧数据库仅对 Execution 4 做只读评估，未升级/备份/回写真实库。
+
+```powershell
+uv run --frozen --extra dev pytest tests/unit/test_resume.py tests/unit/test_cli.py tests/unit/test_validation_diagnostics.py tests/unit/test_cross_document_analysis.py tests/unit/test_cross_document_transactions.py tests/unit/test_cross_document_history.py tests/unit/test_cross_document_repository.py -q --tb=short
+uv run --frozen --extra dev ruff check src tests
+uv run --frozen --extra dev ruff format --check src tests
+```
+
+**此前：Execution=4诊断与离线检查（2026-11-06）**
 
 本轮按用户请求，以只读方式核对执行4的状态/用量及失败结果存在性，没有读取文献全文、
 失败模型候选、Prompt或Key，没有修改真实研究对象。9个成功阶段、1个失败、7个未开始；
@@ -216,7 +280,8 @@ uv run --frozen research-workbench show 1
 
 `history` 按 ID 列出该 Question 的前 100 次跨文献执行。
 `show` 显示完成、失败、中断、未知与未开始的阶段；成功结果通过现有严格历史完整性校验后显示。
-本版每次 `run` 新建 Project、Question 和执行，不提供恢复、重复利用项目的向导或自动续跑。
+`run` 新建 Project、Question 和执行；`resume ID` 创建独立执行并复用严格重验的完整检查点。
+没有后台自动续跑或重复利用项目的向导。
 
 ## 遇到失败
 

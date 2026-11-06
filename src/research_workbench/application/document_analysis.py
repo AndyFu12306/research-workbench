@@ -192,6 +192,7 @@ class DocumentAnalysisService:
         _before_call=None,
         _response=None,
         _managed=False,
+        _reuse=None,
     ) -> DocumentExecutionOutcome:
         """Execute precisely the registered plan; no reads, retries or plan rebuilding."""
         requests, plan = prepared.requests, prepared.plan
@@ -208,7 +209,18 @@ class DocumentAnalysisService:
                 estimate = self._estimate(request)
                 if _before_stage is not None:
                     _before_stage()
+                if (_reuse is None or ordinal not in _reuse) and hasattr(
+                    self._provider, "authorize_stage"
+                ):
+                    self._provider.authorize_stage(request)
                 repository.start_stage(run.id, ordinal, request, estimate)
+                if _reuse is not None and ordinal in _reuse:
+                    validated = _reuse[ordinal]
+                    if validated.request != request:
+                        raise DocumentAnalysisError("invalid_plan")
+                    repository.reuse_stage(run.id, ordinal, validated)
+                    children.append(validated)
+                    continue
                 if _before_stage is not None:
                     _before_stage()
                 if _before_call is not None:
@@ -236,7 +248,17 @@ class DocumentAnalysisService:
             estimate = self._estimate(request)
             if _before_stage is not None:
                 _before_stage()
+            if (_reuse is None or len(requests) + 1 not in _reuse) and hasattr(
+                self._provider, "authorize_stage"
+            ):
+                self._provider.authorize_stage(request)
             repository.start_stage(run.id, len(requests) + 1, request, estimate)
+            if _reuse is not None and len(requests) + 1 in _reuse:
+                validated = _reuse[len(requests) + 1]
+                if validated.request != request:
+                    raise DocumentAnalysisError("invalid_plan")
+                completed = repository.reuse_stage(run.id, len(requests) + 1, validated)
+                return DocumentExecutionOutcome(completed, len(requests) + 1, validated)
             if _before_stage is not None:
                 _before_stage()
             if _before_call is not None:

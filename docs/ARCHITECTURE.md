@@ -1,5 +1,27 @@
 # 系统架构
 
+2026-11-06 安全续跑：application/resume.py 在新获取的冻结 Question/SourceDocument 上，
+用成功检查点的原规范 JSON 重放既有严格 validator，核对相同 Finding ID、Citation、Chunk 闭包及
+history_result，而不是从投影重组 JSON。保持 JSON 字段顺序，因为现有 ID 算法绑定规范字节。
+0006 只追加 stage_checkpoints 与 execution_resumes：成功/检查点同事务，保存 output/request/
+projection hash；来源、预算、版本通过现有父子配置/成员/边及源 fingerprint 绑定。原文/payload 不落库。
+执行来源的完整支持行摘要在预览后、原子登记与每次复用时重验；唯一 source_run_id 防止重复启动。
+新执行仍走现有 parent owner/CAS 与完整引用校验，失败阶段重新调用，成功阶段不调用 Provider。
+
+复用的权威来源为 checkpoint.origin=reuse/source_run_id。为了仅追加表且保留旧表 CHECK/FK，
+旧 stage 行的 response_received 生命周期表示该生成结果曾经收取，不表示本次新收取；
+对外 get_stages/get_call_usage 依据 origin 返回 reused。复用时不构造 ProviderResult，
+response_id/input_tokens/output_tokens 均空，usage_cost/estimated_cost 为零；新执行的 allocated_cost
+使用登记的剩余预留。历史账单不复制，祖先各执行的自身费用单独列示，未知调用不按零计。
+
+剩余 Map 使用正式请求估算；已具备全部子结果的 Reduce 在启动前按实际输入重估，
+尚未知输入的 Reduce 保留原配置的完整上界，调用前再次检查，不借用额度或放松 schema。
+CLI 的 authorize_stage 在登记 running/发请求之前逐次 SEND；复用不要求付费确认，取消不记 unknown。
+迁移通过显式 backup_and_upgrade：只读 SQLite backup、完整性/FK 与旧表行摘要检查；
+真实数据库本轮仅 mode=ro/query_only 评估 Execution 4，未迁移，未回写旧执行。
+旧的投影重建原语不参与 resume；旧检查点缺失、running、已登记后继、任何绑定不一致都拒绝。
+本轮无新依赖，无真实 Zotero/AI 调用，以下检查点评估段为此前设计状态。
+
 校验诊断（2026-11-06）：StageValidationError只携带固定code与白名单整数计数；区分JSON、
 根结构、Finding数量/结构/字段、Citation格式/局部标签、来源绑定及子结果完整性。Cross/Document
 服务保留类别到既有error_code字段；持久化绑定校验与PersistenceError分开，不把所有已返回异常

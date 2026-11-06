@@ -4,7 +4,7 @@ import json
 import re
 from dataclasses import asdict
 
-from sqlalchemy import insert, select, update
+from sqlalchemy import insert, inspect, select, update
 
 from research_workbench.analysis.chunking import SourceIdentity, chunk_document, fingerprint
 from research_workbench.analysis.contracts import ProviderResult
@@ -233,7 +233,34 @@ class DocumentAnalysisRepository:
 
     def get_stages(self, execution_id: int) -> tuple[StageRun, ...]:
         with self._database._session() as session:
-            return tuple(StageRun(**r) for r in self._stages(session, _identifier(execution_id)))
+            from .checkpoint_models import checkpoints
+            from .cross_document_models import members
+
+            reused = set()
+            if inspect(session.connection()).has_table("stage_checkpoints"):
+                reused = set(
+                    session.execute(
+                        select(checkpoints.c.ordinal)
+                        .join(
+                            members,
+                            (members.c.run_id == checkpoints.c.run_id)
+                            & (members.c.ordinal == checkpoints.c.member),
+                        )
+                        .where(
+                            members.c.document_execution_id == execution_id,
+                            checkpoints.c.origin == "reuse",
+                        )
+                    ).scalars()
+                )
+            return tuple(
+                StageRun(
+                    **{
+                        **r,
+                        "call_outcome": "reused" if r.ordinal in reused else r.call_outcome,
+                    }
+                )
+                for r in self._stages(session, _identifier(execution_id))
+            )
 
     def get_inputs(self, execution_id: int) -> tuple[StageInput, ...]:
         with self._database._session() as session:
