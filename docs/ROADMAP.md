@@ -7,7 +7,7 @@
 本轮不重跑 DeepSeek、不重新验证 Execution 7、不读取真实研究数据；下方授权及未测试说明均保留其历史阶段范围。
 Single Paper Analysis 仅为后续方向，须本 PR 审查、用户确认合并并同步 main 后另行设计开发。
 合并前审查基线 a9a70ab：本地离线单元测试1069 passed；远程 Windows/Ubuntu 各1069 passed、8 deselected，Ruff通过。
-该基线 Ubuntu 有1条 annotation 尚未取得详情；本轮只读接口不支持/直接请求限流，保持未核清，不推测原因或视为已证实阻塞。
+该基线 Ubuntu 的1条 annotation 已通过[公开 job 页面](https://github.com/AndyFu12306/research-workbench/actions/runs/42185841614/job/127785840852)只读核清：级别 notice，通知 ubuntu-latest 自2026-10-19起迁移到 Ubuntu 26，附[runner-images说明](https://github.com/actions/runner-images/issues/14748)。此前详情接口不支持/限流的限制仍如实保留；该平台通知不是业务代码或测试失败，无需修改 workflow。
 本轮文档提交的新 HEAD 双平台 CI 与最终审查状态以独立 PR 记录为准；不把旧 HEAD 结果转记为新 HEAD 通过。
 
 2026-11-06 当前交付：用户授权在 codex/minimal-research-cli 实现安全续跑 MVP，允许普通 Commit/Push。
