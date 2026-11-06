@@ -1,6 +1,6 @@
 """Explicit ordered selection, frozen plans, sequential execution and one Cross."""
 
-from research_workbench.analysis.chunking import SourceDocument, SourceIdentity
+from research_workbench.analysis.chunking import PlanningLimitError, SourceDocument, SourceIdentity
 from research_workbench.analysis.cross_document_pipeline import (
     CrossBudget,
     CrossConflict,
@@ -25,6 +25,7 @@ from research_workbench.analysis.stage_contracts import (
     StageRequest,
 )
 from research_workbench.analysis.stage_validation import validate_stage_output
+from research_workbench.integrations.zotero.errors import ZoteroError
 from research_workbench.integrations.zotero.models import ZoteroFulltext
 from research_workbench.persistence.cross_document_repository import CrossDocumentRepository
 from research_workbench.persistence.document_repository import DocumentAnalysisRepository
@@ -152,8 +153,33 @@ class CrossDocumentAnalysisService:
         )
 
     def run_analysis(self, question_id, source_ids):
+        return self.execute_prepared(self.prepare_analysis(question_id, source_ids))
+
+    def prepare_analysis(self, question_id, source_ids):
+        """Freeze fulltexts and validate the complete budget without any AI call/write."""
         try:
-            prepared = self._prepare(question_id, source_ids)
+            return self._prepare(question_id, source_ids)
+        except (PlanningLimitError, StageBudgetError):
+            raise CrossDocumentError("budget_exceeded") from None
+        except ZoteroError:
+            raise CrossDocumentError("source_unavailable") from None
+        except CrossDocumentError as exc:
+            raise CrossDocumentError(exc.code) from None
+        except PersistenceError:
+            raise CrossDocumentError("persistence_failed") from None
+        except Exception:
+            raise CrossDocumentError("invalid_plan") from None
+
+    def execute_prepared(self, prepared):
+        """Execute the exact reviewed snapshot; registration rechecks local bindings."""
+        try:
+            require(type(prepared) is PreparedCross)
+            require(prepared.budget == self._budget and prepared.pricing == self._pricing)
+            require(prepared.stage_budget == self._documents._stage_budget)
+            require(
+                (prepared.selection.provider, prepared.selection.model)
+                == (self._provider.provider, self._provider.model)
+            )
             handle = self._runs.register(prepared)
         except CrossConflict:
             raise CrossConflict() from None

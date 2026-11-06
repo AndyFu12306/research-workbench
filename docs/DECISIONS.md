@@ -1,5 +1,19 @@
 # 架构决定
 
+## ADR-060：先交付两文献交互式 CLI，准备与外发确认分离
+
+2026-11-06 用户调整优先级，暂停4B.5a额外人工及多模型复核，保留既有质量/审计成果。
+从最新远程main b716ad7建立独立CLI分支/worktree，不基于PR #22分支或修改冻结文件。
+选择标准库argparse/getpass，无新依赖；复用既有ZoteroClient、DeepSeekStageProvider及编排。
+本机读取前READ确认，完整全文及固定预算准备后SEND确认，Key仅隐藏输入到进程内存。
+公开prepare_analysis/execute_prepared让确认绑定同一全文快照；登记重验问题/来源关联和计划，
+不跨确认持有数据库事务。旧run_analysis组合两步；结构/引用/来源支撑/预算限制不放宽。
+CLI强制两篇，显式填写单价和费用阈值，不内置易过时的价格；操作估算不承诺实际账单。
+独立Workbench数据库通过既有Alembic迁移，无新migration；history/show只读本地历史，
+不hydrate Zotero或构造新请求。错误仅固定安全码，无traceback/raw payload/凭据输出。
+无自动付费调用、重试、修补、续跑、Zotero写入、PR创建或merge。CLI交付不等于真实Stage API
+或human review验收；本轮仅定向离线检查，用户首次真实运行需另行在终端确认。
+
 日期：2026-11-03。除注明暂定外，以下原则已接受；接受原则不代表已实现。
 
 ## ADR-001：Zotero 是唯一文献事实源

@@ -1,5 +1,12 @@
 # 系统架构
 
+2026-11-06 CLI 入口：标准库 argparse/getpass → 既有 repositories、QuestionSourceService、
+CrossDocumentAnalysisService → ZoteroClient / DeepSeekStageProvider。新增公开
+`prepare_analysis`（冻结全文、纯 AI 预检、不登记执行）与 `execute_prepared`（同一快照、登记时重验）。
+旧 `run_analysis` 组合这两步，保留公开行为。CLI 在两步之间展示预览并要求终端 `SEND`；
+不重新读取可能变化的全文，不更改契约、校验、预算、migration 或重试策略。
+历史页只通过 repository 读 Workbench；新增只读 `get_call_usage` 安全投影，无原始 payload。
+
 ## 分层与目标
 
 ```text

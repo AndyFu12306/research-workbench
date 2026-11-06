@@ -1,5 +1,13 @@
 # 路线与阶段门槛
 
+2026-11-06 优先级调整：暂停 Phase 4B.5a 额外人工/多模型复核及等待 Gemini，保留已有结果，
+DeepSeek 语义复核不计正式 human review。用户授权从最新远程 main `b716ad7` 创建独立
+`codex/minimal-research-cli` / `C:/Projects/research-workbench-cli`，实现最小两文献 CLI，
+运行定向离线测试、Ruff、启动检查并 Conventional Commit / 普通 Push 后停止。
+不修改 PR #22 / Issue #21、冻结 Benchmark/Assessment/审计文件，不 merge、删除旧分支/worktree
+或自动调用真实 API/私人文献。CLI 首次真实运行由用户在终端两次 opt-in 完成；质量验收仍独立。
+实现与首次操作见 [CLI 指南](CLI_QUICKSTART.md)。后续历史授权描述不覆盖本次明确授权。
+
 当前：**Phase 4B.4 — 有界跨文献综合与作用域历史**。Issue #19 v2 + v2.1已获用户正式Branch + Implementation授权；基线main 41b136113aaaa56a9801590f938fcc745a0e546d（PR #18 / Issue #17已完成）。分支codex/phase4b4-cross-document-synthesis，独立worktree C:/Projects/research-workbench-phase4b4。本轮只实现、离线验证和本地提交；不创建PR、不合并、不关闭Issue、不进入4B.5，全部旧分支/worktree保留。真实API及旧Level B仍NOT TESTED。
 
 | Phase | 内容 | 状态 |

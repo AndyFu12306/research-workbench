@@ -75,6 +75,18 @@ class CrossCosts:
     not_started_calls: int
 
 
+@dataclass(frozen=True, slots=True)
+class CrossCallUsage:
+    scope: str
+    ordinal: int
+    stage: str
+    status: str
+    call_outcome: str
+    input_tokens: int | None
+    output_tokens: int | None
+    error_code: str | None
+
+
 def plan_config(prepared):
     """Allowlisted plan identity. Never asdict a source, request or recursive result."""
     s = prepared.selection
@@ -732,4 +744,28 @@ class CrossDocumentRepository:
                 total,
                 sum(r.call_outcome == "unknown" for r in rows),
                 sum(r.call_outcome == "not_started" for r in rows),
+            )
+
+    def get_call_usage(self, run_id):
+        """Offline usage/status projection, including failed and unstarted calls."""
+        with self._database._session() as session:
+            self._row(session, _identifier(run_id))
+            values = [
+                (f"document-{m.ordinal}", r)
+                for m in self._members(session, run_id)
+                for r in self._documents._stages(session, m.document_execution_id)
+            ]
+            values.append(("cross", self._stage(session, run_id)))
+            return tuple(
+                CrossCallUsage(
+                    scope,
+                    r.ordinal,
+                    r.stage,
+                    r.status,
+                    r.call_outcome,
+                    r.input_tokens,
+                    r.output_tokens,
+                    r.error_code,
+                )
+                for scope, r in values
             )

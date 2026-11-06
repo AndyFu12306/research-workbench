@@ -1,0 +1,327 @@
+"""Interactive, consent-gated two-document workflow; no credentials in arguments."""
+
+import argparse
+import getpass
+import json
+import re
+import sys
+import unicodedata
+import warnings
+from decimal import Decimal, InvalidOperation
+from pathlib import Path
+
+from research_workbench.analysis.cross_document_pipeline import ERRORS, CrossBudget
+from research_workbench.analysis.document_pipeline import Pricing
+from research_workbench.analysis.errors import PROVIDER_FAILURE_MESSAGES, AnalysisProviderError
+from research_workbench.application.cross_document_analysis import CrossDocumentAnalysisService
+from research_workbench.application.source_links import QuestionSourceService
+from research_workbench.integrations.ai.stages import DeepSeekStageProvider
+from research_workbench.integrations.zotero import ZoteroClient
+from research_workbench.integrations.zotero.errors import ZoteroError
+from research_workbench.persistence import Database, ProjectRepository, QuestionRepository
+from research_workbench.persistence.cross_document_repository import CrossDocumentRepository
+from research_workbench.persistence.source_repositories import SourceRepository
+
+
+class CliError(ValueError):
+    pass
+
+
+def display(value):
+    """Do not let source/provider text inject terminal control or bidi sequences."""
+    text = str(value)
+    print("".join(c for c in text if c == "\n" or not unicodedata.category(c).startswith("C")))
+
+
+def ask(prompt):
+    value = input(prompt).strip()
+    if not value:
+        raise CliError("输入不能为空；已停止。")
+    return value
+
+
+def confirm(prompt, word):
+    if input(f"{prompt}\n输入 {word} 继续，其他输入取消：").strip() != word:
+        raise CliError("已取消；未发出 AI 请求。")
+
+
+def positive_decimal(prompt):
+    try:
+        value = Decimal(ask(prompt))
+        if not value.is_finite() or value <= 0:
+            raise ValueError
+        return value
+    except (InvalidOperation, ValueError):
+        raise CliError("价格和费用上限必须是大于零的有限数字。") from None
+
+
+def database_path(raw):
+    path = Path(raw).expanduser().resolve()
+    if path.name.lower().startswith("zotero") or path.suffix.lower() not in (
+        ".db",
+        ".sqlite",
+        ".sqlite3",
+    ):
+        raise CliError("请选择独立的 Workbench .db 文件，禁止使用 Zotero 数据库。")
+    return path
+
+
+def interactive_terminal():
+    return sys.stdin.isatty() and sys.stdout.isatty()
+
+
+class ReportingProvider:
+    """Keep fixed adapter diagnostics without exposing exceptions or response bodies."""
+
+    def __init__(self, provider):
+        self.delegate = provider
+        self.last_error = None
+        self.calls = 0
+
+    @property
+    def provider(self):
+        return self.delegate.provider
+
+    @property
+    def model(self):
+        return self.delegate.model
+
+    @property
+    def capabilities(self):
+        return self.delegate.capabilities
+
+    def estimate_stage(self, request):
+        return self.delegate.estimate_stage(request)
+
+    def generate_stage(self, request):
+        self.calls += 1
+        display(f"调用 {self.calls}: {request.stage}（无自动重试）")
+        try:
+            return self.delegate.generate_stage(request)
+        except AnalysisProviderError as exc:
+            self.last_error = (
+                exc.code if exc.code in PROVIDER_FAILURE_MESSAGES else "provider_failed"
+            )
+            raise
+
+
+def select_two(reader):
+    keys = []
+    for number in (1, 2):
+        query = ask(f"第 {number} 篇：输入 Zotero 搜索词：")
+        items = reader.search_items(query, limit=10)
+        if not items:
+            raise CliError("搜索无结果；请调整搜索词后重跑。这不代表全文可用。")
+        for i, item in enumerate(items, 1):
+            display(f"{i}. {item.title} [{item.item_key}]")
+        try:
+            index = int(ask("选择结果序号："))
+            if not 1 <= index <= len(items):
+                raise ValueError
+        except ValueError:
+            raise CliError("序号无效；已停止。") from None
+        item = items[index - 1]
+        if item.item_key in keys:
+            raise CliError("必须选择两篇不同的文献。")
+        keys.append(item.item_key)
+    return tuple(keys)
+
+
+def preview(prepared):
+    display("\n外发预览：目标 DeepSeek https://api.deepseek.com / Responses API")
+    display(f"模型：{prepared.selection.model}")
+    display("数据：研究问题标题及描述、两篇所选文献的全部提取文本（按块发送），")
+    display("以及 AI 生成的中间分析、引用标签、范围与 fingerprint。不会发送整个 Zotero 库。")
+    for i, (doc, plan) in enumerate(
+        zip(prepared.selection.documents, prepared.documents, strict=True), 1
+    ):
+        display(
+            f"文献 {i} [{doc.identity.external_key}]：{len(doc.text)} 字符，"
+            f"{len(plan.requests)} 个 Map + 1 个 Document Reduce"
+        )
+    allocation, budget = prepared.allocation, prepared.budget
+    display(f"最后 1 个 Cross Reduce；预计最多 {allocation.calls} 次调用，失败即停。")
+    display(
+        f"操作估算/上限：{allocation.context_tokens}/{budget.max_estimated_tokens}；"
+        f"调用上限：{budget.max_calls}；"
+        f"单次输出上限：{prepared.stage_budget.output_tokens} tokens。"
+    )
+    display(
+        f"按所填单价估算预留：{allocation.cost} {prepared.pricing.currency}；"
+        f"费用阈值：{budget.max_estimated_cost} {prepared.pricing.currency}。"
+    )
+    display("估算基于 UTF-8 bytes，非精确 token；费用阈值不是服务商账单保证。")
+    display("动态 Reduce 仍可能超限失败；无截断、降级、输出修补或自动重试。")
+    display("本地保存生成分析、引用链、执行历史及 fingerprint；不保存原文或 Key。")
+    display("AI 分析可能复述敏感内容；引用链不证明语义正确，结果需人工核验。")
+
+
+def show_run(database, run_id):
+    repo = CrossDocumentRepository(database)
+    run = repo.get(run_id)
+    if run is None:
+        raise CliError("找不到该执行 ID。")
+    display(
+        f"\n执行 ID={run.id} Question={run.question_id} 状态={run.status} "
+        f"模型={run.model} 时间={run.created_at.isoformat()} 错误={run.error_code or '-'}"
+    )
+    sources = SourceRepository(database)
+    for member in repo.get_members(run.id):
+        source = sources.get(member.source_id)
+        display(
+            f"文献 {member.ordinal}: SourceRef={member.source_id} "
+            f"{source.provider}/{source.scope}/{source.external_key} "
+            f"子执行={member.document_execution_id}"
+        )
+    for call in repo.get_call_usage(run.id):
+        display(
+            f"{call.scope}/{call.ordinal} {call.stage}: {call.status} "
+            f"outcome={call.call_outcome} tokens={call.input_tokens}/{call.output_tokens} "
+            f"error={call.error_code or '-'}"
+        )
+    costs = repo.get_costs(run.id)
+    price_config = json.loads(run.config_json)["pricing"]
+    currency = price_config["currency"] if price_config else "unknown"
+    display(
+        f"名义费用（{currency}）：已知部分={costs.known_usage_cost} 全部={costs.usage_cost}；"
+        f"未知调用={costs.unknown_calls} 未开始={costs.not_started_calls}（None=未知）"
+    )
+    if run.status == "completed":
+        data = json.loads(repo.get_history(run.id).result_json)
+        display(f"\nAI 生成分析 / AI 推断（需人工核验）：{data['status']}")
+        for finding in data["findings"]:
+            display(f"\n[{finding['kind']} / {finding['category']}] {finding['text']}")
+            display("直接引用：" + json.dumps(finding["citations"], ensure_ascii=False))
+            display("来源块：" + json.dumps(finding["chunk_refs"], ensure_ascii=False))
+
+
+def run_workflow(database):
+    confirm("允许在本机检查 Zotero 并搜索/读取你选择的两篇全文？此时不会调用 AI。", "READ")
+    reader = ZoteroClient()
+    health = reader.health_check()
+    display(
+        f"Zotero：Client={health.client.status} Local API={health.local_api.status} "
+        f"CLI={health.cli.status}"
+    )
+    if health.status != "healthy":
+        raise CliError("Zotero 连接检查未通过；请打开 Zotero、启用本机通信并检查 zotero-cli。")
+    keys = select_two(reader)
+    project_title = ask("Research Project 名称：")
+    question_title = ask("研究 Question：")
+    description = input("问题补充说明（可留空）：").strip()
+    model = ask("DeepSeek 模型名称（填写账户实际可用且支持 Responses/结构化输出的模型）：")
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:/-]{0,127}", model):
+        raise CliError("模型名称格式无效。")
+    display("请按服务商控制台填写当前单价；程序不内置价格，也不联网查询价格。")
+    currency = ask("币种（三位字母，例如 CNY）：").upper()
+    input_price = positive_decimal("输入价格 / 百万 tokens（保守使用非缓存价）：")
+    output_price = positive_decimal("输出价格 / 百万 tokens：")
+    cap = positive_decimal("本次名义费用上限（同币种）：")
+    pricing = Pricing(currency, "user-entered-v1", input_price, output_price)
+    # GetPassWarning means hidden input is unavailable: refuse its echoing fallback.
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", getpass.GetPassWarning)
+            key = getpass.getpass("DeepSeek API Key（隐藏输入，仅本进程使用）：")
+    except getpass.GetPassWarning:
+        raise CliError("当前终端不能隐藏 Key；请使用原生 PowerShell 终端重新启动。") from None
+    config = {"DEEPSEEK_API_KEY": key, "DEEPSEEK_MODEL": model, "DEEPSEEK_TIMEOUT_SECONDS": "60"}
+    try:
+        with DeepSeekStageProvider(environ=config) as delegate:
+            provider = ReportingProvider(delegate)
+            project = ProjectRepository(database).create(project_title)
+            question = QuestionRepository(database).create(project.id, question_title, description)
+            display(f"Project ID={project.id}；Question ID={question.id}")
+            links = QuestionSourceService(database, reader)
+            source_ids = tuple(links.attach_zotero_source(question.id, k).source.id for k in keys)
+            service = CrossDocumentAnalysisService(
+                database,
+                reader,
+                provider,
+                cross_budget=CrossBudget(max_estimated_cost=cap),
+                pricing=pricing,
+            )
+            prepared = service.prepare_analysis(question.id, source_ids)
+            preview(prepared)
+            confirm("确认将上述数据外发，并接受本次可能产生的 API 费用？", "SEND")
+            try:
+                run = service.execute_prepared(prepared)
+            except BaseException:
+                if provider.last_error:
+                    display(f"AI 安全诊断：{provider.last_error}")
+                    display(
+                        PROVIDER_FAILURE_MESSAGES.get(
+                            provider.last_error, "Provider request failed."
+                        )
+                    )
+                # This question was just created; its only run is this attempt.
+                runs = CrossDocumentRepository(database).list_by_question(question.id)
+                if runs:
+                    show_run(database, runs[0].id)
+                raise
+            show_run(database, run.id)
+    finally:
+        config.clear()
+        key = None
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description="Research Workbench：两篇 Zotero 文献的交互式分析")
+    parser.add_argument(
+        "--database", default="data/workbench-cli.db", help="独立 Workbench SQLite 路径"
+    )
+    commands = parser.add_subparsers(dest="command", required=True)
+    commands.add_parser("run", help="交互式创建研究、选择两篇文献并确认执行")
+    history = commands.add_parser("history", help="离线列出某个 Question 的执行历史")
+    history.add_argument("--question", type=int, required=True)
+    show = commands.add_parser("show", help="离线查看执行结果、来源和用量")
+    show.add_argument("execution_id", type=int)
+    args = parser.parse_args(argv)
+    try:
+        path = database_path(args.database)
+        if args.command == "run" and not interactive_terminal():
+            raise CliError("真实运行必须使用交互式终端；不接受管道确认或重定向输出。")
+        if args.command != "run" and not path.is_file():
+            raise CliError("Workbench 数据库不存在；请先使用 run。")
+        display(f"Workbench 数据库：{path}")
+        with Database(path) as database:
+            if args.command == "run":
+                display(
+                    "通过 Alembic 升级上述独立 Workbench 数据库到 head（不操作 Zotero 数据库）。"
+                )
+                database.upgrade()
+                run_workflow(database)
+            elif args.command == "history":
+                runs = CrossDocumentRepository(database).list_by_question(args.question)
+                if not runs:
+                    display("没有执行历史；请核对 Question ID。")
+                for run in runs:
+                    display(
+                        f"ID={run.id} {run.status} {run.created_at.isoformat()} "
+                        f"{run.error_code or '-'}"
+                    )
+            else:
+                show_run(database, args.execution_id)
+        return 0
+    except (KeyboardInterrupt, EOFError):
+        display("已中止；已发出的调用可能产生费用。使用 history/show 检查状态，不会自动重试。")
+        return 130
+    except CliError as exc:
+        display(str(exc))
+        return 2
+    except ZoteroError as exc:
+        display(f"Zotero 读取失败，层级：{exc.layer}；未展示可能含私人内容的原始诊断。")
+        return 1
+    except Exception as exc:
+        code = getattr(exc, "code", None)
+        if code in ERRORS:
+            display(f"执行失败：{code} / {ERRORS[code]}")
+        elif code in PROVIDER_FAILURE_MESSAGES:
+            display(f"AI 失败：{code} / {PROVIDER_FAILURE_MESSAGES[code]}")
+        else:
+            display("安全停止：配置、输入、全文、预算或数据库检查失败；未打印原始异常。")
+        return 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
