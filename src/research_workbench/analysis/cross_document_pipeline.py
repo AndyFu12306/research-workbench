@@ -22,6 +22,7 @@ ERRORS = {
     "persistence_failed": "Cross-document persistence failed.",
     "invalid_output": "Cross-document output validation failed.",
     "provider_failed": "Cross-document provider failed.",
+    "provider_incomplete": "Provider output is incomplete; synthesis is unavailable.",
     "interrupted": "Cross-document call outcome is unknown or execution interrupted.",
     "parent_aborted": "Parent execution stopped before this document completed.",
 }

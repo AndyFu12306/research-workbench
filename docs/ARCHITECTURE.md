@@ -7,6 +7,14 @@ CrossDocumentAnalysisService → ZoteroClient / DeepSeekStageProvider。新增�
 不重新读取可能变化的全文，不更改契约、校验、预算、migration 或重试策略。
 历史页只通过 repository 读 Workbench；新增只读 `get_call_usage` 安全投影，无原始 payload。
 
+CLI incomplete 修复：Responses normalizer 抛出的 `AnalysisProviderIncomplete` 仍以
+`provider_incomplete` 作为安全码，仅携带白名单 `max_output_tokens/content_filter` 或 None，
+不保留原始响应/部分生成文本。Cross 的父执行、活动子执行和阶段保留此码与 response_received；
+无 usage 时不填零。原因仅在本次 CLI 失败时展示，未加持久化字段或迁移，旧历史保持原样。
+默认输出4096不变；DeepSeek阶段允许显式配置到8192，OpenAI阶段保持4096能力上限。
+CLI显式context与output同时传入PlanningBudget/StageBudget，沿用最终SDK估算、CrossBudget
+分配和费用门槛，不自动提升整体限制，不改变JSON Schema/引用校验或从incomplete提取可用结果。
+
 ## 分层与目标
 
 ```text

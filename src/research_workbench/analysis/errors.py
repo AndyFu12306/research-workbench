@@ -73,6 +73,17 @@ class AnalysisConfigurationError(AnalysisError):
     message = "Configure a supported model, API key and positive finite timeout."
 
 
+INCOMPLETE_REASONS = frozenset(("max_output_tokens", "content_filter"))
+
+
+class AnalysisProviderIncomplete(AnalysisProviderFailure):
+    """Only an allowlisted status reason; never retain the response or partial output."""
+
+    def __init__(self, reason=None):
+        self.reason = reason if type(reason) is str and reason in INCOMPLETE_REASONS else None
+        super().__init__("provider_incomplete")
+
+
 class AnalysisStateError(AnalysisError):
     code = "immutable_run"
     message = "Only a running analysis can be finalized; history is immutable."

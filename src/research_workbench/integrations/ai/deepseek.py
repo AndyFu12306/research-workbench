@@ -13,6 +13,7 @@ from research_workbench.analysis.errors import (
     AnalysisConfigurationError,
     AnalysisProviderError,
     AnalysisProviderFailure,
+    AnalysisProviderIncomplete,
 )
 from research_workbench.analysis.schema import OUTPUT_SCHEMA
 
@@ -65,7 +66,8 @@ def _invalid_constant(_value):
 def _normalize(response) -> ProviderResult:
     status = getattr(response, "status", None)
     if status == "incomplete":
-        raise AnalysisProviderFailure("provider_incomplete")
+        details = getattr(response, "incomplete_details", None)
+        raise AnalysisProviderIncomplete(getattr(details, "reason", None))
     if status == "failed":
         error = getattr(response, "error", None)
         raise _request_failure(None, getattr(error, "code", None), None)
@@ -86,7 +88,8 @@ def _normalize(response) -> ProviderResult:
         if kind != "message" or getattr(item, "role", None) != "assistant":
             raise AnalysisProviderFailure("provider_sdk_incompatible")
         if getattr(item, "status", None) == "incomplete":
-            raise AnalysisProviderFailure("provider_incomplete")
+            # A message-level status alone does not establish the response-level reason.
+            raise AnalysisProviderIncomplete()
         if getattr(item, "status", None) != "completed":
             raise AnalysisProviderFailure("provider_sdk_incompatible")
         messages.append(item)

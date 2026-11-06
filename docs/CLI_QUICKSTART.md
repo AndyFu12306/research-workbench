@@ -1,7 +1,8 @@
 # 两篇文献的首次真实运行
 
 本入口复用现有 DeepSeekStageProvider、ZoteroClient、来源关联服务与跨文献编排。
-本轮只用合成内容与临时 SQLite 做离线验证，**真实 Zotero + 真实 Stage API 尚未验证**。
+初版仅离线验证。用户随后首次真实运行在第2次 Map incomplete 后失败，
+**真实两文献三层流水线尚未完整成功**；本次故障修复仍只用模拟响应和临时 SQLite 验证。
 Phase 4B.5a 额外人工/多模型复核暂停；既有审计、Benchmark、Assessment 和 PR #22 保留，
 既有 DeepSeek 语义复核不作为正式 human review。CLI 可运行不等于质量验收通过。
 
@@ -79,6 +80,9 @@ uv run --frozen research-workbench show 1
 - `provider_sdk_incompatible` / `provider_structured_output` / `provider_invalid_request`：
   当前服务、模型、Responses 或结构化输出不兼容/拒绝，不能当作成功；不切换到 Chat/普通文本。
 - Reduce 动态输入超限或引用/结构校验失败：停止，保留已完成阶段历史，不伪造最终综合。
+- `provider_incomplete`：已收到不完整响应，仍然失败。新运行的CLI会额外显示安全的
+  `incomplete_details.reason=max_output_tokens/content_filter/unknown`，原因仅本次终端展示，
+  未新增到数据库；`show` 保留错误码和阶段状态。未知用量仍显示None，不是零费用。
 - Ctrl+C 尽力保存 interrupted；强杀进程或持续数据库故障可留下 running。
   使用 `history/show` 核查，不把未知用量算作零费。
 
@@ -86,6 +90,49 @@ uv run --frozen research-workbench show 1
 本版没有自动重试；再次执行 `run` 是新的、需要重新确认的研究和付费尝试。
 预算采用 UTF-8 字节保守操作估算，非服务商精确 tokenizer；用户填写价格也可能过时，
 估算/阈值与 usage 名义费用均不是账单保证。服务商账单为实际费用依据。
+
+## 首次 incomplete 的修复与下一次尝试
+
+用户提供的真实记录：Execution ID=1、Question ID=1，模型deepseek-flash，预计17次调用，
+第一次Map completed（2428 input / 2562 output tokens），第二次Map provider_incomplete且无可用usage，
+剩余15次未开始。连接、SQLite、全文提取和预算预检已通过；这不是完整三层分析成功。
+本次开发未打开真实数据库、真实日志文件或重发请求；以上运行事实来自用户提供的记录。
+
+已证实的代码缺陷：normalizer遇到incomplete直接抛错，未提取reason；Cross分类只识别
+CrossDocumentError，明确的provider_incomplete被归为provider_failed。现新增专用白名单异常，
+并保留该安全码到父执行、活动文献与阶段。原Execution=1仍是原失败状态/错误码，不追溯修改。
+
+4096可能不足，尚未证实是该次原因。官方[Responses文档](https://api-docs.deepseek.com/api/create-response/)
+说明max_output_tokens含可见输出及reasoning额度，incomplete reason可以是max_output_tokens
+或content_filter。原日志没有reason/失败调用usage，不能由首次成功的2562推断第二次需求。
+程序不输出reasoning或原始响应，不猜测被过滤的内容，也不从部分JSON恢复结果。
+
+本版默认仍4096。如决定以8192输出额度重新尝试，复制以下命令：
+
+```powershell
+Set-Location C:\Projects\research-workbench-cli
+$env:PYTHONUTF8 = '1'
+uv sync --frozen --extra dev
+$env:ZOTERO_CLI_PATH = (Get-Command zotero-cli -ErrorAction Stop).Source
+uv run --frozen research-workbench run --stage-output-tokens 8192 --stage-context-tokens 65536
+```
+
+这是新建Project/Question和新执行，完整从Map开始，不是恢复或覆盖Execution=1。
+继续按READ、两篇选择、deepseek-flash、价格/费用上限、隐藏Key、预览、SEND操作。
+context是本地操作预算，不向服务商声明或保证模型窗口；输入上限仍24000，整体预算不自动提升。
+8192不是新默认或成功保证；缺少相应context预留、整体预算或费用额度时在外发前拒绝。
+较高输出额度会增加估算费用，动态Reduce仍可能超限。若再次incomplete，记录终端显示的
+安全reason、执行ID和阶段状态即可，不要分享原文/Prompt/Key/原始响应。
+
+本次修复验证：相关定向集 **425 passed**（含CLI 28项、新incomplete回归12项、阶段校验/
+Provider/跨文献执行/预算/历史/DeepSeek旧接口回归）。强化三阶段错误码断言后，对应SDK状态集
+单独复跑 **39 passed**，是前述定向集的子集，不计作额外39个不同测试。
+Ruff check、format --check（95文件）、diff检查及两种CLI入口help启动通过。
+没有运行完整pytest，没有读取真实Zotero/研究数据库或调用真实API；不代表真实重跑成功。
+
+```powershell
+uv run --frozen --extra dev pytest tests/unit/test_stage_incomplete.py tests/unit/test_cli.py tests/unit/test_cross_document_sdk_outcome.py tests/unit/test_cross_document_analysis.py tests/unit/test_stage_providers.py tests/unit/test_stage_validation.py tests/unit/test_cross_document_budget.py tests/unit/test_cross_document_history.py tests/unit/test_deepseek_provider.py -q
+```
 
 ## 开发验证
 

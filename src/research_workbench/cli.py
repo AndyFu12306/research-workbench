@@ -12,7 +12,14 @@ from pathlib import Path
 
 from research_workbench.analysis.cross_document_pipeline import ERRORS, CrossBudget
 from research_workbench.analysis.document_pipeline import Pricing
-from research_workbench.analysis.errors import PROVIDER_FAILURE_MESSAGES, AnalysisProviderError
+from research_workbench.analysis.errors import (
+    INCOMPLETE_REASONS,
+    PROVIDER_FAILURE_MESSAGES,
+    AnalysisProviderError,
+)
+from research_workbench.analysis.planning import PlanningBudget
+from research_workbench.analysis.stage_contracts import MAX_STAGE_OUTPUT_TOKENS, StageBudget
+from research_workbench.analysis.stage_validation import validate_budget
 from research_workbench.application.cross_document_analysis import CrossDocumentAnalysisService
 from research_workbench.application.source_links import QuestionSourceService
 from research_workbench.integrations.ai.stages import DeepSeekStageProvider
@@ -76,6 +83,7 @@ class ReportingProvider:
     def __init__(self, provider):
         self.delegate = provider
         self.last_error = None
+        self.last_incomplete_reason = None
         self.calls = 0
 
     @property
@@ -102,6 +110,13 @@ class ReportingProvider:
             self.last_error = (
                 exc.code if exc.code in PROVIDER_FAILURE_MESSAGES else "provider_failed"
             )
+            reason = getattr(exc, "reason", None)
+            if (
+                exc.code == "provider_incomplete"
+                and type(reason) is str
+                and reason in INCOMPLETE_REASONS
+            ):
+                self.last_incomplete_reason = reason
             raise
 
 
@@ -145,6 +160,10 @@ def preview(prepared):
         f"操作估算/上限：{allocation.context_tokens}/{budget.max_estimated_tokens}；"
         f"调用上限：{budget.max_calls}；"
         f"单次输出上限：{prepared.stage_budget.output_tokens} tokens。"
+    )
+    display(
+        f"单次输入上限={prepared.stage_budget.max_input_tokens}，"
+        f"context 上限={prepared.stage_budget.context_tokens}；输出额度包含 reasoning tokens。"
     )
     display(
         f"按所填单价估算预留：{allocation.cost} {prepared.pricing.currency}；"
@@ -195,7 +214,18 @@ def show_run(database, run_id):
             display("来源块：" + json.dumps(finding["chunk_refs"], ensure_ascii=False))
 
 
-def run_workflow(database):
+def configured_stage_budget(output_tokens, context_tokens):
+    budget = StageBudget(output_tokens=output_tokens, context_tokens=context_tokens)
+    try:
+        validate_budget(budget)
+    except ValueError:
+        raise CliError(f"阶段输出额度必须为 1–{MAX_STAGE_OUTPUT_TOKENS} 的整数。") from None
+    if context_tokens < budget.max_input_tokens + output_tokens + budget.safety_margin_tokens:
+        raise CliError("context 额度不足以容纳输入、输出与安全预留；请显式配置更大的 context。")
+    return budget
+
+
+def run_workflow(database, *, stage_budget=None):
     confirm("允许在本机检查 Zotero 并搜索/读取你选择的两篇全文？此时不会调用 AI。", "READ")
     reader = ZoteroClient()
     health = reader.health_check()
@@ -238,6 +268,13 @@ def run_workflow(database):
                 database,
                 reader,
                 provider,
+                stage_budget=stage_budget,
+                planning_budget=PlanningBudget(
+                    context_tokens=stage_budget.context_tokens,
+                    reserved_output_tokens=stage_budget.output_tokens,
+                )
+                if stage_budget is not None
+                else None,
                 cross_budget=CrossBudget(max_estimated_cost=cap),
                 pricing=pricing,
             )
@@ -254,6 +291,11 @@ def run_workflow(database):
                             provider.last_error, "Provider request failed."
                         )
                     )
+                    if provider.last_error == "provider_incomplete":
+                        display(
+                            "incomplete_details.reason="
+                            + (provider.last_incomplete_reason or "unknown")
+                        )
                 # This question was just created; its only run is this attempt.
                 runs = CrossDocumentRepository(database).list_by_question(question.id)
                 if runs:
@@ -271,7 +313,19 @@ def main(argv=None):
         "--database", default="data/workbench-cli.db", help="独立 Workbench SQLite 路径"
     )
     commands = parser.add_subparsers(dest="command", required=True)
-    commands.add_parser("run", help="交互式创建研究、选择两篇文献并确认执行")
+    run_parser = commands.add_parser("run", help="交互式创建研究、选择两篇文献并确认执行")
+    run_parser.add_argument(
+        "--stage-output-tokens",
+        type=int,
+        default=4096,
+        help=f"每阶段输出额度，1–{MAX_STAGE_OUTPUT_TOKENS}，默认4096（包含reasoning）",
+    )
+    run_parser.add_argument(
+        "--stage-context-tokens",
+        type=int,
+        default=32768,
+        help="单次context操作预算，默认32768；提高输出时需显式预留足够context",
+    )
     history = commands.add_parser("history", help="离线列出某个 Question 的执行历史")
     history.add_argument("--question", type=int, required=True)
     show = commands.add_parser("show", help="离线查看执行结果、来源和用量")
@@ -279,6 +333,11 @@ def main(argv=None):
     args = parser.parse_args(argv)
     try:
         path = database_path(args.database)
+        stage_budget = (
+            configured_stage_budget(args.stage_output_tokens, args.stage_context_tokens)
+            if args.command == "run"
+            else None
+        )
         if args.command == "run" and not interactive_terminal():
             raise CliError("真实运行必须使用交互式终端；不接受管道确认或重定向输出。")
         if args.command != "run" and not path.is_file():
@@ -290,7 +349,7 @@ def main(argv=None):
                     "通过 Alembic 升级上述独立 Workbench 数据库到 head（不操作 Zotero 数据库）。"
                 )
                 database.upgrade()
-                run_workflow(database)
+                run_workflow(database, stage_budget=stage_budget)
             elif args.command == "history":
                 runs = CrossDocumentRepository(database).list_by_question(args.question)
                 if not runs:

@@ -1,5 +1,10 @@
 # 路线与阶段门槛
 
+CLI 首次真实运行故障修复（2026-11-06）：用户报告 Execution=1 / Question=1 在第2次 Map
+incomplete 后停止，三层执行未完成。修复明确错误码传播，增加白名单原因和显式输出预算配置；
+只用模拟响应/临时数据库验证。原失败历史不改写，不自动重试或发起下一次真实运行，
+仍在现有 CLI 分支提交与普通 Push；PR #22 / Issue #21 / 冻结评估保持不动。
+
 2026-11-06 优先级调整：暂停 Phase 4B.5a 额外人工/多模型复核及等待 Gemini，保留已有结果，
 DeepSeek 语义复核不计正式 human review。用户授权从最新远程 main `b716ad7` 创建独立
 `codex/minimal-research-cli` / `C:/Projects/research-workbench-cli`，实现最小两文献 CLI，

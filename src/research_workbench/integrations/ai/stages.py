@@ -54,6 +54,10 @@ def prepare_stage_call(
     ):
         raise StageError() from None
     rendered = render_stage_input(request)
+    # This opt-in extension is for DeepSeek only; retain the OpenAI stage ceiling.
+    output_limit = 8192 if provider == "deepseek" else 4096
+    if request.budget.output_tokens > output_limit:
+        raise StageCapabilityError()
     payload = {
         "model": model,
         "instructions": stage_instructions(request.stage),

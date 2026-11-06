@@ -2,6 +2,7 @@
 
 import builtins
 import getpass
+import json
 from contextlib import contextmanager
 from dataclasses import replace
 from types import SimpleNamespace
@@ -13,8 +14,10 @@ from test_document_analysis import FakeStageProvider
 from research_workbench import cli
 from research_workbench.analysis.chunking import ChunkingConfig
 from research_workbench.analysis.cross_document_pipeline import CrossBudget, CrossDocumentError
-from research_workbench.analysis.errors import AnalysisProviderFailure
+from research_workbench.analysis.document_pipeline import RequestEstimate
+from research_workbench.analysis.errors import AnalysisProviderFailure, AnalysisProviderIncomplete
 from research_workbench.application.cross_document_analysis import CrossDocumentAnalysisService
+from research_workbench.integrations.ai.stages import prepare_stage_call
 from research_workbench.integrations.zotero.models import ZoteroFulltext, ZoteroItem
 from research_workbench.persistence import Database
 from research_workbench.persistence.cross_document_repository import CrossDocumentRepository
@@ -44,6 +47,12 @@ def session(monkeypatch, tmp_path):
 
     reader, provider = Reader(), FakeStageProvider()
     provider.provider, provider.model = "deepseek", "synthetic-model"
+
+    def estimate(request):
+        _, result = prepare_stage_call(request, model=provider.model, provider="deepseek")
+        return RequestEstimate(result.input_tokens, result.context_tokens)
+
+    provider.estimate_stage = estimate
     config = {}
 
     @contextmanager
@@ -254,6 +263,57 @@ def test_changed_budget_rejected_after_preview(cross_setup):
     with pytest.raises(CrossDocumentError):
         service.execute_prepared(prepared)
     assert s.provider.calls == []
+
+
+@pytest.mark.parametrize("reason", ["max_output_tokens", "content_filter", "PRIVATE_REASON", None])
+def test_cli_incomplete_diagnostic_is_allowlisted(session, monkeypatch, capsys, reason):
+    answers(monkeypatch)
+    session.provider.error_at = 2
+    session.provider.error = AnalysisProviderIncomplete(reason)
+    assert invoke(session, "run") == 1
+    text = capsys.readouterr().out
+    expected = reason if reason in ("max_output_tokens", "content_filter") else "unknown"
+    assert f"incomplete_details.reason={expected}" in text
+    assert "PRIVATE_REASON" not in text and "synthetic-test-secret" not in text
+    with Database(session.path) as db:
+        repo = CrossDocumentRepository(db)
+        assert repo.get(1).error_code == "provider_incomplete"
+        failed = repo.get_call_usage(1)[1]
+        assert failed.call_outcome == "response_received"
+        assert failed.input_tokens is None and failed.output_tokens is None
+    assert len(session.provider.calls) == 2
+
+
+def test_cli_configured_output_budget_is_previewed_and_persisted(session, monkeypatch, capsys):
+    answers(monkeypatch)
+    assert (
+        invoke(session, "run", "--stage-output-tokens", "8192", "--stage-context-tokens", "65536")
+        == 0
+    )
+    assert all(r.budget.output_tokens == 8192 for r in session.provider.calls)
+    text = capsys.readouterr().out
+    assert "8192 tokens" in text and "context 上限=65536" in text
+    with Database(session.path) as db:
+        config = json.loads(CrossDocumentRepository(db).get(1).config_json)
+        assert config["stage_budget"]["output_tokens"] == 8192
+        assert config["documents"][0]["planning_budget"]["reserved_output_tokens"] == 8192
+
+
+@pytest.mark.parametrize("output,context", [(8193, 65536), (8192, 32768), (0, 65536)])
+def test_invalid_cli_output_budget_stops_before_io(session, output, context):
+    assert (
+        invoke(
+            session,
+            "run",
+            "--stage-output-tokens",
+            str(output),
+            "--stage-context-tokens",
+            str(context),
+        )
+        == 2
+    )
+    assert session.provider.calls == [] and session.reader.reads == []
+    assert not session.path.exists()
 
 
 def test_budget_refusal_before_confirmation(cross_setup):

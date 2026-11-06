@@ -282,6 +282,7 @@ class CrossDocumentAnalysisService:
             code = (
                 exc.code
                 if isinstance(exc, CrossDocumentError)
+                or (isinstance(exc, AnalysisProviderFailure) and exc.code == "provider_incomplete")
                 else (
                     "persistence_failed" if isinstance(exc, PersistenceError) else "provider_failed"
                 )

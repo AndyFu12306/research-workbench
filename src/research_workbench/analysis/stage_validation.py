@@ -13,6 +13,7 @@ from .stage_contracts import (
     MAX_GRAPH_NODES,
     MAX_OUTPUT_CHARS,
     MAX_SOURCES,
+    MAX_STAGE_OUTPUT_TOKENS,
     ChunkReference,
     StageBudget,
     StageError,
@@ -73,7 +74,7 @@ def validate_budget(budget):
     _require(type(budget) is StageBudget)
     for value in (budget.context_tokens, budget.max_input_tokens, budget.output_tokens):
         _require(type(value) is int and value > 0)
-    _require(budget.output_tokens <= 4096)
+    _require(budget.output_tokens <= MAX_STAGE_OUTPUT_TOKENS)
     for value in (budget.safety_margin_tokens, budget.protocol_overhead_tokens):
         _require(type(value) is int and value >= 0)
 

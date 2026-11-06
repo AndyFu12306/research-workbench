@@ -1,5 +1,18 @@
 # 架构决定
 
+## ADR-061：incomplete 保持失败分类，输出预算必须显式选择
+
+2026-11-06 根据用户首次真实运行记录及源码，确认 normalizer 未提取 incomplete reason，
+Cross 对 AnalysisProviderFailure 的分类分支将 provider_incomplete 泛化为 provider_failed。
+本轮只修复此明确类别，不重写已失败 Execution=1；response_received 与缺失usage语义保持。
+只读取状态reason白名单，未知/非字符串不透传；CLI显示已知reason或unknown，原因不新增入库字段。
+Responses 的 max_output_tokens 包含可见输出与reasoning额度，达到额度可导致incomplete，
+但缺少原失败reason/usage，不能断言4096是该次故障的已证实根因。
+保留4096默认，StageBudget应用硬上限扩到8192，DeepSeek能力上限8192、OpenAI仍4096。
+CLI通过明确output/context选项同步规划/阶段预算及预检费用，保留24k输入、整体调用/token/费用
+限制；超限继续拒绝，非自动扩容或模型能力保证。无重试、修补、自动恢复或契约校验放宽。
+官方协议来源：[DeepSeek Responses](https://api-docs.deepseek.com/api/create-response/)。
+
 ## ADR-060：先交付两文献交互式 CLI，准备与外发确认分离
 
 2026-11-06 用户调整优先级，暂停4B.5a额外人工及多模型复核，保留既有质量/审计成果。
